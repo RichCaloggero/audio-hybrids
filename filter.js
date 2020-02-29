@@ -50,10 +50,10 @@ ${ui.list("type", "type", [
 ["low shelf", "lowshelf"],
 ["high shelf", "highshelf"],
 ])}
-<label>frequency: <input type="number" defaultValue="${frequency}" oninput="${html.set('frequency')}" min="20" max="20000" step="10"/></label>
-<label>q: <input type="range" defaultValue="${q}" oninput="${html.set('q')}" step="0.1"/></label>
-<label>gain: <input type="range" defaultValue="${gain}" oninput="${html.set('gain')}" min="-30" max="30"/></label>
-<label>detune: <input type="range" defaultValue="${detune}" oninput="${html.set('detune')}" min="-100" max="100" step="1"/></label>
+${ui.number("frequency", "frequency", frequency, 20, 20000, 10)}
+${ui.number("q", "q", q, 0.02, 20, 0.02)}
+${ui.number("gain", "gain", gain, -30, 30, 10)}
+${ui.number("detune", "detune", detune, -100, 100, 1)}
 </fieldset>
 ` // render
 };
