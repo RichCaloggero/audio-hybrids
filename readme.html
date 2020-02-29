@@ -1,0 +1,124 @@
+<h1 align="center">
+  <img alt="hybrids - the web components" src="https://raw.githubusercontent.com/hybridsjs/hybrids/master/docs/assets/hybrids-full-logo.svg?sanitize=true" width="500" align="center">
+  <br/>
+</h1>
+
+<p><a href="https://www.npmjs.com/package/hybrids"><img src="https://img.shields.io/npm/v/hybrids.svg?style=flat" alt="npm version"></a>
+<a href="https://bundlephobia.com/result?p=hybrids"><img src="https://img.shields.io/bundlephobia/minzip/hybrids.svg?label=minzip" alt="bundle size"></a>
+<a href="https://github.com/hybridsjs/hybrids/blob/master/types/index.d.ts"><img src="https://img.shields.io/npm/types/webcomponents-in-react.svg?style=flat" alt="types"></a>
+<a href="https://travis-ci.org/hybridsjs/hybrids"><img src="https://img.shields.io/travis/hybridsjs/hybrids/master.svg?style=flat" alt="build status"></a>
+<a href="https://coveralls.io/github/hybridsjs/hybrids?branch=master"><img src="https://img.shields.io/coveralls/github/hybridsjs/hybrids.svg?style=flat" alt="coverage status"></a>
+<a href="https://www.npmjs.com/package/hybrids"><img src="https://img.shields.io/npm/dt/hybrids.svg" alt="npm"></a>
+<a href="https://gitter.im/hybridsjs/hybrids"><img src="https://img.shields.io/gitter/room/nwjs/nw.js.svg?colorB=893F77" alt="gitter"></a>
+<a href="https://twitter.com/hybridsjs"><img src="https://img.shields.io/badge/follow-on%20twitter-4AA1EC.svg" alt="twitter"></a>
+<a href="https://conventionalcommits.org"><img src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg" alt="Conventional Commits"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/hybridsjs/hybrids.svg" alt="GitHub"></a></p>
+<blockquote>
+<p>🏅One of the four nominated projects to the <strong>&quot;Breakthrough of the year&quot;</strong> category of <a href="https://osawards.com/javascript/">Open Source Award</a> in 2019</p>
+</blockquote>
+<p><strong>Hybrids</strong> is a UI library for creating <a href="https://www.webcomponents.org/">web components</a> with strong declarative and functional approach based on plain objects and pure functions.</p>
+<ul>
+<li><strong>The simplest definition</strong> — just plain objects and pure functions - no <code>class</code> and <code>this</code> syntax</li>
+<li><strong>No global lifecycle</strong> — independent properties with own simplified lifecycle methods</li>
+<li><strong>Composition over inheritance</strong> — easy re-use, merge or split property definitions</li>
+<li><strong>Super fast recalculation</strong> — built-in smart cache and change detection mechanisms</li>
+<li><strong>Templates without external tooling</strong> — template engine based on tagged template literals</li>
+<li><strong>Developer tools included</strong> — Hot module replacement support for a fast and pleasant development</li>
+</ul>
+<h2 id="getting-started">Getting Started</h2>
+<p>Install npm package:</p>
+<pre>npm i <a href=https://www.npmjs.com/package/hybrids>hybrids</a></pre>
+
+<p>Then, import the required features and define a custom element:</p>
+<pre><code class="language-javascript">import { html, define } from &#39;hybrids&#39;;
+
+export function increaseCount(host) {
+  host.count += 1;
+}
+
+export const SimpleCounter = {
+  count: 0,
+  render: ({ count }) =&gt; html`
+    &lt;button onclick=&quot;${increaseCount}&quot;&gt;
+      Count: ${count}
+    &lt;/button&gt;
+  `,
+};
+
+define(&#39;simple-counter&#39;, SimpleCounter);</code></pre>
+<p>👆 <a href="https://stackblitz.com/edit/hybrids-simple-counter?file=simple-counter.js">Click and play on ⚡StackBlitz</a></p>
+<p>Finally, use your custom element in HTML:</p>
+<pre><code class="language-html">&lt;simple-counter count=&quot;10&quot;&gt;&lt;/simple-counter&gt;</code></pre>
+<h3 id="es-modules">ES Modules</h3>
+<p>If you target modern browsers and do not want to use external tooling (like <a href="https://webpack.js.org">webpack</a> or <a href="https://parceljs.org/">parcel</a>), you can use ES modules:</p>
+<pre><code class="language-html">&lt;script type=&quot;module&quot;&gt;
+  // We can use &quot;/src&quot; here - browsers, which support modules also support ES2015
+  import { html, define } from &#39;https://unpkg.com/hybrids@[PUT_VERSION_HERE:x.x.x]/src&#39;;
+  ...
+&lt;/script&gt;</code></pre>
+<p>Please take to account, that it does not provide code minification and loads all required files in separate requests.</p>
+<h3 id="built-version">Built Version</h3>
+<p>For older browsers support you can use the built version (with <code>window.hybrids</code> global namespace):</p>
+<pre><code class="language-html">&lt;script src=&quot;https://unpkg.com/hybrids@[PUT_VERSION_HERE:x.x.x]/dist/hybrids.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  var define = window.hybrids.define;
+  var html = window.hybrids.html;
+  ...
+&lt;/script&gt;</code></pre>
+<h3 id="hot-module-replacement">Hot Module Replacement</h3>
+<p>HMR works out of the box, but your bundler setup may require indication that your entry point supports it. For <a href="https://webpack.js.org"><code>webpack</code></a> and <a href="https://parceljs.org/"><code>parcel</code></a> add the following code to your entry point:</p>
+<pre><code class="language-javascript">// Enable HMR for development
+if (process.env.NODE_ENV !== &#39;production&#39;) module.hot.accept();</code></pre>
+<p>If your entry point imports files that do not support HMR, you can place the above snippet in a module where you define a custom element. (where <code>define</code> method is used).</p>
+<h2 id="overview">Overview</h2>
+<p>There are some common patterns among JavaScript UI libraries like class syntax, a complex lifecycle or stateful architecture. What can we say about them?</p>
+<p>Classes can be confusing, especially about how to use <code>this</code> or <code>super()</code> calls. They are also hard to compose. Multiple lifecycle callbacks have to be studied to understand very well. A stateful approach can open doors for difficult to maintain, imperative code. Is there any way out from all of those challenges?</p>
+<p>After all, the class syntax in JavaScript is only sugar on top of the constructors and prototypes. Because of that, we can switch the component structure to a map of properties applied to the prototype of the custom element class constructor. Lifecycle callbacks can be minimized with smart change detection and cache mechanism. Moreover, they can be implemented independently in the property scope rather than globally in the component definition.</p>
+<p>With all of that, the code may become simple to understand, and the code is written in a declarative way. Not yet sold? You can read more in the <a href="docs/core-concepts/README.md">Core Concepts</a> section of the project documentation.</p>
+<h2 id="documentation">Documentation</h2>
+<p>The hybrids documentation is available at <a href="https://hybrids.js.org">hybrids.js.org</a> or in the <a href="docs/README.md">docs</a> path of the repository:</p>
+<ul>
+<li><a href="docs/core-concepts/README.md">Core Concepts</a></li>
+<li><a href="docs/built-in-factories/README.md">Built-in Factories</a></li>
+<li><a href="docs/template-engine/README.md">Template Engine</a></li>
+<li><a href="docs/misc/README.md">Misc</a></li>
+</ul>
+<h3 id="articles">Articles</h3>
+<ul>
+<li><a href="https://dev.to/smalluban/do-we-really-need-classes-in-javascript-after-all-91n">Do we really need classes in JavaScript after all?</a></li>
+<li><a href="https://dev.to/bennypowers/lets-build-web-components-part-7-hybrids-187l">Let&#39;s Build Web Components! Part 7: Hybrids</a></li>
+</ul>
+<h4 id="core-concepts-series">Core Concepts Series</h4>
+<ul>
+<li><a href="https://dev.to/smalluban/from-classes-to-plain-objects-and-pure-functions-2gip">From classes to plain objects and pure functions</a></li>
+<li><a href="https://dev.to/smalluban/how-to-say-goodbye-to-lifecycle-methods-and-focus-on-productive-code-175">Say goodbye to lifecycle methods, and focus on productive code</a></li>
+<li><a href="https://dev.to/smalluban/chasing-the-best-performance-of-rendering-the-dom-by-hybrids-library-436d">Chasing the best performance of rendering the DOM by hybrids library</a></li>
+<li><a href="https://dev.to/smalluban/three-unique-features-of-the-hybrids-template-engine-that-you-must-know-5ada">Three unique features of the hybrids template engine that you must know</a></li>
+</ul>
+<h3 id="videos">Videos</h3>
+<ul>
+<li><a href="https://youtu.be/WZ1MEHuxHGg">Taste the Future with Functional Web Components</a> <em>(EN, ConFrontJS Conference)</em></li>
+<li><a href="https://youtu.be/ni0d34Yrugk">Hybrids - Web Components with Simple and Functional API</a> <em>(PL, WarsawJS Meetup #46)</em></li>
+</ul>
+<h2 id="live-examples">Live Examples</h2>
+<ul>
+<li><a href="https://stackblitz.com/edit/hybrids-simple-counter?file=simple-counter.js">&lt;simple-counter&gt;</a> - a button with counter controlled by own state</li>
+<li><a href="https://stackblitz.com/edit/hybrids-redux-counter?file=redux-counter.js">&lt;redux-counter&gt;</a> - Redux library for state management</li>
+<li><a href="https://stackblitz.com/edit/hybrids-react-counter?file=react-counter.js">&lt;react-counter&gt;</a> - render factory and <a href="https://reactjs.org/">React</a> library for rendering in shadow DOM</li>
+<li><a href="https://stackblitz.com/edit/hybrids-lit-html-counter?file=lit-counter.js">&lt;lit-counter&gt;</a> - render factory and <a href="https://lit-html.polymer-project.org/">lit-html</a> for rendering in shadow DOM</li>
+<li><a href="https://stackblitz.com/edit/hybrids-parent-factory?file=index.js">&lt;app-todos&gt;</a> - todo list using parent factory for state management</li>
+<li><a href="https://stackblitz.com/edit/hybrids-children-factory?file=index.js">&lt;tab-group&gt;</a> - switching tabs using children factory</li>
+<li><a href="https://stackblitz.com/edit/hybrids-async-user?file=async-user.js">&lt;async-user&gt;</a> - async data in the template</li>
+</ul>
+<h2 id="browser-support">Browser Support</h2>
+<p><a href="https://saucelabs.com/u/hybrids"><img src="https://saucelabs.com/browser-matrix/hybrids.svg" alt="Build Status"></a></p>
+<p>The library requires some of the ES2015 APIs and <a href="https://w3c.github.io/webcomponents/spec/shadow/">Shadow DOM</a>, <a href="https://www.w3.org/TR/custom-elements/">Custom Elements</a>, and <a href="https://www.w3.org/TR/html-templates/">Template</a> specifications. You can use <code>hybrids</code> in all evergreen browsers and IE11 including a list of required polyfills and shims. The easiest way is to add a bundle from <a href="https://github.com/webcomponents/webcomponentsjs"><code>@webcomponents/webcomponentsjs</code></a> package on top of your project:</p>
+<pre><code class="language-javascript">import &#39;@webcomponents/webcomponentsjs/webcomponents-bundle.js&#39;;
+import { define, ... } from &#39;hybrids&#39;;
+
+...</code></pre>
+<p>The polyfill package provides two modes in which you can use it (<code>webcomponents-bundle.js</code> and <code>webcomponents-loader.js</code>). Read more in the <a href="https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs#how-to-use">How to use</a> section of the documentation.</p>
+<p>Web components shims have some limitations. Especially, <a href="https://github.com/webcomponents/polyfills/tree/master/packages/shadycss#shadycss"><code>webcomponents/shadycss</code></a> approximates CSS scoping and CSS custom properties inheritance. Read more on the <a href="https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs#known-issues">known issues</a> and <a href="https://www.polymer-project.org/3.0/docs/devguide/custom-css-properties#custom-properties-shim-limitations">custom properties shim limitations</a> pages.</p>
+<h2 id="license">License</h2>
+<p><code>hybrids</code> is released under the <a href="LICENSE">MIT License</a>.</p>
+
