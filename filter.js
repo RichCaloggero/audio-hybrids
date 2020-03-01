@@ -1,12 +1,14 @@
 import {define, html, property} from "https://unpkg.com/hybrids@4.1.5/src";
 import * as audio from "./audio.js";
+import * as context from "./context.js";
 import * as ui from "./ui.js";
 
-let connected = false;
 
 const Filter = {
+id: "filter",
 label: "",
 node: null,
+
 
 type: {
 get: (host, value) => host.node.type,
@@ -61,23 +63,13 @@ ${ui.number("detune", "detune", detune, -100, 100, 1)}
 define("audio-filter", Filter);
 
 function connect (host, key) {
+if (!host.node) {
 audio.initialize(host);
-if (!host.node) host.node = audio.context.createBiquadFilter();
+host.node = audio.context.createBiquadFilter();
 host.input.connect(host.node).connect(host.wet);
+context.signalReady(host);
+} // if
 
 host[key] = host.getAttribute(key);
-connectFilter(host);
 } // connect
 
-function connectFilter (host) {
-if (connected) return;
-connected = true;
-const audioElement = document.querySelector("audio");
-const source = audio.context.createMediaElementSource(audioElement);
-try {
-source.connect(host.input);
-host.output.connect(audio.context.destination);
-} catch (e) {
-console.debug(e);
-} // try
-} // connectFilter
