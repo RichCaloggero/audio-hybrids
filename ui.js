@@ -9,7 +9,7 @@ return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" o
 } // text
 
 export function boolean (label, name, defaultValue) {
-return html`<label>${label}: <input type="checkbox" defaultValue="${defaultValue? 'checked' : ''}" onchange="${html.set(name)}"></label>`;
+return html`<label>${label}: <input type="checkbox" defaultValue="${defaultValue? 'checked' : ''}" onclick="${(host, event) => host[name] = event.target.checked}"></label>`;
 } // boolean
 
 export function list(label, name, options, defaultValue) {
@@ -22,3 +22,4 @@ html`<option value="${option[1] || option[0]}">${option[0]}</option>`
 ); // map
 } // init
 } // list
+

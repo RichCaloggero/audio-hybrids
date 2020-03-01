@@ -11,7 +11,7 @@ node: null,
 
 
 src: {
-get: (host, value) => host.node.src,
+get: (host, value) => host.audioElement.src,
 set: (host, value) => {
 try {
 host.audioElement.src = value;
@@ -24,6 +24,7 @@ connect: connect,
 },  // src property
 
 play: {
+get: (host, value) => !host.audioElement.paused,
 set: (host, value) => {
 if (value) {
 host.audioElement.play();
