@@ -61,15 +61,55 @@ console.debug(`abort: ${e}\n${e.stack}\n`);
 } // handleChildReady
 } // waitForChildren
 
-export function isReady (element, value) {
-if (value) {
-signalReady(element);
-alert(`${element.id} is ready`);
-} // if
-} // isReady
 
 export function signalReady (element) {
 //statusMessage(`${element.module.name}: sent ready signal`, "append");
 element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
 console.debug (`${element.id} is ready`);
 } // signalReady
+
+export function connect (host, key) {
+if (!host.node) {
+	if (!host.creator) {
+throw new Error(`${host.id}: no creator -- aborting`);
+} // if
+
+if (host.creator instanceof Function ) host.node = host.creator(host);
+else host.node = audio.context[host.creator].call(audio.context);
+
+		audio.initialize(host);
+host.input.connect(host.node).connect(host.wet);
+signalReady(host);
+	} // if
+
+	setDefault(host, key);
+} // connect
+
+export function setDefault (host, key) {
+if (host && key) {
+	if (host.hasAttribute(key)) return host.getAttribute(key);
+	else if (host.defaults && host.defaults[key]) return host.defaults[key]
+	else if (host.node && host.node[key] instanceof AudioParam && host.node[key].defaultValue) return host.node[key].defaultValue;
+} // if
+
+return undefined;
+} // setDefault
+
+function audioParams (node) {
+	return Object.keys(node).map(key => node[key] instanceof AudioParam);
+} // audioParams
+
+function getDefaults (node) {
+	const defaults = {};
+	audioParams(node).forEach(key => {
+const p = node[key];
+defaults[key] = {
+	min: p.minValue,
+	max: p.maxValue,
+	default: p.defaultValue
+};
+});
+
+return defaults;
+} // getDefaults
+
