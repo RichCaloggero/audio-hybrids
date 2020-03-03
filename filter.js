@@ -18,8 +18,14 @@ connect: context.connect,
 },  // type property
 
 frequency: {
-get: (host, value) => host.node.frequency.value,
-set: (host, value) => {host.node.frequency.value = Number(value); alert(`set ${value}`);},
+get: (host, value) => {
+	console.debug(`get frequency ${value}`);
+		return host.node.frequency.value;
+},
+set: (host, value) => {
+		console.debug(`set frequency ${Number(value)}`);
+return host.node.frequency.value = Number(value);
+	},
 connect: context.connect,
 },  // frequency property
 
@@ -41,7 +47,9 @@ set: (host, value) => host.node.detune.value = Number(value),
 connect: context.connect,
 },  // detune property
 
-render: ({ label, type, frequency, q, gain, detune, defaults }) => html`
+render: ({ label, type, frequency, q, gain, detune, defaults }) => {
+	console.debug(`rendering filter...`);
+	return html`
 <fieldset class="filter">
 <legend><h2>${label}</h2></legend>
 ${ui.list("type", "type", [
@@ -58,7 +66,8 @@ ${ui.number("q", "q", q, 0.02, 20, 0.02)}
 ${ui.number("gain", "gain", gain, -30, 30, 10)}
 ${ui.number("detune", "detune", detune, -100, 100, 1)}
 </fieldset>
-` // render
+`;
+} // render
 };
 
 define("audio-filter", Filter);

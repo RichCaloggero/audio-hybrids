@@ -81,19 +81,26 @@ else host.node = audio.context[host.creator].call(audio.context);
 		audio.initialize(host);
 host.input.connect(host.node).connect(host.wet);
 host.defaults = getPropertyInfo(host, host.node);
-console.debug("- defaults: ", host.defaults);
 signalReady(host);
 	} // if
 
-	setDefault(host, key);
+	host[key] = getDefault(host, key);
+console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
 } // connect
 
+export function getDefault (host, key) {
+if (host && key) {
+if (host.hasAttribute(key)) return host.getAttribute(key);
+	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
+} // if
+
+return undefined;
+} // getDefault
+
 function getPropertyInfo (host, node) {
-console.debug(`getPropertyInfo: ${params(node)}`);
 const defaults = {};
 params(node).forEach (key => {
 const p = node[key];
-console.debug("- key: ", key, p, alias(host,key));
 defaults[alias(host, key)] = p instanceof AudioParam?
 {min: p.minValue, max: p.maxValue, default: p.defaultValue}
 : {default: p};
@@ -102,14 +109,6 @@ defaults[alias(host, key)] = p instanceof AudioParam?
 return defaults;
 } // getPropertyInfo
 
-export function setDefault (host, key) {
-if (host && key) {
-if (host.hasAttribute(key)) return host.getAttribute(key);
-	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
-} // if
-
-return undefined;
-} // setDefault
 
 
 function alias(host, key) {
@@ -125,11 +124,16 @@ connect: connect
 }; // property descriptor
 } // descriptor
 
+function props(node) {
+const result = [];
+	for (let key in node) result.push([key, node[key]]);
+return result;
+} // props
+
 function params (node) {
-	return Object.keys(node)
-.map(key => [key, node[key]])
-.filter (x => x[1] instanceof AudioParam || typeof(x[1]) === "string")
-.map(x => x[0]);
+	return props(node)
+	.filter(x =>
+	x[1] instanceof AudioParam
+	|| (typeof(x[1]) === "string" && !["channelInterpretation", "channelCountMode"].includes(x[0]))
+	).map(x => x[0]);
 } // params
-
-
