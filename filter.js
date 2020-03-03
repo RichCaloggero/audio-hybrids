@@ -9,7 +9,7 @@ id: "filter",
 label: "",
 node: null,
 creator: "createBiquadFilter",
-propertyMap: {q: "Q"},
+alias: {q: "Q"},
 
 type: {
 get: (host, value) => host.node.type,
