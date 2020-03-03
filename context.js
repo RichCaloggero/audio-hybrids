@@ -79,21 +79,49 @@ else host.node = audio.context[host.creator].call(audio.context);
 
 		audio.initialize(host);
 host.input.connect(host.node).connect(host.wet);
+host.defaults = {};
 signalReady(host);
 	} // if
 
-	setDefault(host, key);
+	const val = setDefault(host, key);
+console.debug(`setDefault is ${val}`);
+return host[key] = val;
+
 } // connect
 
 export function setDefault (host, key) {
 if (host && key) {
-	if (host.hasAttribute(key)) return host.getAttribute(key);
-	else if (host.defaults && host.defaults[key]) return host.defaults[key]
-	else if (host.node && host.node[key] instanceof AudioParam && host.node[key].defaultValue) return host.node[key].defaultValue;
+	host.defaults[key] = getPropertyInfo(host.node, propertyMap(host, key));
+
+console.debug(`${host.id} has ${key} and attribute ${host.hasAttribute(key)} with value ${host.getAttribute(key)}`);
+if (host.hasAttribute(key)) return host.getAttribute(key);
+	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
 } // if
 
 return undefined;
 } // setDefault
+
+function getPropertyInfo (node, key) {
+const param = node[key];
+return param instanceof AudioParam? ({
+min: param.minValue,
+max: param.maxValue,
+default: param.defaultValue
+}) : {};
+} // getPropertyInfo
+
+function propertyMap (host, key) {
+return (host.propertyMap && host.propertyMap[key])?
+host.propertyMap[key] :  key;
+} // propertyMap
+
+export function descriptor (key) {
+return {
+get: (host, value) => host.node[propertyMap(host, key)].value,
+set: (host, value) => host.node[propertyMap(host, key)].value = value,
+connect: connect
+}; // property descriptor
+} // descriptor
 
 function audioParams (node) {
 	return Object.keys(node).map(key => node[key] instanceof AudioParam);

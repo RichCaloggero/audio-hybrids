@@ -1,6 +1,7 @@
 import {html} from "https://unpkg.com/hybrids@4.1.5/src";
 
 export function number (label, name, defaultValue, min=0, max=1, step=1, type="range") {
+console.debug(`ui.number: ${name} default is ${defaultValue}`);
 return html`<label>${label}: <input type="${type}" defaultValue="${defaultValue}" onchange="${html.set(name)}" min="${min}" max="${max}" step="${step}"></label>`;
 } // number
 

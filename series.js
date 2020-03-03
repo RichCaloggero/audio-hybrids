@@ -3,7 +3,6 @@ import * as audio from "./audio.js";
 import * as context from "./context.js";
 import * as ui from "./ui.js";
 
-let connected = false;
 
 const Series = {
 id: "series",

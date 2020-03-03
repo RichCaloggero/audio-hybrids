@@ -9,14 +9,17 @@ id: "gain",
 label: "",
 node: null,
 creator: "createGain",
-	
-gain: {
+
+gain: context.descriptor("gain"),
+
+/*gain: {
 	get: (host, value) => host.node.gain.value,
 set: (host, value) => host.node.gain.value = value,
 	connect: context.connect
 }, // gain property
+*/
 
-render: ({ label, gain }) => html`
+render: ({ label, gain, defaults }) => html`
 <fieldset class="destination">
 <legend><h2>${label}</h2></legend>
 ${ui.number("gain", "gain", gain)}
