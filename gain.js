@@ -4,28 +4,24 @@ import * as context from "./context.js";
 import * as ui from "./ui.js";
 
 
-const Gain = {
+const Gain = context.createAudioProcessor({
 id: "gain",
-label: "",
-node: null,
 creator: "createGain",
 
-gain: context.descriptor("gain"),
-
-/*gain: {
+gain: {
 	get: (host, value) => host.node.gain.value,
-set: (host, value) => host.node.gain.value = value,
+set: (host, value) => host.node.gain.value = Number(value),
 	connect: context.connect
 }, // gain property
-*/
 
-render: ({ label, gain, defaults }) => html`
+render: ({ mix, bypass, label, gain, defaults }) => html`
 <fieldset class="destination">
 <legend><h2>${label}</h2></legend>
-${ui.number("gain", "gain", gain)}
+${ui.commonControls(bypass, mix)}
+${ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.max, 0.1)}
 </fieldset>
 ` // render
-};
+});
 
 define("audio-gain", Gain);
 

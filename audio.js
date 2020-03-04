@@ -12,13 +12,13 @@ element.input.connect(element._bypass);
 element.wet.connect(element.output);
 
 
-element.mix = function (value) {
+element.__mix = function (value) {
 //console.debug(`mix: ${this.name} ${this.value} ${!this.output} ${!this.wet}`);
 this.dry.gain.value = 1-Math.abs(value);
 this._mix = this.wet.gain.value = value;
-} // mix
+} // __mix
 
-element.bypass = function (value) {
+element.__bypass = function (value) {
 if (!this.output) return this;
 //console.debug(`${this.name}.bypass ${value} ${this.wet.gain.value} ${this.dry.gain.value} ${this._bypass}`);
 if (value) {
@@ -33,9 +33,9 @@ this._bypass.disconnect();
 //console.debug(`- ${this.wet.gain.value} ${this.dry.gain.value} ${this._bypass}`);
 
 return this;
-} // bypass
+} // __bypass
 
-element.silentBypass = function (value) {
+element.__silentBypass = function (value) {
 if (value) {
 this._silentBypass = true;
 this._bypass.gain.value = 0;
@@ -43,11 +43,12 @@ this._bypass.gain.value = 0;
 this._silentBypass = false;
 this._bypass.gain.value = 1.0;
 } // if
-} // silentBypass
+} // __silentBypass
 
-element.mix(1);
-element.bypass(false);
-element.silentBypass(false);
+element.__mix(1);
+element.__bypass(false);
+element.__silentBypass(false);
+
 
 return element;
 } // initialize

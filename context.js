@@ -68,6 +68,23 @@ element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
 console.debug (`${element.id} is ready`);
 } // signalReady
 
+export function audioParam (key) {
+return {
+get: (host, value) => host.node[alias(host,key)].value,
+set: (host, value) => host.node[alias(host,key)].value = Number(value),
+connect: connect,
+
+};
+} // audioParam
+
+export function stringParam (key) {
+return {
+get: (host, value) => host.node[alias(host,key)],
+set: (host, value) => host.node[alias(host,key)] = value,
+connect: (host, key) => connect(host, key)
+};
+} // stringParam
+
 export function connect (host, key) {
 if (!host.node) {
 	console.debug(`${host.id}: connecting...`);
@@ -78,13 +95,14 @@ throw new Error(`${host.id}: no creator -- aborting`);
 if (host.creator instanceof Function ) host.node = host.creator(host);
 else host.node = audio.context[host.creator].call(audio.context);
 
-		audio.initialize(host);
+audio.initialize(host);
 host.input.connect(host.node).connect(host.wet);
 host.defaults = getPropertyInfo(host, host.node);
 signalReady(host);
-	} // if
+	host._initialized = true;
+} // if
 
-	host[key] = getDefault(host, key);
+host[key] = getDefault(host, key);
 console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
 } // connect
 
@@ -116,13 +134,14 @@ return (host.alias && host.alias[key])?
 host.alias[key] :  key;
 } // alias
 
-export function descriptor (key) {
+/*export function descriptor (key) {
 return {
 get: (host, value) => host.node[alias(host, key)].value,
 set: (host, value) => host.node[alias(host, key)].value = value,
 connect: connect
 }; // property descriptor
 } // descriptor
+*/
 
 function props(node) {
 const result = [];
@@ -137,3 +156,22 @@ function params (node) {
 	|| (typeof(x[1]) === "string" && !["channelInterpretation", "channelCountMode"].includes(x[0]))
 	).map(x => x[0]);
 } // params
+
+export function createAudioProcessor (definition) {
+return Object.assign({
+label: "",
+id: "",
+node: null,
+
+bypass: {
+get: (host, value) => value,
+set: (host, value) => host.__bypass(value),
+},
+
+mix: {
+get: (host, value) => value,
+set: (host, value) => host.__mix(value),
+},
+}, // common properties
+definition); // assign
+} // createAudioProcessor 

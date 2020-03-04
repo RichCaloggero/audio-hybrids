@@ -11,6 +11,16 @@ node: null,
 creator: "createBiquadFilter",
 alias: {q: "Q"},
 
+mix: {
+get: (host, value) => value,
+set: (host, value) => host.__mix(value),
+},
+
+bypass: {
+get: (host, value) => value,
+set: (host, value) => host.__bypass(value),
+},
+
 type: {
 get: (host, value) => host.node.type,
 set: (host, value) => host.node.type = value,
@@ -47,11 +57,13 @@ set: (host, value) => host.node.detune.value = Number(value),
 connect: context.connect,
 },  // detune property
 
-render: ({ label, type, frequency, q, gain, detune, defaults }) => {
+
+render: ({ bypass, mix, label, type, frequency, q, gain, detune, defaults }) => {
 	console.debug(`rendering filter...`);
 	return html`
 <fieldset class="filter">
 <legend><h2>${label}</h2></legend>
+${ui.commonControls()}
 ${ui.list("type", "type", [
 ["low pass", "lowpass"],
 ["high pass", "highpass"],
