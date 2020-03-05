@@ -6,12 +6,21 @@
 </head>
 <body>
 <h1>Test</h1>
-<div>
-<audio src="t.mp3" controls></audio>
-</div>
 
-<audio-gain label="volume" gain="0.1"></audio-gain>
+<audio-context label="gain test">
+<audio-series>
+<audio-player src="jam-002.mp3"></audio-player>
+<audio-gain label="volume"></audio-gain>
+<audio-destination></audio-destination>
+</audio-series>
+</audio-context>
 
-<script type="module" src="/gain.js"></script>
+<script src="context.js" type="module"></script>
+<script src="/series.js" type="module"></script>
+<script src="gain.js" type="module"></script>
+<script src="player.js" type="module"></script>
+<script src="destination.js" type="module"></script>
+
+
 </body>
 </html>

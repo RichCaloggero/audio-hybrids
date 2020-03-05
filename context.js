@@ -68,23 +68,6 @@ element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
 console.debug (`${element.id} is ready`);
 } // signalReady
 
-export function audioParam (key) {
-return {
-get: (host, value) => host.node[alias(host,key)].value,
-set: (host, value) => host.node[alias(host,key)].value = Number(value),
-connect: connect,
-
-};
-} // audioParam
-
-export function stringParam (key) {
-return {
-get: (host, value) => host.node[alias(host,key)],
-set: (host, value) => host.node[alias(host,key)] = value,
-connect: (host, key) => connect(host, key)
-};
-} // stringParam
-
 export function connect (host, key) {
 if (!host.node) {
 	console.debug(`${host.id}: connecting...`);
@@ -97,7 +80,9 @@ else host.node = audio.context[host.creator].call(audio.context);
 
 audio.initialize(host);
 host.input.connect(host.node).connect(host.wet);
+console.debug(`${host.id}: connected audio`);
 host.defaults = getPropertyInfo(host, host.node);
+console.debug(`${host.id}: created defaults`);
 signalReady(host);
 	host._initialized = true;
 } // if
@@ -107,6 +92,7 @@ console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
 } // connect
 
 export function getDefault (host, key) {
+console.debug(`getDefaults: ${host.id}, ${key}`);
 if (host && key) {
 if (host.hasAttribute(key)) return host.getAttribute(key);
 	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
@@ -175,3 +161,21 @@ set: (host, value) => host.__mix(value),
 }, // common properties
 definition); // assign
 } // createAudioProcessor 
+
+export function audioParam (key) {
+return {
+get: (host, value) => host.node[alias(host,key)].value,
+set: (host, value) => host.node[alias(host,key)].value = Number(value),
+connect: connect,
+
+};
+} // audioParam
+
+export function stringParam (key) {
+return {
+get: (host, value) => host.node[alias(host,key)],
+set: (host, value) => host.node[alias(host,key)] = value,
+connect: (host, key) => connect(host, key)
+};
+} // stringParam
+

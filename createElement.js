@@ -1,47 +1,55 @@
+import * as context from "./context.js";
+
 export function createAudioProcessor (...definitions) {
-return Object.assign.apply (null,
-[defaults,
-definitions.map(definition => definition instanceof Array?
+return Object.assign(defaults(),
+...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
 : definition
-)].flat(2)
-); // assign
+)); // assign
 
 function createDescriptors (props) {
-return props.map(p => p instanceof Array? p[1] : p)
-.map(p => ({p: {
-get: _get, set: _set}
-}));
+const aliases = [];
+const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
+result.aliases = aliases;
+console.debug(`adding aliases${result.aliases}`);
+return result;
+
+function createDescriptor (p) {
+const key = p instanceof Array? createAlias(p) : p;
+const prop = p instanceof Array? p[0] : p;
+
+console.debug(`creating descriptor ${p}`);
+return {[prop]: {
+get: (host,value) => {console.debug("evaluating getter"); host.node[key] instanceof AudioParam? host.node[key].value : host.node[key]},
+set: (host, value) => host.node[key] instanceof AudioParam? host.node[key].value = Number(value) : host.node[key] = value,
+connect: context.connect
+}};
+} // createDescriptor
+
+function createAlias(p) {
+aliases[p[0]] = p[1];
+return p[1];
+} // createAlias
 } // createDescriptors
 
-var defaults = {
+function defaults () {
+return {
 label: "",
 id: "",
 node: null,
 
 bypass: {
-get: _get,
-set: _set
+get: (host, value) => value,
+	set: (host, value) => host.__bypass(value)
 },
 
 mix: {
-get: _get,
-set: _set
+get: (host, value) => value,
+	set: (host, value) => host.__mix(value),
 },
 }; // common properties
-function _get (host, value) {
-return host.node[key] instanceof AudioParam?
-host.node[key].value
-: host[key]
-} // _get
+}// defaults
 
-function _set (host, value) {
-return host.node[key] instanceof AudioParam?
-host.node[key].value = value
-: host[key] = value
-} // _set
 } // createAudioProcessor 
 
 
-
-createAudioProcessor(["foo", "bar", "baz"], {render: "render function"});

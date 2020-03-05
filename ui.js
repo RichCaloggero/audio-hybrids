@@ -11,7 +11,7 @@ return html`<label>${label}: <input type="${type}" defaultValue="${defaultValue}
 } // number
 
 export function text (label, name, defaultValue) {
-return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" oninput="${html.set(name)}"></label>`;
+return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"></label>`;
 } // text
 
 export function boolean (label, name, defaultValue) {
