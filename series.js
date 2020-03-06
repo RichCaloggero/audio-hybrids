@@ -1,6 +1,6 @@
 import {define, html, property} from "https://unpkg.com/hybrids@4.1.5/src";
 import * as audio from "./audio.js";
-import * as context from "./context.js";
+import * as connector from "./connector.js";
 import * as ui from "./ui.js";
 
 
@@ -22,7 +22,7 @@ render: ({ label, type, frequency, q, gain, detune }) => html`
 define("audio-series", Series);
 
 function connect (host, key) {
-context.waitForChildren(host, children => {
+connector.waitForChildren(host, children => {
 const first = children[0];
 const last = children[children.length-1];
 

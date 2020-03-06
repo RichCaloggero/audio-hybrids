@@ -3,7 +3,7 @@ import * as context from "./context.js";
 
 const savedValues = new Map();
 
-export function number (label, name, defaultValue, min=0, max=1, step=1, type="number") {
+export function number (label, name, defaultValue, min,max,step, type="number") {
 //console.debug(`ui.number: ${name} default is ${defaultValue}`);
 return html`<label>${label}: <input type="${type}" defaultValue="${defaultValue}" onchange="${html.set(name)}" min="${min}" max="${max}" step="${step}"></label>`;
 
@@ -19,9 +19,14 @@ return html`<label>${label}: <input type="checkbox" defaultValue="${defaultValue
 } // boolean
 
 export function list(label, name, options, defaultValue) {
-return html`<label>${label}: <select onchange="${html.set(name)}">${init(options)}</select></label>`;
+const defaultIndex = defaultValue?
+options.find((x,i) => x instanceof Array? x.includes(defaultValue) : x === defaultValue)
+: 0;
+
+return html`<label>${label}: <select onchange="${html.set(name)}">${init(options, defaultIndex)}</select></label>`;
 
 function init(options, index) {
+if (index < 0) index = 0;
 return options.map(option => option instanceof Array?
 html`<option value="${option[1] || option[0]}">${option[0]}</option>`
 : html`<option value="${option}">${option}</option>`
@@ -29,10 +34,10 @@ html`<option value="${option[1] || option[0]}">${option[0]}</option>`
 } // init
 } // list
 
-export function commonControls (bypass, mix) {
+export function commonControls (bypass, mix, defaults) {
 return html`
 ${boolean("bypass", "bypass", false)}
-${number("mix", "mix", mix)}
+${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step)}
 `; // return
 } // commonControls
 

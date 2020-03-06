@@ -1,14 +1,16 @@
-import {createAudioProcessor} from "./createElement.js";
 import {define, html, property} from "https://unpkg.com/hybrids@4.1.5/src";
 import * as audio from "./audio.js";
-import * as context from "./context.js";
+import * as audioProcessor from "./audioProcessor.js";
 import * as ui from "./ui.js";
 
+let instanceCount = 0;
 
-const Gain = createAudioProcessor(["gain"], {
-id: "gain",
+const Gain = audioProcessor.create(["gain"], {
+id: `gain${++instanceCount}`,
 creator: "createGain",
-defaults: {},
+defaults: {
+gain: {min: -1, max: 1, default: 1, step: 0.1}
+},
 
 
 render: ({ mix, bypass, label, gain, defaults }) => {
@@ -16,7 +18,7 @@ render: ({ mix, bypass, label, gain, defaults }) => {
 	return html`
 <fieldset class="destination">
 <legend><h2>${label}</h2></legend>
-${ui.commonControls(bypass, mix)}
+${ui.commonControls(bypass, mix, defaults)}
 ${ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.max, 0.1)}
 </fieldset>
 `; // template
@@ -24,7 +26,6 @@ ${ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.max, 0.1)}
 });
 
 console.debug("defining Gain...");
-//debugger;
 
 define("audio-gain", Gain);
 
