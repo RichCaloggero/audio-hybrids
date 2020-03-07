@@ -1,4 +1,4 @@
-import {property} from "https://unpkg.com/hybrids@4.1.5/src";
+import {property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as connector from "./connector.js";
 

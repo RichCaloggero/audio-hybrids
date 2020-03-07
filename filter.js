@@ -1,4 +1,4 @@
-import {define, html, property} from "https://unpkg.com/hybrids@4.1.5/src";
+import {define, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as audioProcessor from "./audioProcessor.js";
 import * as ui from "./ui.js";

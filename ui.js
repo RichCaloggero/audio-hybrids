@@ -1,4 +1,4 @@
-import {html} from "https://unpkg.com/hybrids@4.1.5/src";
+import {html} from "./hybrids/index.js";
 import * as context from "./context.js";
 
 const savedValues = new Map();
