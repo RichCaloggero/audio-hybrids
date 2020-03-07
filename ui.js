@@ -18,19 +18,29 @@ export function boolean (label, name, defaultValue) {
 return html`<label>${label}: <input type="checkbox" defaultValue="${defaultValue? 'checked' : ''}" onclick="${(host, event) => host[name] = event.target.checked}"></label>`;
 } // boolean
 
-export function list(label, name, options, defaultValue) {
-const defaultIndex = defaultValue?
-options.find((x,i) => x instanceof Array? x.includes(defaultValue) : x === defaultValue)
-: 0;
+export function list(label, name, defaultValue, options) {
+return html`<label>${label}: <select onchange="${html.set(name)}">${init(options, defaultValue)}</select></label>`;
 
-return html`<label>${label}: <select onchange="${html.set(name)}">${init(options, defaultIndex)}</select></label>`;
-
-function init(options, index) {
-if (index < 0) index = 0;
-return options.map(option => option instanceof Array?
-html`<option value="${option[1] || option[0]}">${option[0]}</option>`
+function init(options, defaultValue) {
+return options.map(option => {
+if (isSelected(option, defaultValue)) return (
+option instanceof Array? html`<option selected value="${option[1] || option[0]}">${option[0]}</option>`
+: html`<option selected value="${option}">${option}</option>`
+);
+else return (
+option instanceof Array? html`<option value="${option[1] || option[0]}">${option[0]}</option>`
 : html`<option value="${option}">${option}</option>`
-); // map
+);
+}); // map
+
+function isSelected (option, defaultValue) {
+if (!defaultValue || typeof(defaultValue) !== "string") return "";
+//console.debug(`isSelected: ${option}, ${defaultValue}`);
+defaultValue = defaultValue.trim().toLowerCase();
+return option instanceof Array?
+defaultValue === option[0].toLowerCase().trim() || defaultValue === option[1].toLowerCase().trim()
+: defaultValue === option.toLowerCase().trim();
+} // isSelected
 } // init
 } // list
 

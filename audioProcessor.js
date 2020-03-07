@@ -1,3 +1,4 @@
+import {property} from "https://unpkg.com/hybrids@4.1.5/src";
 import * as audio from "./audio.js";
 import * as connector from "./connector.js";
 
@@ -11,27 +12,28 @@ createDescriptors(definition)
 
 
 function createDescriptors (props) {
-const aliases = [];
+const aliases = {};
 const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
-result.aliases = aliases;
+result.aliases = () => aliases;
 //console.debug(`adding aliases${result.aliases}`);
 return result;
 
 function createDescriptor (p) {
-const key = p instanceof Array? createAlias(p) : p;
+if (p instanceof Array) createAlias(p);
+const webaudioProp = p instanceof Array? p[1] : p;
 const prop = p instanceof Array? p[0] : p;
+const key = prop;
 
-//console.debug(`creating descriptor ${p}`);
+//console.debug(`creating descriptor ${p}, ${prop}, ${webaudioProp}`);
 return {[prop]: {
-get: (host,value) => host.node[key] instanceof AudioParam? host.node[key].value : host.node[key],
-set: (host, value) => host.node[key] instanceof AudioParam? host.node[key].value = Number(value) : host.node[key] = value,
-connect: connect
+get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
+set: (host, value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value,
+connect: connect,
 }};
 } // createDescriptor
 
 function createAlias(p) {
 aliases[p[0]] = p[1];
-return p[1];
 } // createAlias
 } // createDescriptors
 
@@ -40,7 +42,6 @@ const result = {
 label: "",
 id: "",
 node: null,
-
 
 bypass: {
 get: (host, value) => value,
@@ -62,7 +63,7 @@ return result;
 
 export function connect (host, key) {
 if (!host.node) {
-	console.debug(`${host.id}: connecting...`);
+	//console.debug(`${host.id}: connecting...`);
 if (!host.creator) {
 throw new Error(`${host.id}: no creator -- aborting`);
 } // if
@@ -72,17 +73,16 @@ else host.node = audio.context[host.creator].call(audio.context);
 
 audio.initialize(host);
 host.input.connect(host.node).connect(host.wet);
-console.debug(`${host.id}: webaudio node connected - ${host.node}`);
-
+//console.debug(`${host.id}: webaudio node connected - ${host.node}`);
 
 host.defaults = Object.assign(defaults(), getPropertyInfo(host, host.node), host.defaults);
-console.debug(`${host.id}: created defaults`);
+//console.debug(`${host.id}: created defaults`);
 connector.signalReady(host);
 	host._initialized = true;
 } // if
 
 host[key] = getDefault(host, key);
-console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
+//console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
 
 function defaults () {
 return {
@@ -93,7 +93,7 @@ mix: {default: 1, min: -1, max: 1, step: 0.1}
 
 
 export function getDefault (host, key) {
-console.debug(`getDefault: ${host.id}, ${key}`);
+//console.debug(`getDefault: ${host.id}, ${key}`);
 if (host && key) {
 if (host.hasAttribute(key)) return host.getAttribute(key);
 	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
@@ -103,16 +103,25 @@ return undefined;
 } // getDefault
 
 function getPropertyInfo (host, node) {
+const alias = invert(host.aliases);
+//console.debug(`inverted: `, alias);
 const info = {};
 params(node).forEach (key => {
 const p = node[key];
-info[alias(host, key)] = p instanceof AudioParam?
+info[alias[key] || key] = p instanceof AudioParam?
 {min: p.minValue, max: p.maxValue, default: p.defaultValue, step: 1}
 : {default: p};
 });
 
 return info;
 } // getPropertyInfo
+
+function invert (data) {
+const result = {};
+Object.keys(data)
+.forEach (key => result[data[key]] = key);
+return result;
+} // invert
 
 
 function alias(host, key) {

@@ -12,22 +12,21 @@ creator: "createBiquadFilter",
 
 
 render: ({ bypass, mix, label, type, frequency, q, gain, detune, defaults }) => {
-	console.debug(`rendering filter...`);
 	return html`
 <fieldset class="filter">
 <legend><h2>${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
-${ui.list("type", "type", [
+${ui.list("type", "type", type, [
 ["low pass", "lowpass"],
 ["high pass", "highpass"],
 ["band pass", "bandpass"],
-["notch"],
+"notch",
 ["all pass", "allpass"],
 ["low shelf", "lowshelf"],
 ["high shelf", "highshelf"],
-], defaults.type)}
+])}
 ${ui.number("frequency", "frequency", frequency, defaults.frequency.min, defaults.frequency.max, 10)}
-${ui.number("q", "q", q, 0.02, 20, 0.02)}
+${ui.number("q", "q", q, defaults.q.min, defaults.q.max,  0.02)}
 ${ui.number("gain", "gain", gain, -30, 30, 1)}
 ${ui.number("detune", "detune", detune, -100, 100, 1)}
 </fieldset>
@@ -36,6 +35,3 @@ ${ui.number("detune", "detune", detune, -100, 100, 1)}
 });
 
 define("audio-filter", Filter);
-
-
-
