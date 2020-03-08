@@ -1,10 +1,11 @@
 import {property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as connector from "./connector.js";
+import * as element from "./element.js";
 
 export function create (...definitions) {
 const result = Object.assign(
-commonProperties(),
+element.commonProperties(),
+{_connected: property(true, connect)},
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
 : definition
@@ -30,7 +31,7 @@ const key = prop;
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
 set: (host, value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value,
-connect: connect,
+connect: (host, key) => host[key] = element.getDefault(host, key),
 }};
 } // createDescriptor
 
@@ -38,33 +39,6 @@ function createAlias(p) {
 aliases[p[0]] = p[1];
 } // createAlias
 } // createDescriptors
-
-function commonProperties () {
-return {
-id: "",
-node: null,
-
-label: {
-connect: connect,
-observe: (host, value) => {
-host.shadowRoot.querySelector("fieldset").hidden = value? false : true;
-console.debug(`${host.id} label changed to ${value}`);
-}, // observe
-}, // label
-
-bypass: {
-get: (host, value) => value,
-	set: (host, value) => host.__bypass(value),
-connect: (host, key) => false
-},  // bypass
-
-mix: {
-get: (host, value) => host._mix,
-	set: (host, value) => host.__mix(value), // mix
-connect: (host, key) => getDefault(host, key),
-}, // mix
-}; // properties
-}// commonProperties
 
 } // createAudioProcessor 
 
@@ -86,33 +60,14 @@ host.input.connect(host.node).connect(host.wet);
 // defaults from the user will have their properties frozen, but the object can have new keys added
 // if no user supplied defaults exist, then add an empty object first
 if (!host.defaults) host.defaults = {};
-Object.assign(host.defaults, defaults(), getPropertyInfo(host, host.node), host.defaults);
+Object.assign(host.defaults, element.defaults(), getPropertyInfo(host, host.node), host.defaults);
 //console.debug(`${host.id}: created defaults`);
-connector.signalReady(host);
+element.signalReady(host);
 	host._initialized = true;
 } // if
-
-host[key] = getDefault(host, key);
-console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
-
-
-function defaults () {
-return {
-mix: {default: 1, min: -1, max: 1, step: 0.1},
-};
-} // defaults
 } // connect
 
 
-export function getDefault (host, key) {
-//console.debug(`getDefault: ${host.id}, ${key}`);
-if (host && key) {
-if (host.hasAttribute(key)) return host.getAttribute(key);
-	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
-} // if
-
-return undefined;
-} // getDefault
 
 function getPropertyInfo (host, node) {
 const alias = invert(host.aliases);

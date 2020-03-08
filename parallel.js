@@ -1,7 +1,6 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as connector from "./connector.js";
-import * as audioProcessor from "./audioProcessor.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 let instanceCount = 0;
@@ -23,7 +22,7 @@ observe: (host, value) => host.shadowRoot.querySelector("fieldset").hidden = val
 }, // label
 
 mix: {
-connect: (host, key) => host[key] = audioProcessor.getDefault(host, key),
+connect: (host, key) => host[key] = element.getDefault(host, key),
 }, // mix
 
 
@@ -41,7 +40,7 @@ define("audio-parallel", Parallel);
 function connect (host, key) {
 if (!host._initialized) {
 
-connector.waitForChildren(host, children => {
+element.waitForChildren(host, children => {
 const first = children[0];
 const last = children[children.length-1];
 
