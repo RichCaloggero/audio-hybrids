@@ -36,7 +36,7 @@ ${ui.commonControls(bypass, mix, defaults)}
 ` // render
 };
 
-define("audio-series", Series);
+define("audio-parallel", Parallel);
 
 function connect (host, key) {
 if (!host._initialized) {
@@ -46,6 +46,8 @@ const first = children[0];
 const last = children[children.length-1];
 
 audio.initialize(host);
+const mixer = audio.context.createGain();
+
 if (first !== last) {
 children.forEach((child, index) => {
 if (index < children.length-1) child.output.connect(children[index+1].input);
@@ -53,13 +55,9 @@ if (index < children.length-1) child.output.connect(children[index+1].input);
 } // if
 
 if (first.input) host.input.connect(first.input);
-if (last.output) last.output.connect(host.wet);
+if (last.output) last.output.connect(host.mixer).connect(host.wet);
+host.mixer.gain.value = 1 / children.length;
 
-host._delay = audio.context.createDelay();
-host._gain = audio.context.createGain();
-host.wet.connect(host._delay).connect(host._gain).connect(host.input);
-host._gain.gain.value = 0;
-host._delay.delayTime.value = 0;
 
 }); // waitForChildren
 

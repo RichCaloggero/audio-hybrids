@@ -3,8 +3,15 @@ import * as context from "./context.js";
 
 const savedValues = new Map();
 
-export function number (label, name, defaultValue, min,max,step, type="number") {
+export function number (label, name, defaultValue, ...rest) {
 //console.debug(`ui.number: ${name} default is ${defaultValue}`);
+let min, max, step, type;
+if (rest.length === 1 && rest[0] instanceof Object) {
+({ min, max, step, type } = rest[0][name]);
+} else {
+[min, max, step, type] = rest;
+} // if
+
 return html`<label>${label}: <input type="${type}" defaultValue="${defaultValue}" onchange="${html.set(name)}" min="${min}" max="${max}" step="${step}"></label>`;
 
 

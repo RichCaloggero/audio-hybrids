@@ -160,7 +160,8 @@ function params (node) {
 	return props(node)
 	.filter(x =>
 	x[1] instanceof AudioParam
-	|| (typeof(x[1]) === "string" && !["channelInterpretation", "channelCountMode"].includes(x[0]))
+	|| typeof(x[1]) === "number"
+|| (typeof(x[1]) === "string" && !["channelInterpretation", "channelCountMode"].includes(x[0]))
 	).map(x => x[0]);
 } // params
 
