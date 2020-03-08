@@ -3,13 +3,15 @@ import * as audio from "./audio.js";
 import * as connector from "./connector.js";
 
 export function create (...definitions) {
-return Object.assign(
+const result = Object.assign(
 commonProperties(),
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
 : definition
 )); // assign
 
+//if (result.defaults) result.defaults = () => (result.defaults);
+return result;
 
 function createDescriptors (props) {
 const aliases = {};
@@ -38,24 +40,30 @@ aliases[p[0]] = p[1];
 } // createDescriptors
 
 function commonProperties () {
-const result = {
-label: "",
+return {
 id: "",
 node: null,
+
+label: {
+connect: connect,
+observe: (host, value) => {
+host.shadowRoot.querySelector("fieldset").hidden = value? false : true;
+console.debug(`${host.id} label changed to ${value}`);
+}, // observe
+}, // label
 
 bypass: {
 get: (host, value) => value,
 	set: (host, value) => host.__bypass(value),
 connect: (host, key) => false
-},
+},  // bypass
 
 mix: {
 get: (host, value) => host._mix,
-	set: (host, value) => host.__mix(value),
+	set: (host, value) => host.__mix(value), // mix
 connect: (host, key) => getDefault(host, key),
-},
+}, // mix
 }; // properties
-return result;
 }// commonProperties
 
 } // createAudioProcessor 
@@ -75,18 +83,22 @@ audio.initialize(host);
 host.input.connect(host.node).connect(host.wet);
 //console.debug(`${host.id}: webaudio node connected - ${host.node}`);
 
-host.defaults = Object.assign(defaults(), getPropertyInfo(host, host.node), host.defaults);
+// defaults from the user will have their properties frozen, but the object can have new keys added
+// if no user supplied defaults exist, then add an empty object first
+if (!host.defaults) host.defaults = {};
+Object.assign(host.defaults, defaults(), getPropertyInfo(host, host.node), host.defaults);
 //console.debug(`${host.id}: created defaults`);
 connector.signalReady(host);
 	host._initialized = true;
 } // if
 
 host[key] = getDefault(host, key);
-//console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
+console.debug(`connect: ${host.id}[${key}] = ${host[key]}`);
+
 
 function defaults () {
 return {
-mix: {default: 1, min: -1, max: 1, step: 0.1}
+mix: {default: 1, min: -1, max: 1, step: 0.1},
 };
 } // defaults
 } // connect

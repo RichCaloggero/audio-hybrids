@@ -6,17 +6,13 @@ import * as ui from "./ui.js";
 
 let instanceCount = 0;
 
-const Series = {
-id: `series${++instanceCount}`,
+const Parallel = {
+id: `parallel${++instanceCount}`,
 node: null,
-_delay: null,
-_gain: null,
 
 defaults : () => ({
 bypass: {default: false},
 mix: {default: 1, min: -1, max: 1, step: 0.1},
-gain: {default: 0, min: -0.98, max: 0.98, step: 0.02},
-delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
 }), // sefaults
 
 _connected: property(false, connect),
@@ -30,29 +26,11 @@ mix: {
 connect: (host, key) => host[key] = audioProcessor.getDefault(host, key),
 }, // mix
 
-delay: {
-get: (host, value) => host._delay && host._delay.delayTime.value,
-set: (host, value) => {if (host._delay) host._delay.delayTime.value = Number(value)},
-},
 
-gain: {
-get: (host, value) => host._gain && host._gain.gain.value,
-set: (host, value) => host._gain.gain.value = Number(value),
-connect: audioProcessor.getDefault,
-},
-
-feedback: false,
-feedforward: false,
-
-
-render: ({ label, mix, bypass, feedback, feedforward, delay, gain, defaults }) => html`
-<fieldset class="series">
+render: ({ label, mix, defaults }) => html`
+<fieldset class="parallel">
 <legend><h2>${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
-<div id="feedback-panel">
-${feedback && ui.number("delay", "delay", delay, defaults.delay.min, defaults.delay.max, defaults.delay.step)}
-${feedback && ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.max, defaults.gain.step)}
-</div>
 </fieldset>
 <slot></slot>
 ` // render

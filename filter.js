@@ -13,7 +13,7 @@ creator: "createBiquadFilter",
 
 render: ({ bypass, mix, label, type, frequency, q, gain, detune, defaults }) => {
 	return html`
-<fieldset class="filter">
+<fieldset class="filter" hidden>
 <legend><h2>${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 ${ui.list("type", "type", type, [
