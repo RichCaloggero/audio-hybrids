@@ -5,6 +5,7 @@ import * as audio from "./audio.js";
 export function create (creator, ...definitions) {
 return Object.assign(
 commonProperties(),
+{creator: creator},
 {_connected: property(true, connect)},
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
@@ -42,7 +43,7 @@ aliases[p[0]] = p[1];
 
 
 export function connect (host, key) {
-if (!host.initialized) {
+if (!host._initialized) {
 	//console.debug(`${host.id}: connecting...`);
 if (!host.creator) {
 throw new Error(`${host.id}: no creator -- aborting`);
@@ -60,6 +61,7 @@ host.input.connect(host.node).connect(host.wet);
 if (!host.defaults) host.defaults = {};
 Object.assign(host.defaults, element.defaults(), getPropertyInfo(host, host.node), host.defaults);
 //console.debug(`${host.id}: created defaults`);
+
 } else {
 alert(`${host.id}: bad creator -- ${creator}; aborting`);
 throw new Error(`bad creator`);
@@ -74,6 +76,7 @@ element.signalReady(host);
 
 export function commonProperties () {
 return {
+_initialized: null,
 id: "",
 node: null,
 

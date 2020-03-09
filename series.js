@@ -5,9 +5,8 @@ import * as ui from "./ui.js";
 
 let instanceCount = 0;
 
-const Series = {
+const Series = element.create(initialize, {
 id: `series${++instanceCount}`,
-node: null,
 _delay: null,
 _gain: null,
 
@@ -18,16 +17,7 @@ gain: {default: 0, min: -0.98, max: 0.98, step: 0.02},
 delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
 }), // sefaults
 
-_connected: property(false, connect),
 
-label: {
-connect: (host, key) => host[key] = host.getAttribute(key),
-observe: (host, value) => host.shadowRoot.querySelector("fieldset").hidden = value? false : true,
-}, // label
-
-mix: {
-connect: (host, key) => host[key] = element.getDefault(host, key),
-}, // mix
 
 delay: {
 get: (host, value) => host._delay && host._delay.delayTime.value,
@@ -56,18 +46,17 @@ ${feedback && ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.m
 </fieldset>
 <slot></slot>
 ` // render
-};
+});
 
 define("audio-series", Series);
 
-function connect (host, key) {
+function initialize (host, key) {
 if (!host._initialized) {
 
 element.waitForChildren(host, children => {
 const first = children[0];
 const last = children[children.length-1];
 
-audio.initialize(host);
 if (first !== last) {
 children.forEach((child, index) => {
 if (index < children.length-1) child.output.connect(children[index+1].input);
@@ -87,5 +76,5 @@ host._delay.delayTime.value = 0;
 
 host._initialized = true;
 } // if
-} // connect
+} // initialize
 

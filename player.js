@@ -4,10 +4,14 @@ import * as connector from "./connector.js";
 import * as ui from "./ui.js";
 
 
-const Player = {
+const Player = element.create(host => {
+host.input = null;
+host.output = audio.context.createGain();
+host.audioElement = document.createElement("audio");
+host.node = audio.context.createMediaElementSource(host.audioElement);
+host.node.connect(host.output);
+}, {
 id: "player",
-label: "",
-node: null,
 
 
 src: {
@@ -19,8 +23,7 @@ host.audioElement.src = value;
 context.statusMessage(e);
 } // try
 }, // set
-
-connect: connect,
+connect: (host, key) => host[key] = element.getDefault(host, key)
 },  // src property
 
 play: {
@@ -41,7 +44,7 @@ ${ui.text("src", "src", src)}
 ${ui.boolean("play", "play", play)}
 </fieldset>
 ` // render
-};
+});
 
 define("audio-player", Player);
 
