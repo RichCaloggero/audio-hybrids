@@ -5,6 +5,7 @@ import * as ui from "./ui.js";
 
 let instanceCount = 0;
 
+
 const Series = element.create(initialize, {
 id: `series${++instanceCount}`,
 _delay: null,

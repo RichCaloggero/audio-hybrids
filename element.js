@@ -30,7 +30,7 @@ const key = prop;
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
 set: (host, value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value,
-connect: (host, key) => host[key] = element.getDefault(host, key),
+connect: (host, key) => host[key] = getDefault(host, key),
 }};
 } // createDescriptor
 
@@ -44,26 +44,26 @@ aliases[p[0]] = p[1];
 
 export function connect (host, key) {
 if (!host._initialized) {
-	//console.debug(`${host.id}: connecting...`);
+//console.debug(`${host.id}: connecting...`);
 if (!host.creator) {
 throw new Error(`${host.id}: no creator -- aborting`);
 } // if
 
 audio.initialize(host);
-if (creator instanceof Function ) {
-creator(host);
-} else if (creator in audio.context) {
-host.node = audio.context[creator].call(audio.context);
+if (host.creator instanceof Function ) {
+host.creator(host);
+} else if (host.creator in audio.context) {
+host.node = audio.context[host.creator].call(audio.context);
 host.input.connect(host.node).connect(host.wet);
 
 // defaults from the user will have their properties frozen, but the object can have new keys added
 // if no user supplied defaults exist, then add an empty object first
 if (!host.defaults) host.defaults = {};
-Object.assign(host.defaults, element.defaults(), getPropertyInfo(host, host.node), host.defaults);
+Object.assign(host.defaults, defaults(), audioProcessor.getPropertyInfo(host, host.node), host.defaults);
 //console.debug(`${host.id}: created defaults`);
 
 } else {
-alert(`${host.id}: bad creator -- ${creator}; aborting`);
+alert(`${host.id}: bad creator -- ${host.creator}; aborting`);
 throw new Error(`bad creator`);
 } // if
 
@@ -76,7 +76,6 @@ element.signalReady(host);
 
 export function commonProperties () {
 return {
-_initialized: null,
 id: "",
 node: null,
 
