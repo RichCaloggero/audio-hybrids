@@ -1,13 +1,12 @@
 import {define, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as audioProcessor from "./audioProcessor.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 let instanceCount = 0;
 
-const Gain = audioProcessor.create(["gain"], {
+const Gain = element.create("createGain", ["gain"], {
 id: `gain${++instanceCount}`,
-creator: "createGain",
 defaults: {
 gain: {min: -1, max: 1, default: 1, step: 0.1}
 },
