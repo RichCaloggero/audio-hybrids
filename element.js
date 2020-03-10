@@ -4,7 +4,7 @@ import * as audioProcessor from "./audioProcessor.js";
 
 
 export function create (creator, ...definitions) {
-return Object.assign(
+const result = Object.assign(
 commonProperties(),
 {creator: () => creator},
 {_connected: property(true, connect)},
@@ -13,12 +13,15 @@ createDescriptors(definition)
 : definition
 )); // assign
 
+return result;
+
 
 function createDescriptors (props) {
 const aliases = {};
 const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
 result.aliases = () => aliases;
 //console.debug(`adding aliases${result.aliases}`);
+
 return result;
 
 function createDescriptor (p) {
@@ -40,7 +43,7 @@ aliases[p[0]] = p[1];
 } // createAlias
 } // createDescriptors
 
-} // createAudioProcessor 
+} // create
 
 
 export function connect (host, key) {
@@ -56,11 +59,9 @@ host.creator(host);
 } else if (host.creator in audio.context) {
 host.node = audio.context[host.creator].call(audio.context);
 host.input.connect(host.node).connect(host.wet);
-
 // defaults from the user will have their properties frozen, but the object can have new keys added
 // if no user supplied defaults exist, then add an empty object first
-if (!host.defaults) host.defaults = {};
-Object.assign(host.defaults, defaults(), audioProcessor.getPropertyInfo(host, host.node), host.defaults);
+host.defaults = Object.assign({}, defaults(), audioProcessor.getPropertyInfo(host, host.node), host.defaults);
 //console.debug(`${host.id}: created defaults`);
 
 } else {
@@ -72,12 +73,12 @@ throw new Error(`bad creator`);
 
 signalReady(host);
 	host._initialized = true;
+if (host.id === "gain1") debugger;
 } // if
 } // connect
 
 export function commonProperties () {
 return {
-
 label: {
 connect: (host, key) => host[key] = getDefault(host, key),
 observe: (host, value) => {
@@ -95,7 +96,7 @@ connect: (host, key) => false
 
 mix: {
 get: (host, value) => host._mix,
-	set: (host, value) => host.__mix(value), // mix
+	set: (host, value) => host.__mix(value),
 connect: (host, key) => getDefault(host, key),
 }, // mix
 }; // properties
@@ -103,12 +104,12 @@ connect: (host, key) => getDefault(host, key),
 
 export function defaults () {
 return {
-mix: {default: 1, min: -1, max: 1, step: 0.1},
+mix: {default: 1, min: -1, max: 1, step: 0.1, type: "range"},
 };
 } // defaults
 
 export function getDefault (host, key) {
-console.debug(`getDefault: ${host.id}, ${key}`);
+//console.debug(`getDefault: ${host.id}, ${key}`);
 if (host && key) {
 if (host.hasAttribute(key)) return host.getAttribute(key);
 	else if (host.defaults && host.defaults[key]) return host.defaults[key].default

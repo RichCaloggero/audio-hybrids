@@ -12,7 +12,7 @@ if (rest.length === 1 && rest[0] instanceof Object) {
 [min, max, step, type] = rest;
 } // if
 
-return html`<label>${label}: <input type="${type}" defaultValue="${defaultValue}" onchange="${html.set(name)}" min="${min}" max="${max}" step="${step}"></label>`;
+return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}" min="${min}" max="${max}" step="${step}"></label>`;
 
 
 } // number

@@ -7,9 +7,7 @@ let instanceCount = 0;
 
 const Gain = element.create("createGain", ["gain"], {
 id: `gain${++instanceCount}`,
-defaults: {
-gain: {min: -1, max: 1, default: 1, step: 0.1}
-},
+
 
 
 render: ({ mix, bypass, label, gain, defaults }) => {
@@ -17,7 +15,7 @@ render: ({ mix, bypass, label, gain, defaults }) => {
 <fieldset class="destination">
 <legend><h2>${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
-${ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.max, defaults.gain.step)}
+${ui.number("gain", "gain", gain, defaults)}
 </fieldset>
 `; // template
 } // render
