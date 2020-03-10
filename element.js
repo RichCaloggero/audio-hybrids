@@ -1,11 +1,12 @@
 import {property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
+import * as audioProcessor from "./audioProcessor.js";
 
 
 export function create (creator, ...definitions) {
 return Object.assign(
 commonProperties(),
-{creator: creator},
+{creator: () => creator},
 {_connected: property(true, connect)},
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
@@ -69,15 +70,13 @@ throw new Error(`bad creator`);
 
 //console.debug(`${host.id}: webaudio node connected - ${host.node}`);
 
-element.signalReady(host);
+signalReady(host);
 	host._initialized = true;
 } // if
 } // connect
 
 export function commonProperties () {
 return {
-id: "",
-node: null,
 
 label: {
 connect: (host, key) => host[key] = getDefault(host, key),

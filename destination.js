@@ -6,7 +6,7 @@ import * as ui from "./ui.js";
 
 const Destination = element.create(host => {
 host.node = audio.context.destination;
-host.input.connect(node);
+host.input.connect(host.node);
 host.output = null;
 },
 [], // no UI

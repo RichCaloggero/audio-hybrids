@@ -1,7 +1,7 @@
 
 
 
-function getPropertyInfo (host, node) {
+export function getPropertyInfo (host, node) {
 const alias = invert(host.aliases);
 //console.debug(`inverted: `, alias);
 const info = {};

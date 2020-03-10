@@ -6,7 +6,7 @@ import * as ui from "./ui.js";
 let instanceCount = 0;
 
 
-const Series = element.create(initialize, {
+const Series = element.create(host => initialize(host), {
 id: `series${++instanceCount}`,
 _delay: null,
 _gain: null,
