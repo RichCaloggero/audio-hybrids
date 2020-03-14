@@ -8,15 +8,16 @@
 <script src="player.js" type="module"></script>
 <script src="destination.js" type="module"></script>
 <script src="gain.js" type="module"></script>
+<script src="filter.js" type="module"></script>
 </head>
 <body>
-<h1>Test</h1>
 
 <audio-context label="gain test">
-<audio-series>
-<audio-player src="t.mp3"></audio-player>
-<audio-gain label="volume"></audio-gain>
-<audio-destination></audio-destination>
+<audio-series label="series">
+<audio-player label="player"src="t.mp3"></audio-player>
+<audio-filter label="filter"></audio-filter>
+<audio-gain label="volume" gain="3"></audio-gain>
+<audio-destination label="speakers"></audio-destination>
 </audio-series>
 </audio-context>
 

@@ -4,10 +4,15 @@ import * as context from "./context.js";
 const savedValues = new Map();
 
 export function number (label, name, defaultValue, ...rest) {
-//console.debug(`ui.number: ${name} default is ${defaultValue}`);
+console.debug(`ui.number: ${name} default is ${defaultValue}`);
 let min, max, step, type;
 if (rest.length === 1 && rest[0] instanceof Object) {
+try {
 ({ min, max, step, type } = rest[0][name]);
+} catch (e) {
+console.debug(e);
+} // catch
+
 } else {
 [min, max, step, type] = rest;
 } // if

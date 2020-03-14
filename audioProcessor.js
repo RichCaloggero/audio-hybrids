@@ -23,7 +23,7 @@ return result;
 } // invert
 
 
-function alias(host, key) {
+export function alias(host, key) {
 return (host.aliases && host.aliases[key])?
 host.aliases[key] :  key;
 } // alias

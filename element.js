@@ -1,22 +1,24 @@
-import {property} from "./hybrids/index.js";
+import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as audioProcessor from "./audioProcessor.js";
-
+const environment = new Map();
 
 export function create (creator, ...definitions) {
 const result = Object.assign(
 commonProperties(),
-{creator: () => creator},
-{_connected: property(true, connect)},
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
 : definition
 )); // assign
 
+environment.set(result, {
+creator: creator,
+defaults:  Object.assign({}, commonDefaults(), result.defaults)
+});
 return result;
+} // create
 
-
-function createDescriptors (props) {
+export function createDescriptors (props, connect, defaults) {
 const aliases = {};
 const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
 result.aliases = () => aliases;
@@ -33,8 +35,11 @@ const key = prop;
 //console.debug(`creating descriptor ${p}, ${prop}, ${webaudioProp}`);
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
-set: (host, value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value,
-connect: (host, key) => host[key] = getDefault(host, key),
+set: (host, value) => {
+console.debug(`${host.id}.set (${webaudioProp}) = ${value}`);
+return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
+},
+connect: connect
 }};
 } // createDescriptor
 
@@ -43,50 +48,40 @@ aliases[p[0]] = p[1];
 } // createAlias
 } // createDescriptors
 
-} // create
 
-
-export function connect (host, key) {
+function connect (host, key) {
 if (!host._initialized) {
-//console.debug(`${host.id}: connecting...`);
-if (!host.creator) {
+console.debug(`${host.id}: connecting...`);
+if (!host.__creator) {
 throw new Error(`${host.id}: no creator -- aborting`);
 } // if
 
 audio.initialize(host);
-if (host.creator instanceof Function ) {
-host.creator(host);
-} else if (host.creator in audio.context) {
+console.log(`${host.id}: `, host.__creator);
+if (host.__creator instanceof Function ) {
+console.debug(`${host.id}: creator function detected`);
+host.__creator(host);
+console.debug("- creator returned");
+
+} else if (host.__creator in audio.context) {
+console.debug(`${host.id}: audio processor being initialized`);
 host.node = audio.context[host.creator].call(audio.context);
 host.input.connect(host.node).connect(host.wet);
-// defaults from the user will have their properties frozen, but the object can have new keys added
-// if no user supplied defaults exist, then add an empty object first
-host.defaults = Object.assign({}, defaults(), audioProcessor.getPropertyInfo(host, host.node), host.defaults);
-//console.debug(`${host.id}: created defaults`);
+//host.defaults = Object.assign({}, audioProcessor.getPropertyInfo(host, host.node), host.defaults);
+console.debug("- audio processor created");
 
 } else {
-alert(`${host.id}: bad creator -- ${host.creator}; aborting`);
+alert(`${host.id}: bad creator -- ${host.__creator}; aborting`);
 throw new Error(`bad creator`);
 } // if
 
-//console.debug(`${host.id}: webaudio node connected - ${host.node}`);
-
-signalReady(host);
-	host._initialized = true;
-if (host.id === "gain1") debugger;
+host._initialized = true;
 } // if
 } // connect
 
 export function commonProperties () {
 return {
-label: {
-connect: (host, key) => host[key] = getDefault(host, key),
-observe: (host, value) => {
-host.shadowRoot.querySelector("fieldset").hidden = value? false : true;
-console.debug(`${host.id} label changed to ${value}`);
-}, // observe
-}, // label
-
+label: "",
 
 bypass: {
 get: (host, value) => value,
@@ -102,21 +97,15 @@ connect: (host, key) => getDefault(host, key),
 }; // properties
 }// commonProperties
 
-export function defaults () {
+export function commonDefaults () {
 return {
 mix: {default: 1, min: -1, max: 1, step: 0.1, type: "range"},
 };
-} // defaults
+} // commonDefaults
 
-export function getDefault (host, key) {
-//console.debug(`getDefault: ${host.id}, ${key}`);
-if (host && key) {
-if (host.hasAttribute(key)) return host.getAttribute(key);
-	else if (host.defaults && host.defaults[key]) return host.defaults[key].default
-} // if
+export function getDefault (host, key, _defaults) {
+const defaults = Object.assign({}, _defaults, {default: host.getAttribute(key)});
 
-console.debug("- no defaults");
-return undefined;
 } // getDefault
 
 
@@ -138,9 +127,11 @@ if (children.length > 0) return;
 // no more children left, so remove this handler and signal ready on this element
 element.removeEventListener("elementReady", handleChildReady);
 //statusMessage(`${element.id}: all children ready`);
+console.log("- all children ready");
 
 try {
 callback.call(element, Array.from(element.children));
+console.log("- callback returned");
 signalReady(element);
 } catch (e) {
 alert(`abort: ${e}`);
@@ -153,6 +144,6 @@ console.log(`abort: ${e}\n${e.stack}\n`);
 export function signalReady (element) {
 //statusMessage(`${element.module.name}: sent ready signal`, "append");
 element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
-console.log (`${element.id} is ready`);
+console.log (`${element.id} signaling ready`);
 } // signalReady
 

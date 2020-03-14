@@ -4,15 +4,10 @@ import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 
-const Player = element.create(host => {
-host.input = null;
-host.output = audio.context.createGain();
-host.audioElement = document.createElement("audio");
-host.node = audio.context.createMediaElementSource(host.audioElement);
-host.node.connect(host.output);
-}, {
+const Player = {
 id: "player",
 
+_connected: property(true, initialize),
 
 src: {
 get: (host, value) => host.audioElement.src,
@@ -23,7 +18,7 @@ host.audioElement.src = value;
 context.statusMessage(e);
 } // try
 }, // set
-connect: (host, key) => host[key] = element.getDefault(host, key)
+connect: (host, key) => host[key] = host[key] = host.getAttribute(key)
 },  // src property
 
 play: {
@@ -37,27 +32,26 @@ host.audioElement.pause();
 } // set
 }, // play property
 
-render: ({ label, src, play }) => html`
+render: ({ label, src, play }) => {
+console.debug(`${label}: rendering...`);
+return html`
 <fieldset class="player">
 <legend><h2>${label}</h2></legend>
 ${ui.text("src", "src", src)}
 ${ui.boolean("play", "play", play)}
 </fieldset>
-` // render
-});
+`;
+} // render
+};
 
 define("audio-player", Player);
 
-function connect (host, key) {
-if (!host.node) {
+function initialize (host) {
+audio.initialize(host);
 host.input = null;
 host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
-connector.signalReady(host);
-} // if
-
-host[key] = host.getAttribute(key);
-} // connect
-
+element.signalReady(host);
+} // initialize
