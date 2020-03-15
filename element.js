@@ -1,29 +1,37 @@
 import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as audioProcessor from "./audioProcessor.js";
-const environment = new Map();
 
-export function create (creator, ...definitions) {
-const result = Object.assign(
-commonProperties(),
+const prefix = "audio";
+const registry = new Map();
+const instanceCount = Object.create(null);
+
+export function create (name, defaults, creator, connect, ...definitions) {
+if (!instanceCount[name]) instanceCount[name] = 0;
+const _id = `${name}${++instanceCount[name]}`;
+
+const descriptors = Object.assign(
+commonProperties(_id),
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
 : definition
 )); // assign
 
-environment.set(result, {
+
+registry.set(_id, {
+descriptors: descriptors,
 creator: creator,
-defaults:  Object.assign({}, commonDefaults(), result.defaults)
+connect: connect,
+defaults:  defaults
 });
-return result;
+return define (`${prefix}-${name}`, descriptors);
 } // create
 
-export function createDescriptors (props, connect, defaults) {
+export function createDescriptors (props, _connect = connect) {
 const aliases = {};
 const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
 result.aliases = () => aliases;
 //console.debug(`adding aliases${result.aliases}`);
-
 return result;
 
 function createDescriptor (p) {
@@ -36,10 +44,10 @@ const key = prop;
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
 set: (host, value) => {
-console.debug(`${host.id}.set (${webaudioProp}) = ${value}`);
+console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
 return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
 },
-connect: connect
+connect: _connect
 }};
 } // createDescriptor
 
@@ -49,38 +57,60 @@ aliases[p[0]] = p[1];
 } // createDescriptors
 
 
-function connect (host, key) {
-if (!host._initialized) {
-console.debug(`${host.id}: connecting...`);
-if (!host.__creator) {
-throw new Error(`${host.id}: no creator -- aborting`);
+export function connect (host, key) {
+if (!host._id) {
+console.error(`bad element: aborting;\n`, host);
+throw new Error(`bad element`);
 } // if
+const _id = host._id;
+if (!registry.has(_id)) {
+console.error(`no registry info for ${_id}; aborting`);
+throw new Error(`no registry info`);
+} // if
+const hostInfo = registry.get(_id);
 
+if (!host._initialized) {
+console.debug (`${host._id}: initializing...`);
 audio.initialize(host);
-console.log(`${host.id}: `, host.__creator);
-if (host.__creator instanceof Function ) {
-console.debug(`${host.id}: creator function detected`);
-host.__creator(host);
-console.debug("- creator returned");
 
-} else if (host.__creator in audio.context) {
-console.debug(`${host.id}: audio processor being initialized`);
-host.node = audio.context[host.creator].call(audio.context);
+if (hostInfo.creator instanceof Function) {
+hostInfo.creator(host);
+
+}else if (typeof(hostInfo.creator) === "string" && hostInfo.creator in audio.context) {
+host.node = audio.context[hostInfo.creator].call(audio.context);
 host.input.connect(host.node).connect(host.wet);
-//host.defaults = Object.assign({}, audioProcessor.getPropertyInfo(host, host.node), host.defaults);
-console.debug("- audio processor created");
+
+const _defaults = Object.assign({}, commonDefaults(), hostInfo.defaults);
+const info = audioProcessor.getPropertyInfo(host, host.node);
+Object.keys(info).forEach(key => _defaults[key] = Object.assign({}, info[key], _defaults[key]));
+Object.assign(hostInfo.defaults, _defaults);
 
 } else {
-alert(`${host.id}: bad creator -- ${host.__creator}; aborting`);
-throw new Error(`bad creator`);
+throw new Error(`bad creator; aborting`);
 } // if
 
 host._initialized = true;
+signalReady(host);
 } // if
+
+if (hostInfo.creator instanceof Function) {
+hostInfo.creator(host, key);
+return;
+} // if
+
+const _defaults = hostInfo.defaults;
+console.debug(`${host._id}(${key}: connecting`);
+
+let value = host.getAttribute(key)
+|| _defaults[key]?.default;
+value = Number(value)? Number(value) : value;
+console.debug(`${host._id}(${key}): defaulted to ${value}`);
+host[key] = value;
 } // connect
 
-export function commonProperties () {
+export function commonProperties (_id) {
 return {
+_id: {get: () => _id},
 label: "",
 
 bypass: {

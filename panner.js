@@ -1,11 +1,13 @@
 import {define, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as audioProcessor from "./audioProcessor.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
 
-let instanceCount = 0;
+const defaults = {
+panningModel: {default: "HRTF"}
+};
 
-const Panner = audioProcessor.create([
+const audioPanner = element.create("panner", defaults, "createPanner", element.connect, [
 ["x", "positionX"],
 ["y", "positionY"],
 ["z", "positionZ"],
@@ -16,12 +18,9 @@ const Panner = audioProcessor.create([
 "orientationX", "orientationY", "orientationZ",
 "panningModel", "distanceModel", "maxDistance", "refDistance", "rolloffFactor",
 ], {
-id: `panner${++instanceCount}`,
-node: null,
-creator: "createPanner",
 
 
-render: ({ bypass, mix, label,  defaults,
+render: ({ bypass, mix, label,
 x,y,z,
 orientationX, orientationY, orientationZ,
 distanceModel, maxDistance, refDistance, rolloffFactor,
@@ -40,8 +39,8 @@ ${ui.number("orientationX", "orientationX", orientationX, defaults)}
 ${ui.number("orientationY", "orientationY", orientationY, defaults)}
 ${ui.number("orientationZ", "orientationZ", orientationZ, defaults)}
 
-${ui.number("panningModel", "panningModel", panningModel, defaults)}
-${ui.number("distanceModel", "distanceModel", distanceModel, defaults)}
+${ui.text("panningModel", "panningModel", panningModel)}
+${ui.text("distanceModel", "distanceModel", distanceModel)}
 ${ui.number("maxDistance", "maxDistance", maxDistance, defaults)}
 ${ui.number("refDistance", "refDistance", refDistance, defaults)}
 ${ui.number("rolloffFactor", "rolloffFactor", rolloffFactor, defaults)}
@@ -54,4 +53,3 @@ ${ui.number("outerGain", "outerGain", outerGain, defaults)}
 } // render
 });
 
-define("audio-panner", Panner);

@@ -3,16 +3,21 @@
 <head>
 <meta charset="utf-8">
 <title>panner test</title>
-<script src="load.js"></script>
+<script src="context.js" type="module"></script>
+<script src="series.js" type="module"></script>
+<script src="player.js" type="module"></script>
+<script src="destination.js" type="module"></script>
+<script src="gain.js" type="module"></script>
+<script src="panner.js" type="module"></script>
 </head>
 <body>
 <h1>Test</h1>
 
-<audio-context label="gain test">
+<audio-context label="Panner Test">
 <audio-series>
 <audio-player src="jam-002.mp3"></audio-player>
 
-<audio-panner label="panner"></audio-panner>
+<audio-panner label="panner" panningModel="equalpower"></audio-panner>
 
 <audio-destination></audio-destination>
 </audio-series>

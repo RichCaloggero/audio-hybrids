@@ -14,14 +14,6 @@ const Gain = Object.assign(element.commonProperties(), element.createDescriptors
 id: `gain${++instanceCount}`,
 
 
-
-/*gain: {
-get: (host, value) => host.node.gain.value,
-set: (host, value) => host.node.gain.value = Number(value),
-connect: (host, key) => host[key] = Number(host.getAttribute(key)) || 1,
-},
-*/
-
 render: ({ mix, bypass, label, gain }) => {
 console.debug(`${label}: rendering...`);
 return html`
