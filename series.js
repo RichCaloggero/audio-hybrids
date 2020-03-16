@@ -3,7 +3,6 @@ import * as audio from "./audio.js";
 import * as element from "./element.js";
 import * as ui from "./ui.js";
 
-let instanceCount = 0;
 
 const defaults = Object.assign(element.commonDefaults(), {
 gain: {default: 0, min: -0.98, max: 0.98, step: 0.02},
@@ -11,8 +10,7 @@ delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
 }); // sefaults
 
 
-const Series = Object.assign(element.commonProperties(), {
-id: `series${++instanceCount}`,
+const audioSeries = element.create("series", connect, element.connect, {
 _delay: null,
 _gain: null,
 
@@ -20,13 +18,13 @@ _gain: null,
 delay: {
 get: (host, value) => host._delay && host._delay.delayTime.value,
 set: (host, value) => {if (host._delay) host._delay.delayTime.value = Number(value)},
-connect: connect,
+connect: element.connect,
 }, // delay
 
 gain: {
 get: (host, value) => host._gain && host._gain.gain.value,
 set: (host, value) => {if (host._gain) host._gain.gain.value = Number(value)},
-connect: connect
+connect: element.connect
 }, // gain
 
 feedback: false,
@@ -48,10 +46,9 @@ ${feedback && ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.m
 } // render
 });
 
-define("audio-series", Series);
 
 function connect (host, key) {
-if (!host._initialized) {
+if (!element.isInitialized(host)) {
 audio.initialize(host);
 
 host._delay = audio.context.createDelay();
@@ -76,7 +73,7 @@ if (last.output) last.output.connect(host.wet);
 
 }); // waitForChildren
 
-host._initialized = true;
+element.initializeHost(host);
 } // if
 
 host.getAttribute(key) || defaults[key]?.default || 1;
