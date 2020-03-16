@@ -1,13 +1,11 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
+import * as context from "./context.js";
 import * as ui from "./ui.js";
 
 
-const Player = {
-id: "player",
-
-_connected: property(true, initialize),
+const audioPlayer = element.create("player", {}, connect, element.connect, {
 
 src: {
 get: (host, value) => host.audioElement.src,
@@ -18,7 +16,7 @@ host.audioElement.src = value;
 context.statusMessage(e);
 } // try
 }, // set
-connect: (host, key) => host[key] = host[key] = host.getAttribute(key)
+connect: connect
 },  // src property
 
 play: {
@@ -42,16 +40,20 @@ ${ui.boolean("play", "play", play)}
 </fieldset>
 `;
 } // render
-};
+});
 
-define("audio-player", Player);
 
-function initialize (host) {
-audio.initialize(host);
+function connect (host, key) {
+if (!element.isInitialized(host)) {
 host.input = null;
 host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
+element.initializeHost(host);
 element.signalReady(host);
-} // initialize
+
+} else {
+host[key] = host.getAttribute(key) || "";
+} // if
+} // connect

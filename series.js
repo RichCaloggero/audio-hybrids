@@ -4,13 +4,13 @@ import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 
-const defaults = Object.assign(element.commonDefaults(), {
+const defaults = {
 gain: {default: 0, min: -0.98, max: 0.98, step: 0.02},
 delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
-}); // sefaults
+}; // sefaults
 
 
-const audioSeries = element.create("series", connect, element.connect, {
+const audioSeries = element.create("series", defaults, connect, element.connect, {
 _delay: null,
 _gain: null,
 
@@ -49,15 +49,12 @@ ${feedback && ui.number("gain", "gain", gain, defaults.gain.min, defaults.gain.m
 
 function connect (host, key) {
 if (!element.isInitialized(host)) {
-audio.initialize(host);
-
 host._delay = audio.context.createDelay();
 host._gain = audio.context.createGain();
 host.wet.connect(host._delay).connect(host._gain).connect(host.input);
 host._gain.gain.value = 0;
 host._delay.delayTime.value = 0;
 
-console.log(`${host.id}: initializing...`);
 element.waitForChildren(host, children => {
 const first = children[0];
 const last = children[children.length-1];
@@ -71,11 +68,15 @@ if (index < children.length-1) child.output.connect(children[index+1].input);
 if (first.input) host.input.connect(first.input);
 if (last.output) last.output.connect(host.wet);
 
+console.log(`${host._id}: ${children.length} children connected in series`);
 }); // waitForChildren
-
 element.initializeHost(host);
-} // if
 
-host.getAttribute(key) || defaults[key]?.default || 1;
+} else {
+// initialized, so set defaults for key
+const value = Number(host.getAttribute(key) || defaults[key]?.default || 1);
+host[key] = value;
+console.debug(`${host._id}(${key}) connected and defaulted to ${value}`);
+} // if
 } // connect
 

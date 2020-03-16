@@ -4,11 +4,7 @@ import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 
-const Destination = {
-id: "destination",
-
-_connected: property(true, initialize),
-
+const audioDestination = element.create("destination", {}, initialize, element.connect, {
 render: ({ label }) => {
 console.debug(`${label}: rendering...`);
 return html`
@@ -18,14 +14,16 @@ return html`
 </fieldset>
 `;
 } // render
-};
+});
 
-define("audio-destination", Destination);
 
 function initialize (host) {
-audio.initialize(host);
+console.log("destination: initialize called...");
+if (!element.isInitialized(host)) {
 host.node = audio.context.destination;
 host.input.connect(host.node);
 host.output = null;
+element.initializeHost(host);
 element.signalReady(host);
+} // if
 } // initialize

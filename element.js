@@ -12,6 +12,7 @@ const _id = `${name}${++instanceCount[name]}`;
 if (registry[_id]) {
 throw new Error(`create: duplicate id generated: ${_id}; aborting`);
 } // if
+console.log(`creating ${_id}...`);
 
 
 const descriptors = Object.assign(
@@ -71,7 +72,7 @@ aliases[p[0]] = p[1];
 export function connect (host, key) {
 const creator = getHostInfo(host).creator;
 if (!isInitialized(host)) {
-console.debug (`${host._id}: initializing...`);
+console.log(`${host._id}: initializing...`);
 audio.initialize(host);
 
 if (creator instanceof Function) {
@@ -80,16 +81,18 @@ creator(host);
 }else if (typeof(creator) === "string" && creator in audio.context) {
 host.node = audio.context[creator].call(audio.context);
 host.input.connect(host.node).connect(host.wet);
+initializeHost(host);
+signalReady(host);
 
 } else {
 throw new Error(`bad creator; aborting`);
 } // if
 
-signalReady(host);
-initializeHost(host);
-} // if
+} else {
+// we're initialized, so set defaults for key
 
 if (creator instanceof Function) {
+// creator will set initialized flag and set defaults
 creator(host, key);
 return;
 } // if
@@ -100,8 +103,9 @@ console.debug(`${host._id}(${key}: connecting`);
 let value = host.getAttribute(key)
 || _defaults[key]?.default;
 value = Number(value)? Number(value) : value;
-console.debug(`${host._id}(${key}): defaulted to ${value}`);
 host[key] = value;
+console.debug(`${host._id}(${key}): defaulted to ${value}`);
+} // if
 } // connect
 
 
@@ -124,13 +128,16 @@ return registry[host._id]?.initialized;
 
 export function initializeHost (host) {
 registry[host._id].initialized = true;
+console.log (`${host._id}: initialization complete`);
 } // initializeHost
 
 
 export function commonProperties (_id) {
 return {
-_id: {get: () => _id},
+_id: () => _id,
 label: "",
+
+_connected: property(true, connect),
 
 bypass: {
 get: (host, value) => value,
@@ -159,41 +166,46 @@ const defaults = Object.assign({}, _defaults, {default: host.getAttribute(key)})
 
 
 export function waitForChildren (element, callback) {
-let children = Array.from(element.children);
+let children = Array.from(element.children)
+.filter(child => !child._isReady);
 
-element.addEventListener("elementReady", handleChildReady);
-//statusMessage (`${element.id}: waiting for ${children.length} children`);
-console.log(`${element.id}: waiting for ${children.length} children`);
+if (children.length === 0) runCallback(element, callback);
+else element.addEventListener("elementReady", handleChildReady);
+console.log(`${element._id}: waiting for ${children.length} children`);
 
 function handleChildReady (e) {
 if (!children.includes(e.target)) return;
 
 // remove this child and we're done if no more children left to process
 children = children.filter(x => x !== e.target);
-console.log(`${element.id}: child ${e.target.id} is ready; ${children.length} remaining`);
+console.log(`${element._id}: child ${e.target._id} is ready; ${children.length} remaining`);
 if (children.length > 0) return;
 
 // no more children left, so remove this handler and signal ready on this element
 element.removeEventListener("elementReady", handleChildReady);
-//statusMessage(`${element.id}: all children ready`);
-console.log("- all children ready");
+
+runCallback(element, callback);
+} // handleChildReady
+
+function runCallback (element, callback) {
+console.log(`${element._id}: all children ready`);
 
 try {
 callback.call(element, Array.from(element.children));
-console.log("- callback returned");
+console.debug(`${element._id}: callback returned`);
 signalReady(element);
 } catch (e) {
-alert(`abort: ${e}`);
 console.log(`abort: ${e}\n${e.stack}\n`);
 } // catch
-} // handleChildReady
+} // runCallback
+
 } // waitForChildren
 
 
 export function signalReady (element) {
-//statusMessage(`${element.module.name}: sent ready signal`, "append");
 element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
-console.log (`${element.id} signaling ready`);
+element._isReady = true;
+console.log (`${element._id} signaling ready`);
 } // signalReady
 
 function getPropertyInfo (node, _alias = []) {

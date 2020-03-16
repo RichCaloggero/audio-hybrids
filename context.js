@@ -2,12 +2,9 @@ import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
 
-const Context = {
-id: "context",
+const audioContext = element.create("context", {}, initialize, element.connect, {
 message: "",
-label: "",
 
-_connected: property(true, connect),
 
 render: ({ label, message }) => {
 console.debug(`${label}: rendering...`);
@@ -22,21 +19,21 @@ ${message}
 <slot></slot>
 `;
 } // render
-}; // Context
+}); // Context
 
 
-define("audio-context", Context);
 
 export function statusMessage (text) {
-Context.message = text;
+audioContext.message = text;
 } // statusMessage
 
-function connect (host, key) {
-if (!host._initialized) {
+function initialize(host, key) {
+if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
-console.debug(`context is complete`);
-element.signalReady(host);
+console.log(`${host._id} is complete`);
+element.initializeHost(host);
 });
-host._initialized = true;
+
+element.initializeHost(host);
 } // if
-} // connect
+} // initialize
