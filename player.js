@@ -4,8 +4,9 @@ import * as element from "./element.js";
 import * as context from "./context.js";
 import * as ui from "./ui.js";
 
+const defaults = {};
 
-const audioPlayer = element.create("player", {}, connect, element.connect, {
+const Player = element.create("player", defaults, connect, element.connect, {
 
 src: {
 get: (host, value) => host.audioElement.src,
@@ -42,6 +43,8 @@ ${ui.boolean("play", "play", play)}
 } // render
 });
 
+define ("audio-player", Player);
+
 
 function connect (host, key) {
 if (!element.isInitialized(host)) {
@@ -50,7 +53,6 @@ host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
-element.initializeHost(host);
 element.signalReady(host);
 
 } else {

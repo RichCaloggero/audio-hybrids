@@ -4,19 +4,12 @@ import * as audioProcessor from "./audioProcessor.js";
 
 const prefix = "audio";
 const registry = Object.create(null);
-const instanceCount = Object.create(null);
 
 export function create (name, defaults, creator, _connect, ...definitions) {
-if (!instanceCount[name]) instanceCount[name] = 0;
-const _id = `${name}${++instanceCount[name]}`;
-if (registry[_id]) {
-throw new Error(`create: duplicate id generated: ${_id}; aborting`);
-} // if
-console.log(`creating ${_id}...`);
-
+console.debug(`create(${name}):`);
 
 const descriptors = Object.assign(
-commonProperties(_id),
+commonProperties(name),
 ...definitions.map(definition => definition instanceof Array?
 createDescriptors(definition)
 : definition
@@ -29,14 +22,11 @@ Object.keys(info).forEach(key => _defaults[key] = Object.assign({}, info[key], _
 } // if
 Object.assign(defaults, _defaults);
 
-registry[_id] = {
-initialized: false,
-descriptors: descriptors,
-creator: creator,
-connect: connect,
-defaults:  defaults
+registry[name] = { descriptors, creator, defaults,
+idGen: idGen(name)
 };
-return define (`${prefix}-${name}`, descriptors);
+
+return descriptors;
 } // create
 
 export function createDescriptors (props, _connect = connect) {
@@ -71,12 +61,15 @@ aliases[p[0]] = p[1];
 
 export function connect (host, key) {
 const creator = getHostInfo(host).creator;
+
 if (!isInitialized(host)) {
+host._id = getHostInfo(host).idGen.next().value;
 console.log(`${host._id}: initializing...`);
 audio.initialize(host);
 
 if (creator instanceof Function) {
 creator(host);
+initializeHost(host);
 
 }else if (typeof(creator) === "string" && creator in audio.context) {
 host.node = audio.context[creator].call(audio.context);
@@ -92,63 +85,67 @@ throw new Error(`bad creator; aborting`);
 // we're initialized, so set defaults for key
 
 if (creator instanceof Function) {
-// creator will set initialized flag and set defaults
-creator(host, key);
+//creator(host, key);
 return;
 } // if
 
 const _defaults = getHostInfo(host).defaults;
-console.debug(`${host._id}(${key}: connecting`);
+//console.debug(`${host._id}(${key}: connecting`);
 
 let value = host.getAttribute(key)
 || _defaults[key]?.default;
 value = Number(value)? Number(value) : value;
 host[key] = value;
-console.debug(`${host._id}(${key}): defaulted to ${value}`);
+//console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // if
 } // connect
 
 
 function getHostInfo (host) {
-const _id = host._id;
-if (!_id) {
+const name = host._name;
+if (!name) {
 console.error(`bad element: aborting;\n`, host);
 throw new Error(`bad element`);
 } // if
 
-if (registry[_id]) return registry[_id];
+if (registry[name]) return registry[name];
 
-console.error(`no registry info for ${host._id}; aborting`);
+console.error(`no registry info for ${name}; aborting`);
 throw new Error(`no registry info`);
 } // getHostInfo
 
 export function isInitialized (host) {
-return registry[host._id]?.initialized;
+return host._initialized;
 } // isInitialized
 
 export function initializeHost (host) {
-registry[host._id].initialized = true;
+host._initialized = true;
 console.log (`${host._id}: initialization complete`);
 } // initializeHost
 
 
-export function commonProperties (_id) {
-return {
-_id: () => _id,
-label: "",
+export function commonProperties (name) {
+if (registry[name]) {
+throw new Error(`create: duplicate descriptors generated: ${_id}; aborting`);
+} // if
 
+return {
+_name: () => name,
+label: {
+observe: (host, value) => host.shadowRoot.querySelector("fieldset").hidden = !value
+},
 _connected: property(true, connect),
 
 bypass: {
 get: (host, value) => value,
 	set: (host, value) => host.__bypass(value),
-connect: (host, key) => false
+connect: connect
 },  // bypass
 
 mix: {
 get: (host, value) => host._mix,
 	set: (host, value) => host.__mix(value),
-connect: (host, key) => getDefault(host, key),
+connect: connect
 }, // mix
 }; // properties
 }// commonProperties
@@ -159,10 +156,6 @@ mix: {default: 1, min: -1, max: 1, step: 0.1, type: "range"},
 };
 } // commonDefaults
 
-export function getDefault (host, key, _defaults) {
-const defaults = Object.assign({}, _defaults, {default: host.getAttribute(key)});
-
-} // getDefault
 
 
 export function waitForChildren (element, callback) {
@@ -188,11 +181,10 @@ runCallback(element, callback);
 } // handleChildReady
 
 function runCallback (element, callback) {
-console.log(`${element._id}: all children ready`);
+console.log(`${element._id}: all children ready; executing callback`);
 
 try {
 callback.call(element, Array.from(element.children));
-console.debug(`${element._id}: callback returned`);
 signalReady(element);
 } catch (e) {
 console.log(`abort: ${e}\n${e.stack}\n`);
@@ -244,3 +236,14 @@ export function alias(host, key) {
 return (host.aliases && host.aliases[key])?
 host.aliases[key] :  key;
 } // alias
+
+function* idGen (name) {
+const map = new Map();
+while (true) {
+if (!map.has(name)) map.set(name, 0);
+const count = map.get(name) + 1;
+map.set(name, count);
+yield `${name}${count}`;
+} // while
+} // idGen
+

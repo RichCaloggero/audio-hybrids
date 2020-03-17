@@ -3,14 +3,20 @@
 <head>
 <meta charset="utf-8">
 <title>filter test</title>
-<script src="load.js"></script>
+<script src="context.js" type="module"></script>
+<script src="player.js" type="module"></script>
+<script src="destination.js" type="module"></script>
+<script src="filter.js" type="module"></script>
+<script src="delay.js" type="module"></script>
+<script src="gain.js" type="module"></script>
+<script src="series.js" type="module"></script>
 </head>
 <body>
 <audio-context label="audio components test">
 <audio-series>
 <audio-player src="t.mp3"></audio-player>
 
-<audio-series label="feedback delay" feedback>
+<audio-series label="feedback delay" feedback delay=".5" gain=".5">
 <audio-filter label="filter" type="highpass" frequency="555" q="3"></audio-filter>
 </audio-series>
 

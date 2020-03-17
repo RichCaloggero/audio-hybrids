@@ -1,27 +1,24 @@
-import {define, html} from "./hybrids/index.js";
-import * as audio from "./audio.js";
-import * as audioProcessor from "./audioProcessor.js";
+import {define, html, property} from "./hybrids/index.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
 
-let instanceCount = 0;
 
-const Delay = audioProcessor.create([["delay", "delayTime"]], {
-id: `delay${++instanceCount}`,
-creator: "createDelay",
-defaults: {},
+const defaults = {
+delay: {default: 0.5, min: 0, max: 1, step: 0.001}
+};
 
+const Delay = element.create("delay", defaults, "createDelay", element.connect, [["delay", "delayTime"]], {
 
-render: ({ mix, bypass, label, delay, defaults }) => {
-	console.debug("rendering delay...");
-	return html`
+render: ({ mix, bypass, label, delay }) => {
+console.debug(`${label}: rendering...`);
+return html`
 <fieldset class="delay">
 <legend><h2>${label}</h2></legend>
-${ui.commonControls(bypass, mix)}
-${ui.number("delay", "delay", delay, defaults.delay.min, defaults.delay.max, 0.00001)}
+${ui.commonControls(bypass, mix, defaults)}
+${ui.number("delay", "delay", delay, defaults)}
 </fieldset>
 `; // template
 } // render
 });
 
-define("audio-delay", Delay);
-
+define ("audio-delay", Delay);

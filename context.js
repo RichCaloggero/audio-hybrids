@@ -2,7 +2,9 @@ import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
 
-const audioContext = element.create("context", {}, initialize, element.connect, {
+const defaults = {};
+
+const Context = element.create("context", defaults, initialize, element.connect, {
 message: "",
 
 
@@ -20,6 +22,8 @@ ${message}
 `;
 } // render
 }); // Context
+
+define ("audio-context", Context);
 
 
 
