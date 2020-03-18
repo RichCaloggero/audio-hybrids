@@ -26,9 +26,8 @@ ${message}
 define ("audio-context", Context);
 
 
-
 export function statusMessage (text) {
-audioContext.message = text;
+document.querySelector("audio-context").message = text;
 } // statusMessage
 
 function initialize(host, key) {

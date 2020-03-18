@@ -1,66 +1,44 @@
-import {define, html, property} from "./hybrids/index.js";
+ import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
 import * as ui from "./ui.js";
 
-let instanceCount = 0;
 
-const Parallel = {
-id: `parallel${++instanceCount}`,
-node: null,
-
-defaults : () => ({
-bypass: {default: false},
-mix: {default: 1, min: -1, max: 1, step: 0.1},
-}), // sefaults
-
-_connected: property(false, connect),
-
-label: {
-connect: (host, key) => host[key] = host.getAttribute(key),
-observe: (host, value) => host.shadowRoot.querySelector("fieldset").hidden = value? false : true,
-}, // label
-
-mix: {
-connect: (host, key) => host[key] = element.getDefault(host, key),
-}, // mix
+const defaults = {}; // sefaults
 
 
-render: ({ label, mix, defaults }) => html`
-<fieldset class="parallel">
+const Parallel = element.create("series", defaults, initialize, element.connect, {
+
+
+render: ({ label, mix, bypass }) => {
+return html`
+<fieldset class="series">
 <legend><h2>${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 </fieldset>
 <slot></slot>
-` // render
-};
+`;
+} // render
+});
 
-define("audio-parallel", Parallel);
+define ("audio-parallel", Parallel);
 
-function connect (host, key) {
-if (!host._initialized) {
-
+function initialize (host, key) {
+if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
-const first = children[0];
-const last = children[children.length-1];
 
-audio.initialize(host);
-const mixer = audio.context.createGain();
+if (children.length < 2) {
+console.error(`${host._id}: must have at least two children; aborting`);
+throw new Error(`must have at least two children`);
+} // if
 
-if (first !== last) {
 children.forEach((child, index) => {
-if (index < children.length-1) child.output.connect(children[index+1].input);
+child.output.connect(host.wet.input);
 }); // forEach
-} // if
 
-if (first.input) host.input.connect(first.input);
-if (last.output) last.output.connect(host.mixer).connect(host.wet);
-host.mixer.gain.value = 1 / children.length;
-
-
+host.wet.gain.value = 1 / children.length;
+console.log(`${host._id}: ${children.length} children connected in parallel`);
 }); // waitForChildren
-
-host._initialized = true;
 } // if
-} // connect
+} // initialize
 
