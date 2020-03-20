@@ -14,10 +14,10 @@
 <body>
 <audio-context label="audio components test">
 <audio-series>
-<audio-player src="t.mp3"></audio-player>
+<audio-player label="player" src="t.mp3"></audio-player>
 
 <audio-series label="feedback delay" feedback delay=".5" gain=".5">
-<audio-filter label="filter" type="highpass" frequency="555" q="3"></audio-filter>
+<audio-filter hide-on-bypass label="filter" type="highpass" frequency="555" q="3"></audio-filter>
 </audio-series>
 
 <audio-gain label="volume"></audio-gain>

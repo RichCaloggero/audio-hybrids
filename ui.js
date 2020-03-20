@@ -62,6 +62,7 @@ export function commonControls (bypass, mix, defaults) {
 return html`
 ${boolean("bypass", "bypass", false)}
 ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step, defaults.mix.type)}
+<br>
 `; // return
 } // commonControls
 

@@ -1,6 +1,6 @@
 import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as audioProcessor from "./audioProcessor.js";
+import * as context from "./context.js";
 
 const prefix = "audio";
 const registry = Object.create(null);
@@ -131,16 +131,27 @@ throw new Error(`create: duplicate descriptors generated: ${_id}; aborting`);
 
 return {
 _name: () => name,
-label: {
-observe: (host, value) => host.shadowRoot.querySelector("fieldset").hidden = !value
-},
 _connected: property(true, connect),
 
+label: {
+connect: (host, key) => host[key] = host.getAttribute(key),
+observe: (host, value) => {
+if (host.shadowRoot) host.shadowRoot.querySelector("fieldset").hidden = !value
+}
+},
+
 bypass: {
-get: (host, value) => value,
-	set: (host, value) => host.__bypass(value),
-connect: connect
+connect: (host, key) => host[key] = host.hasAttribute(key) || false,
+observe: (host, value) => {
+host.__bypass(value);
+hideOnBypass(host);
+} // observe
 },  // bypass
+
+
+silentBypass: {
+}, // silentBypass
+
 
 mix: {
 get: (host, value) => host._mix,
@@ -149,6 +160,13 @@ connect: connect
 }, // mix
 }; // properties
 }// commonProperties
+
+export function hideOnBypass (host) {
+if (host.shadowRoot) {
+Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
+.slice(2).forEach(x => x.hidden =  context.root?.hideOnBypass && host.bypass);
+} // if
+} // hideOnBypass
 
 export function commonDefaults () {
 return {
