@@ -10,7 +10,7 @@ const Context = element.create("context", defaults, initialize, element.connect,
 message: "",
 
 hideOnBypass: {
-connect: (host, key) => host[key] = host.hasAttribute("hide-on-bypass") || false,
+connect: (host, key) => host[key] = true, // connect
 observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
 }, // hideOnBypass
 
@@ -19,11 +19,12 @@ console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="context">
 <legend><h1>${label}</h1></legend>
-${ui.boolean("hide on bypass", "hideOnBypass", hideOnBypass)}
 
 <div aria-live="polite" id="status">
 ${message}
 </div>
+
+${ui.boolean("hide on bypass", "hideOnBypass", true)}
 </fieldset>
 <slot></slot>
 `;
@@ -46,6 +47,5 @@ root = host;
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });
 
-element.initializeHost(host);
 } // if
 } // initialize

@@ -29,7 +29,9 @@ return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" o
 } // text
 
 export function boolean (label, name, defaultValue) {
-return html`<label>${label}: <input type="checkbox" defaultValue="${defaultValue? 'checked' : ''}" onclick="${(host, event) => host[name] = event.target.checked}"></label>`;
+return defaultValue?
+html`<label>${label}: <input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}"></label>`
+: html`<label>${label}: <input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}"></label>`;
 } // boolean
 
 export function list(label, name, defaultValue, options) {

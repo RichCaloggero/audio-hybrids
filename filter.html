@@ -25,6 +25,9 @@
 </audio-series>
 </audio-context>
 
+<script>
+document.querySelector("audio-context").addEventListener("complete", e => e.target.message = "Ready.");
+</script>
 
 </body>
 </html>
