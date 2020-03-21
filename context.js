@@ -42,10 +42,28 @@ function initialize(host, key) {
 if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
 console.log(`${host._id} is complete`);
-element.initializeHost(host);
 root = host;
+setTimeout(() => {
+root.querySelectorAll("*").forEach(host => host._depth = depth(host));
+}, 0);
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });
 
 } // if
 } // initialize
+
+export function depth (start, _depth = 2) {
+let e = start;
+console.debug(`depth: ${e._id} begin at  ${_depth}`);
+
+while (e && e !== root) {
+if (e.parentElement.container && e.parentElement.label) _depth += 1;
+console.debug(`depth: ${e._id}, ${e.parentElement.container}, ${e.parentElement.label} = ${_depth}`);
+e = e.parentElement;
+} // while
+
+console.debug(`${start._id}: depth = ${_depth}\ndone.\n`);
+return _depth;
+
+function isContainer (e) {return e.shadowRoot?.querySelector("slot");}
+} // depth

@@ -13,10 +13,10 @@ type: {default: "highpass"}
 const Filter = element.create("filter", defaults, "createBiquadFilter", element.connect,
 ["type", "frequency", ["q", "Q"], "gain", "detune"], {
 
-render: ({ bypass, mix, label, type, frequency, q, gain, detune }) => {
+render: ({ bypass, mix, label, _depth, type, frequency, q, gain, detune }) => {
 	return html`
 <fieldset class="filter">
-<legend><h2>${label}</h2></legend>
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 ${ui.list("type", "type", type, [
 ["low pass", "lowpass"],

@@ -21,14 +21,14 @@ const audioPanner = element.create("panner", defaults, "createPanner", element.c
 
 
 render: ({ bypass, mix, label,
-x,y,z,
+_depth, x,y,z,
 orientationX, orientationY, orientationZ,
 distanceModel, maxDistance, refDistance, rolloffFactor,
 panningModel, innerAngle, outerAngle, outerGain,
 }) => {
 	return html`
 <fieldset class="panner">
-<legend><h2>${label}</h2></legend>
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 
 ${ui.number("x", "x", x, defaults)}

@@ -9,11 +9,11 @@ delay: {default: 0.5, min: 0, max: 1, step: 0.001}
 
 const Delay = element.create("delay", defaults, "createDelay", element.connect, [["delay", "delayTime"]], {
 
-render: ({ mix, bypass, label, delay }) => {
+render: ({ mix, bypass, label, depth, delay }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="delay">
-<legend><h2>${label}</h2></legend>
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 ${ui.number("delay", "delay", delay, defaults)}
 </fieldset>

@@ -31,10 +31,10 @@ feedback: false,
 feedforward: false,
 
 
-render: ({ label, mix, bypass, feedback, feedforward, delay, gain }) => {
+render: ({ mix, bypass, label, _depth, feedback, feedforward, delay, gain }) => {
 return html`
 <fieldset class="series">
-<legend><h2>${label}</h2></legend>
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 <div id="feedback-panel">
 ${feedback && ui.number("delay", "delay", delay, defaults)}
@@ -50,6 +50,7 @@ define ("audio-series", Series);
 
 function initialize (host, key) {
 if (!element.isInitialized(host)) {
+host.container = true;
 host._delay = audio.context.createDelay();
 host._gain = audio.context.createGain();
 host.wet.connect(host._delay).connect(host._gain).connect(host.input);

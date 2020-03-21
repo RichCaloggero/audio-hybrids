@@ -31,11 +31,11 @@ host.audioElement.pause();
 } // set
 }, // play property
 
-render: ({ label, src, play }) => {
+render: ({ label, _depth, src, play }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="player">
-<legend><h2>${label}</h2></legend>
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.text("src", "src", src)}
 ${ui.boolean("play", "play", play)}
 </fieldset>

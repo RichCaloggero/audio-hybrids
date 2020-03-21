@@ -3,6 +3,9 @@ import * as context from "./context.js";
 
 const savedValues = new Map();
 
+export function container (...args) {
+} // container
+
 export function number (label, name, defaultValue, ...rest) {
 //console.debug(`ui.number: ${name} default is ${defaultValue}`);
 let min, max, step, type;

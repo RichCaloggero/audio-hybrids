@@ -6,11 +6,11 @@ import * as ui from "./ui.js";
 const defaults = {};
 
 const Destination = element.create("destination", defaults, initialize, element.connect, {
-render: ({ label }) => {
+render: ({ label, _depth }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="destination">
-<legend><h2>${label}</h2></legend>
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 <p>Audio Destination.</p>
 </fieldset>
 `;

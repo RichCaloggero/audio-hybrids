@@ -134,11 +134,13 @@ _name: () => name,
 _connected: property(true, connect),
 
 label: {
-connect: (host, key) => host[key] = host.getAttribute(key),
+connect: (host, key) => host[key] = host.getAttribute(key) || "",
 observe: (host, value) => {
 if (host.shadowRoot) host.shadowRoot.querySelector("fieldset").hidden = !value
 }
 },
+
+_depth: 0,
 
 bypass: {
 connect: (host, key) => host[key] = host.hasAttribute(key) || false,

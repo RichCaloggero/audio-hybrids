@@ -10,10 +10,10 @@ const defaults = {}; // sefaults
 const Parallel = element.create("series", defaults, initialize, element.connect, {
 
 
-render: ({ label, mix, bypass }) => {
+render: ({ label, mix, bypass, _depth }) => {
 return html`
-<fieldset class="series">
-<legend><h2>${label}</h2></legend>
+<fieldset class="parallel">
+<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 </fieldset>
 <slot></slot>
