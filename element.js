@@ -197,14 +197,19 @@ if (children.length > 0) return;
 // no more children left, so remove this handler and signal ready on this element
 element.removeEventListener("elementReady", handleChildReady);
 
+setTimeout(() => {
 runCallback(element, callback);
+}, 0);
 } // handleChildReady
 
 function runCallback (element, callback) {
 console.log(`${element._id}: all children ready; executing callback`);
 
 try {
+//callback(Array.from(element.children));
+//setTimeout(() => {
 callback.call(element, Array.from(element.children));
+//}, 0);
 signalReady(element);
 } catch (e) {
 console.log(`abort: ${e}\n${e.stack}\n`);

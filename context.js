@@ -43,9 +43,10 @@ if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
 console.log(`${host._id} is complete`);
 root = host;
-setTimeout(() => {
+//debugger;
+//setTimeout(() => {
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
-}, 0);
+//}, 0);
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });
 
