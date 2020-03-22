@@ -16,23 +16,36 @@ observe: (host, value) => value && setTimeout(() => host.shadowRoot.querySelecto
 }, // prompt
 
 hideOnBypass: {
-connect: (host, key) => host[key] = true, // connect
+connect: (host, key) => host[key] = true,
 observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
 }, // hideOnBypass
 
-render: ({ label, message, prompt, response, hideOnBypass }) => {
+enableAutomation: {
+connect: (host, key) => host[key] = false,
+observe: (host, value) => value? ui.enableAutomation() : ui.disableAutomation()
+}, // hideOnBypass
+
+automationInterval: {
+connect: (host, key) => host[key] = Number(host.getAttribute("automation-interval")) || ui.automationInterval,
+observe: (host, value) => ui.setAutomationInterval(Number(value))
+}, // automationInterval
+
+
+render: ({ label, message, prompt, response, hideOnBypass, enableAutomation, automationInterval }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="context">
 <legend><h1>${label}</h1></legend>
 ${ui.boolean("hide on bypass", "hideOnBypass", true)}
+${ui.boolean("enable automation", "enableAutomation", enableAutomation)}
+${ui.number("automation interval", "automationInterval", automationInterval, 0.01, 0.3, 0.01)}
 
 <div aria-live="polite" aria-atomic="true" id="status">
 ${message}
 </div>
 
-<div class="prompt" role="region" aria-label="prompt">
-${prompt && html`<label>${prompt}:
+<div class="prompt" role="region" aria-label="">
+${prompt && html`<label>automation for ${prompt}:
 <input type="text" id="prompt" oninput="${html.set("response")}" onkeyup="${(host, event) => {
 if (event.key === "Enter" || event.key === "Escape") {
 if (event.key === "Escape") host.response = "";

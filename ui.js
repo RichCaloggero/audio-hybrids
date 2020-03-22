@@ -1,8 +1,10 @@
 import {html} from "./hybrids/index.js";
 import * as context from "./context.js";
+import * as audio from "./audio.js";
 
 const savedValues = new Map();
 let automator = null;
+export let automationInterval = 0.03; // seconds
 const automationQueue = new Map();
 
 
@@ -23,7 +25,7 @@ console.error(e);
 
 return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}" onkeyup="${handleSpecialKeys}"
 min="${min}" max="${max}" step="${step}"
-data-name=${name}">
+data-name="${name}">
 </label>`;
 
 
@@ -94,7 +96,7 @@ case "Enter": {
 //if (event.ctrlKey && event.altKey && event.shiftKey) //defineKey(getKey(input), input);
 //else
 if(event.ctrlKey) toggleAutomation(input);
-else defineAutomation(input, input.getRootNode.host, input.getAttribute("data-name"));
+else defineAutomation(input, input.getRootNode().host, input.getAttribute("data-name"));
 } // case Enter
 break
 
@@ -143,16 +145,20 @@ context.statusMessage(`No saved value; press enter to save.`);
 } // if
 } // swapValues
 
-export function startAutomation () {
+export function enableAutomation () {
 automator = setInterval(() => {
 automationQueue.forEach(e => automate(e));
 }, 1000*automationInterval); // startAutomation
 } // startAutomation
 
-export function stopAutomation () {clearInterval(automator); automator = null;}
+export function disableAutomation () {clearInterval(automator); automator = null;}
 
 function automate (e) {
-if (e.enabled) e.host[e.property] = e.function(audio.context.currentTime);
+if (e.enabled) {
+e.host[e.property] = e.function(audio.context.currentTime);
+//e.input.value = Number(e.function(audio.context.currentTime));
+//console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
+} // if
 } // automate
 
 function toggleAutomation (input) {
@@ -160,18 +166,24 @@ if (automationQueue.has(input)) {
 const e = automationQueue.get(input);
 e.enabled = !e.enabled;
 automationQueue.set(input, e);
+context.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.property}`);
 } // if
 } // toggleAutomation
 
 function defineAutomation (input, host, property) {
-context.prompt("function", text => {
+console.debug(`defining automation for ${host._id}.${property}:`);
+const labelText = input.parentElement.textContent;
+context.prompt(labelText, text => {
 console.debug(`response: ${text}`);
 if (text) {
 const _function = compileFunction(text);
 
 if (_function) {
 console.debug(`response: compiled to ${_function}`);
-automationQueue.set(input, { name, text, host, property, function: _function, enabled: true });
+automationQueue.set(input, {
+input, name, text, labelText, host, property,
+function: _function, enabled: true }
+);
 
 } else {
 return false;
@@ -202,3 +214,4 @@ return null;
 } // try
 } // compileFunction
 
+export function setAutomationInterval (x) {automationInterval = x;}

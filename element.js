@@ -46,7 +46,7 @@ const key = prop;
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
 set: (host, value) => {
-console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
+//console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
 return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
 },
 connect: _connect
