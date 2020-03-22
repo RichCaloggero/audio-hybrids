@@ -8,23 +8,47 @@ const defaults = {};
 
 const Context = element.create("context", defaults, initialize, element.connect, {
 message: "",
+responseCallback: undefined,
+
+prompt: {
+connect: (host, key) => host[key] = "",
+observe: (host, value) => value && setTimeout(() => host.shadowRoot.querySelector("#prompt").focus(), 0)
+}, // prompt
 
 hideOnBypass: {
 connect: (host, key) => host[key] = true, // connect
 observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
 }, // hideOnBypass
 
-render: ({ label, message, hideOnBypass }) => {
+render: ({ label, message, prompt, response, hideOnBypass }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="context">
 <legend><h1>${label}</h1></legend>
+${ui.boolean("hide on bypass", "hideOnBypass", true)}
 
-<div aria-live="polite" id="status">
+<div aria-live="polite" aria-atomic="true" id="status">
 ${message}
 </div>
 
-${ui.boolean("hide on bypass", "hideOnBypass", true)}
+<div class="prompt" role="region" aria-label="prompt">
+${prompt && html`<label>${prompt}:
+<input type="text" id="prompt" oninput="${html.set("response")}" onkeyup="${(host, event) => {
+if (event.key === "Enter" || event.key === "Escape") {
+if (event.key === "Escape") host.response = "";
+if (host.responseCallback(host.response)){
+host.prompt = "";
+host.response = "";
+host.responseCallback = null;
+} else {
+host.response = "";
+} // if
+} // if
+}}">
+</label>
+`}
+</div>
+
 </fieldset>
 <slot></slot>
 `;
@@ -35,8 +59,17 @@ define ("audio-context", Context);
 
 
 export function statusMessage (text) {
+//document.querySelector("audio-context").message = "";
 document.querySelector("audio-context").message = text;
 } // statusMessage
+
+export function prompt (message, callback) {
+console.debug(`prompt: ${message}`);
+if (message && callback && callback instanceof Function) {
+root.responseCallback = callback;
+root.prompt = message;
+} // if
+} // prompt
 
 function initialize(host, key) {
 if (!element.isInitialized(host)) {

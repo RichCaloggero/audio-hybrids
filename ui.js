@@ -2,9 +2,10 @@ import {html} from "./hybrids/index.js";
 import * as context from "./context.js";
 
 const savedValues = new Map();
+let automator = null;
+const automationQueue = new Map();
 
-export function container (...args) {
-} // container
+
 
 export function number (label, name, defaultValue, ...rest) {
 //console.debug(`ui.number: ${name} default is ${defaultValue}`);
@@ -21,7 +22,8 @@ console.error(e);
 } // if
 
 return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}" onkeyup="${handleSpecialKeys}"
-min="${min}" max="${max}" step="${step}">
+min="${min}" max="${max}" step="${step}"
+data-name=${name}">
 </label>`;
 
 
@@ -81,19 +83,20 @@ if (input.type === "range" && handleRangeInput(key, input)) return false;
 //if (handleUserKey(e)) return false;
 
 switch (key) {
-case " ": if(event.ctrlKey) swapValues(input);
+case " ": {
+if(event.ctrlKey && event.shiftKey) swapValues(input);
+else if(event.ctrlKey) saveValue(input);
 else return true;
+} // case spaceBar
 break;
 
-case "Enter":
-if (event.ctrlKey && event.altKey && event.shiftKey) {
-//defineKey(getKey(input), input);
-} else if(event.ctrlKey) {
-saveValue(input);
-} else {
-return true;
-} // if
-break;
+case "Enter": {
+//if (event.ctrlKey && event.altKey && event.shiftKey) //defineKey(getKey(input), input);
+//else
+if(event.ctrlKey) toggleAutomation(input);
+else defineAutomation(input, input.getRootNode.host, input.getAttribute("data-name"));
+} // case Enter
+break
 
 default: return true;
 } // switch
@@ -140,32 +143,62 @@ context.statusMessage(`No saved value; press enter to save.`);
 } // if
 } // swapValues
 
+export function startAutomation () {
+automator = setInterval(() => {
+automationQueue.forEach(e => automate(e));
+}, 1000*automationInterval); // startAutomation
+} // startAutomation
 
-/*function processValues (values) {
-if (values instanceof String || typeof(values) === "string") {
-values = values.trim();
-if (values.charAt(0) !== "[" && values.includes(",") && !values.includes('"')) {
-return values.split(",")
-.map (value => value.trim());
+export function stopAutomation () {clearInterval(automator); automator = null;}
+
+function automate (e) {
+if (e.enabled) e.host[e.property] = e.function(audio.context.currentTime);
+} // automate
+
+function toggleAutomation (input) {
+if (automationQueue.has(input)) {
+const e = automationQueue.get(input);
+e.enabled = !e.enabled;
+automationQueue.set(input, e);
+} // if
+} // toggleAutomation
+
+function defineAutomation (input, host, property) {
+context.prompt("function", text => {
+console.debug(`response: ${text}`);
+if (text) {
+const _function = compileFunction(text);
+
+if (_function) {
+console.debug(`response: compiled to ${_function}`);
+automationQueue.set(input, { name, text, host, property, function: _function, enabled: true });
+
 } else {
-try {values = JSON.parse(values);
-} catch (e) {values = [];} // catch
+return false;
 } // if
 } // if
 
-if (values && (values instanceof Array)) {
-values = values.map (value => {
-if (typeof(value) !== "object") value = {value: value, text: value};
-else if (value instanceof Array) value = {
-value: value[0],
-text: value.length > 1? value[1] : value[0]
-};
+input.focus();
+return true;
+}); // prompt
+} // defineAutomation
 
-return value;
-}); // map
-} // if
 
-return values;
-} // processValues
-*/
+export function compileFunction (text, parameter = "t") {
+try {
+return new Function (parameter,
+`with (Math) {
+function  toRange (x, a,b) {return (Math.abs(a-b) * (x+1)/2) + a;}
+function s (x, l=-1.0, u=1.0) {return toRange(Math.sin(x), l,u);}
+function c (x, l=-1.0, u=1.0) {return toRange(Math.cos(x), l,u);}
+function r(a=0, b=1) {return toRange(Math.random(), a, b);}
+return ${text};
+} // Math
+`); // new Function
+
+} catch (e) {
+context.statusMessage(e);
+return null;
+} // try
+} // compileFunction
 
