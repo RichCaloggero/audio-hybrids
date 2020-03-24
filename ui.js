@@ -6,6 +6,7 @@ const savedValues = new Map();
 let automator = null;
 export let automationInterval = 0.03; // seconds
 const automationQueue = new Map();
+const automationRequests = [];
 
 
 
@@ -25,6 +26,7 @@ console.error(e);
 
 return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}" onkeyup="${handleSpecialKeys}"
 min="${min}" max="${max}" step="${step}"
+accesskey="${name[0]}"
 data-name="${name}">
 </label>`;
 
@@ -172,17 +174,21 @@ context.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.p
 
 function defineAutomation (input, host, property) {
 console.debug(`defining automation for ${host._id}.${property}:`);
-const labelText = input.parentElement.textContent;
-context.prompt(labelText, text => {
+const labelText = getLabelText(input);
+const automationData = automationQueue.has(input)?
+automationQueue.get(input)
+: {input, labelText, host, property, text: "", function: null, enabled: false};
+console.debug("automation data: ", automationData);
+
+context.prompt(labelText, automationData.text, text => {
 console.debug(`response: ${text}`);
 if (text) {
 const _function = compileFunction(text);
 
 if (_function) {
 console.debug(`response: compiled to ${_function}`);
-automationQueue.set(input, {
-input, name, text, labelText, host, property,
-function: _function, enabled: true }
+automationQueue.set(input,
+Object.assign(automationData, {text, function: _function, enabled: true })
 );
 
 } else {
@@ -195,6 +201,32 @@ return true;
 }); // prompt
 } // defineAutomation
 
+export function requestAutomation (data) {
+automationRequests.push (data);
+console.debug("requestAutomation: ", data);
+} // requestAutomation
+
+export function processAutomationRequests () {
+console.debug(`processing ${automationRequests.length} automation requests`);
+automationRequests.forEach(request => {
+console.debug("automation request: ", request);
+debugger;
+const input = findUiControl(request.host, request.property);
+
+if (input) {
+automationQueue.set (input, Object.assign({}, request, {labelText: getLabelText(input), enabled: true}));
+
+} else {
+alert(`$bad automation specified for ${request.host._id}.${request.property}; skipped`);
+} // if
+}); // forEach
+} // processAutomationRequests
+
+function findUiControl (host, property) {
+const element = host.shadowRoot.querySelector(`[data-name='${property}']`);
+console.debug(`uiControl: ${host._id}.${property}: ${element}`);
+return element;
+} // findUiControl
 
 export function compileFunction (text, parameter = "t") {
 try {
@@ -216,12 +248,30 @@ return null;
 
 export function setAutomationInterval (x) {automationInterval = x;}
 
-function parse (expression) {
-let parser =
-/(\d+)|(\w+?)\{(.+?)\}/gi;
 
-return [...expression.matchAll(parser)]
+
+export function parse (expression) {
+if (!expression) return [];
+
+let parser =
+/^(\d+)$|^(\w+)$|(\w+)\{(.+?)\}/gi;
+//console.debug("intermediate: ", [...expression.matchAll(parser)]);
+
+const result = [...expression.matchAll(parser)]
 .map(a => a.filter(x => x))
 .map(a => a.slice(1));
+//console.debug("final: ", result);
+return result;
+
+
 } // parser
 
+export function findAllUiElements () {
+return Array.from(document.querySelectorAll("audio-context *"))
+.map(x => Array.from(x.shadowRoot.querySelectorAll("input,select,button")))
+.flat(9);
+} // findAllUiElements
+
+function getLabelText (input) {
+return input.parentElement.textContent.trim();
+} // getLabelText

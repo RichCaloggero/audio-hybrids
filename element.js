@@ -1,6 +1,7 @@
 import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as context from "./context.js";
+import * as ui from "./ui.js";
 
 const prefix = "audio";
 const registry = Object.create(null);
@@ -92,8 +93,9 @@ return;
 const _defaults = getHostInfo(host).defaults;
 //console.debug(`${host._id}(${key}: connecting`);
 
-let value = host.getAttribute(key)
-|| _defaults[key]?.default;
+let value = host.hasAttribute(key)? processAttribute(host, key) : _defaults[key]?.default;
+console.debug(`connect: default value for ${host._id}.${key} = ${value}`);
+
 value = Number(value)? Number(value) : value;
 host[key] = value;
 //console.debug(`${host._id}(${key}): defaulted to ${value}`);
@@ -272,3 +274,32 @@ yield `${name}${count}`;
 } // while
 } // idGen
 
+function processAttribute (host, key) {
+//console.debug(`processAttribute: ${host._id}, ${key}`);
+const data = getData(host, key, ui.parse(host.getAttribute(key)));
+//console.debug("processAttribute: data = ", data);
+
+if (data.automate) ui.requestAutomation(data.automate);
+if (data.shortcut) processShortcut(data.shortcut);
+if (data.default) return data.default;
+return undefined;
+
+function getData (host, property, data) {
+//console.debug("getData: ", data);
+return Object.assign({}, ...data.map(item => {
+if (item.length === 1) return {default: item[0]};
+else {
+const [operator, operand] = item;
+if (operator === "automate" || operator === "") return {automate: {host, property, text: operand}};
+if (operator === "shortcut") return {shortcut: {host, name, key: operand}};
+if (operator === "default") return {default: operand};
+} // if
+}) // map
+); // assign
+} // getData
+
+
+function processShortcut () {
+// not implemented
+} // processShortcut
+} // processAttribute

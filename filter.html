@@ -17,7 +17,7 @@
 <audio-player label="player" src="t1.mp3"></audio-player>
 
 <audio-series label="feedback delay" feedback delay=".5" gain=".5">
-<audio-filter hide-on-bypass label="filter" type="highpass" frequency="555" q="3"></audio-filter>
+<audio-filter hide-on-bypass label="filter" type="highpass" frequency="default{555} automate{s(t/2, 400, 1400)}" q="3"></audio-filter>
 </audio-series>
 
 <audio-gain label="volume"></audio-gain>

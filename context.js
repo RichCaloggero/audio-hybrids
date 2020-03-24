@@ -9,6 +9,7 @@ const defaults = {};
 const Context = element.create("context", defaults, initialize, element.connect, {
 message: "",
 responseCallback: undefined,
+//response: "",
 
 prompt: {
 connect: (host, key) => host[key] = "",
@@ -46,7 +47,7 @@ ${message}
 
 <div class="prompt" role="region" aria-label="">
 ${prompt && html`<label>automation for ${prompt}:
-<input type="text" id="prompt" oninput="${html.set("response")}" onkeyup="${(host, event) => {
+<input type="text" id="prompt" value="${response}" oninput="${html.set("response")}" onkeyup="${(host, event) => {
 if (event.key === "Enter" || event.key === "Escape") {
 if (event.key === "Escape") host.response = "";
 if (host.responseCallback(host.response)){
@@ -76,11 +77,12 @@ export function statusMessage (text) {
 document.querySelector("audio-context").message = text;
 } // statusMessage
 
-export function prompt (message, callback) {
-console.debug(`prompt: ${message}`);
+export function prompt (message, response, callback) {
+//console.debug(`prompt: ${message}, ${response}`);
 if (message && callback && callback instanceof Function) {
 root.responseCallback = callback;
 root.prompt = message;
+root.response = response;
 } // if
 } // prompt
 
@@ -90,9 +92,13 @@ element.waitForChildren(host, children => {
 console.log(`${host._id} is complete`);
 root = host;
 //debugger;
-//setTimeout(() => {
+// calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 //}, 0);
+
+// process collected automation requests specified in the markup (need to run asynch because shadowRoot not available yet)
+setTimeout(() => ui.processAutomationRequests(), 0);
+
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });
 
@@ -101,15 +107,15 @@ host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 
 export function depth (start, _depth = 2) {
 let e = start;
-console.debug(`depth: ${e._id} begin at  ${_depth}`);
+//console.debug(`depth: ${e._id} begin at  ${_depth}`);
 
 while (e && e !== root) {
 if (e.parentElement.container && e.parentElement.label) _depth += 1;
-console.debug(`depth: ${e._id}, ${e.parentElement.container}, ${e.parentElement.label} = ${_depth}`);
+//console.debug(`depth: ${e._id}, ${e.parentElement.container}, ${e.parentElement.label} = ${_depth}`);
 e = e.parentElement;
 } // while
 
-console.debug(`${start._id}: depth = ${_depth}\ndone.\n`);
+//console.debug(`${start._id}: depth = ${_depth}\ndone.\n`);
 return _depth;
 
 function isContainer (e) {return e.shadowRoot?.querySelector("slot");}
