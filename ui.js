@@ -210,7 +210,6 @@ export function processAutomationRequests () {
 console.debug(`processing ${automationRequests.length} automation requests`);
 automationRequests.forEach(request => {
 console.debug("automation request: ", request);
-debugger;
 const input = findUiControl(request.host, request.property);
 
 if (input) {

@@ -47,18 +47,7 @@ ${message}
 
 <div class="prompt" role="region" aria-label="">
 ${prompt && html`<label>automation for ${prompt}:
-<input type="text" id="prompt" value="${response}" oninput="${html.set("response")}" onkeyup="${(host, event) => {
-if (event.key === "Enter" || event.key === "Escape") {
-if (event.key === "Escape") host.response = "";
-if (host.responseCallback(host.response)){
-host.prompt = "";
-host.response = "";
-host.responseCallback = null;
-} else {
-host.response = "";
-} // if
-} // if
-}}">
+<input type="text" id="prompt" value="${response}" oninput="${html.set("response")}" onkeyup="${processResponse}">
 </label>
 `}
 </div>
@@ -77,6 +66,7 @@ export function statusMessage (text) {
 document.querySelector("audio-context").message = text;
 } // statusMessage
 
+
 export function prompt (message, response, callback) {
 //console.debug(`prompt: ${message}, ${response}`);
 if (message && callback && callback instanceof Function) {
@@ -85,6 +75,19 @@ root.prompt = message;
 root.response = response;
 } // if
 } // prompt
+
+function processResponse (host, event) {
+if (event.key === "Enter" || event.key === "Escape") {
+if (event.key === "Escape") host.response = "";
+if (host.responseCallback(host.response)){
+host.prompt = "";
+host.response = "";
+host.responseCallback = null;
+} else {
+host.response = "";
+} // if
+} // if
+} // processResponse
 
 function initialize(host, key) {
 if (!element.isInitialized(host)) {
