@@ -169,6 +169,7 @@ export function hideOnBypass (host) {
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
 .slice(2).forEach(x => x.hidden =  context.root?.hideOnBypass && host.bypass);
+if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = context.root?.hideOnBypass && host.bypass;
 } // if
 } // hideOnBypass
 
