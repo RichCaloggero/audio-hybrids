@@ -99,8 +99,6 @@ root = host;
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 //}, 0);
 
-// process collected automation requests specified in the markup (need to run asynch because shadowRoot not available yet)
-setTimeout(() => ui.processAutomationRequests(), 0);
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });

@@ -149,6 +149,9 @@ context.statusMessage(`No saved value; press enter to save.`);
 } // swapValues
 
 export function enableAutomation () {
+// process collected automation requests specified in the markup (need to run asynch because shadowRoot not available yet)
+processAutomationRequests();
+
 automator = setInterval(() => {
 automationQueue.forEach(e => automate(e));
 }, 1000*automationInterval); // startAutomation
@@ -207,10 +210,11 @@ automationRequests.push (data);
 console.debug("requestAutomation: ", data);
 } // requestAutomation
 
-export function processAutomationRequests () {
+function processAutomationRequests () {
 console.log(`processing ${automationRequests.length} automation requests`);
 try {
-automationRequests.forEach(request => {
+let request;
+while (request = automationRequests.shift()) {
 console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
 
@@ -222,7 +226,7 @@ else throw new Error(`${request.text}: cannot compile; aborting`);
 } else {
 throw new Error(`$bad automation specified for ${request.host._id}.${request.property}; skipped`);
 } // if
-}); // forEach
+} // while
 
 } catch (e) {
 console.error(e);
