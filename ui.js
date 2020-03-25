@@ -38,9 +38,10 @@ return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" o
 } // text
 
 export function boolean (label, name, defaultValue) {
-return defaultValue?
-html`<label>${label}: <input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}"></label>`
-: html`<label>${label}: <input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}"></label>`;
+return html`<label>${label}
+${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}">`
+: html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}">`
+}</label>`;
 } // boolean
 
 export function list(label, name, defaultValue, options) {
@@ -207,22 +208,30 @@ console.debug("requestAutomation: ", data);
 } // requestAutomation
 
 export function processAutomationRequests () {
-console.debug(`processing ${automationRequests.length} automation requests`);
+console.log(`processing ${automationRequests.length} automation requests`);
+try {
 automationRequests.forEach(request => {
 console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
 
 if (input) {
-automationQueue.set (input, Object.assign({}, request, {labelText: getLabelText(input), enabled: true}));
+request.function = compileFunction(request.text);
+if (request.function) automationQueue.set (input, Object.assign({}, request, {labelText: getLabelText(input), enabled: true}));
+else throw new Error(`${request.text}: cannot compile; aborting`);
 
 } else {
-alert(`$bad automation specified for ${request.host._id}.${request.property}; skipped`);
+throw new Error(`$bad automation specified for ${request.host._id}.${request.property}; skipped`);
 } // if
 }); // forEach
+
+} catch (e) {
+console.error(e);
+context.statusMessage(e);
+} // catch
 } // processAutomationRequests
 
 function findUiControl (host, property) {
-const element = host.shadowRoot.querySelector(`[data-name='${property}']`);
+const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);
 console.debug(`uiControl: ${host._id}.${property}: ${element}`);
 return element;
 } // findUiControl

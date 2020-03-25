@@ -274,7 +274,7 @@ yield `${name}${count}`;
 } // while
 } // idGen
 
-function processAttribute (host, key) {
+export function processAttribute (host, key) {
 //console.debug(`processAttribute: ${host._id}, ${key}`);
 const data = getData(host, key, ui.parse(host.getAttribute(key)));
 //console.debug("processAttribute: data = ", data);

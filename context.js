@@ -24,7 +24,7 @@ observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypa
 enableAutomation: {
 connect: (host, key) => host[key] = false,
 observe: (host, value) => value? ui.enableAutomation() : ui.disableAutomation()
-}, // hideOnBypass
+}, // enableAutomation
 
 automationInterval: {
 connect: (host, key) => host[key] = Number(host.getAttribute("automation-interval")) || ui.automationInterval,

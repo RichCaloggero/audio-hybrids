@@ -16,18 +16,30 @@ _gain: null,
 
 
 delay: {
-get: (host, value) => host._isReady ? host._delay.delayTime.value : 0,
+get: (host, value) => host._isReady? host._delay.delayTime.value : 0,
 set: (host, value) => host._isReady? host._delay.delayTime.value = value : 0,
-connect: (host, key) => host.getAttribute(key) || defaults[key].default,
+connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
 }, // delay
 
 gain: {
 get: (host, value) => host._isReady ? host._gain.gain.value : 0,
 set: (host, value) => host._isReady? host._gain.gain.value = value : 0,
-connect: (host, key) => host.getAttribute(key) || defaults[key].default,
+connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
 }, // gain
 
-feedback: false,
+feedback: {
+connect: (host, key) => host[key] = host.hasAttribute(key) || false,
+observe: (host, value) => {
+if (value) {
+host.wet.connect(host._delay).connect(host._gain).connect(host.input);
+console.log(`${host._id}: connecting feedback`);
+
+} else {
+ host.wet.disconnect(host.delay);
+} // if
+} // observe
+}, // feedback
+
 feedforward: false,
 
 
@@ -53,7 +65,6 @@ if (!element.isInitialized(host)) {
 host.container = true;
 host._delay = audio.context.createDelay();
 host._gain = audio.context.createGain();
-host.wet.connect(host._delay).connect(host._gain).connect(host.input);
 host._gain.gain.value = 0;
 host._delay.delayTime.value = 0;
 
@@ -69,7 +80,10 @@ if (index < children.length-1) child.output.connect(children[index+1].input);
 
 if (first.input) host.input.connect(first.input);
 if (last.output) last.output.connect(host.wet);
-if (host.feedback) host.wet.connect(host._delay).connect(host._gain).connect(host.input);
+
+
+if (host.feedback) {
+} // if
 
 console.log(`${host._id}: ${children.length} children connected in series`);
 }); // waitForChildren
