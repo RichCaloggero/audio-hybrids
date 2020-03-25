@@ -304,3 +304,8 @@ function processShortcut () {
 // not implemented
 } // processShortcut
 } // processAttribute
+
+export function isContainer (host) {
+const containers = ["series", "parallel"];
+return host.children.lengt > 0 || host.container || containers.includes(host._name);
+} // isContainer

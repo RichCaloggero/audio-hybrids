@@ -111,7 +111,7 @@ let e = start;
 //console.debug(`depth: ${e._id} begin at  ${_depth}`);
 
 while (e && e !== root) {
-if (e.parentElement.container && e.parentElement.label) _depth += 1;
+if (element.isContainer(e.parentElement) && e.parentElement.getAttribute("label")) _depth += 1;
 //console.debug(`depth: ${e._id}, ${e.parentElement.container}, ${e.parentElement.label} = ${_depth}`);
 e = e.parentElement;
 } // while
@@ -119,5 +119,4 @@ e = e.parentElement;
 //console.debug(`${start._id}: depth = ${_depth}\ndone.\n`);
 return _depth;
 
-function isContainer (e) {return e.shadowRoot?.querySelector("slot");}
 } // depth
