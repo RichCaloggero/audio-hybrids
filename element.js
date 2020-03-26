@@ -2,6 +2,7 @@ import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as context from "./context.js";
 import * as ui from "./ui.js";
+import * as keymap from "./keymap.js";
 
 const prefix = "audio";
 const registry = Object.create(null);
@@ -278,10 +279,10 @@ yield `${name}${count}`;
 export function processAttribute (host, key) {
 //console.debug(`processAttribute: ${host._id}, ${key}`);
 const data = getData(host, key, ui.parse(host.getAttribute(key)));
-//console.debug("processAttribute: data = ", data);
+console.debug("processAttribute: data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
-if (data.shortcut) processShortcut(data.shortcut);
+if (data.shortcut) keymap.requestKeyDefinition(data.shortcut);
 if (data.default) return data.default;
 return undefined;
 
@@ -291,8 +292,8 @@ return Object.assign({}, ...data.map(item => {
 if (item.length === 1) return {default: item[0]};
 else {
 const [operator, operand] = item;
-if (operator === "automate" || operator === "") return {automate: {host, property, text: operand}};
-if (operator === "shortcut") return {shortcut: {host, name, key: operand}};
+if (operator === "automate") return {automate: {host, property, text: operand}};
+if (operator === "shortcut") return {shortcut: {host, property, text: operand}};
 if (operator === "default") return {default: operand};
 } // if
 }) // map

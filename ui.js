@@ -45,7 +45,9 @@ ${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => 
 } // boolean
 
 export function list(label, name, defaultValue, options) {
-return html`<label>${label}: <select onchange="${html.set(name)}">${init(options, defaultValue)}</select></label>`;
+return html`<label>${label}: <select onchange="${html.set(name)}" data-name="${name}">
+${init(options, defaultValue)}
+</select></label>`;
 
 function init(options, defaultValue) {
 return options.map(option => {
@@ -234,7 +236,7 @@ context.statusMessage(e);
 } // catch
 } // processAutomationRequests
 
-function findUiControl (host, property) {
+export function findUiControl (host, property) {
 const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);
 console.debug(`uiControl: ${host._id}.${property}: ${element}`);
 return element;

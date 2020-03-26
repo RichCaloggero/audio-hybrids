@@ -2,6 +2,7 @@ import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
 import * as ui from "./ui.js";
+import * as keymap from "./keymap.js";
 
 export let root = null;
 const defaults = {};
