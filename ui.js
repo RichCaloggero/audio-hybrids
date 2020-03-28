@@ -1,13 +1,23 @@
 import {html} from "./hybrids/index.js";
 import * as context from "./context.js";
 import * as audio from "./audio.js";
+import * as keymap from "./keymap.js";
 
 const savedValues = new Map();
 let automator = null;
 export let automationInterval = 0.03; // seconds
 const automationQueue = new Map();
 const automationRequests = [];
+const definitionRequests = [];
 
+document.addEventListener("focusin", initialize);
+
+function initialize () {
+processAutomationRequests();
+processKeyDefinitionRequests();
+document.removeEventListener("focusin", initialize);
+console.log("UI initialization complete.");
+} // initialize
 
 
 export function number (label, name, defaultValue, ...rest) {
@@ -86,22 +96,23 @@ const key = event.key;
 const input = event.target;
 
 if (input.type === "range" && handleRangeInput(key, input)) return false;
-//if (isModifierKey(key)) return true;
-//if (handleUserKey(e)) return false;
 
 switch (key) {
 case " ": {
+if (isNumericInput(input)) {
 if(event.ctrlKey && event.shiftKey) swapValues(input);
 else if(event.ctrlKey) saveValue(input);
-else return true;
+else e.preventDefault();
+} // if
 } // case spaceBar
 break;
 
 case "Enter": {
-//if (event.ctrlKey && event.altKey && event.shiftKey) //defineKey(getKey(input), input);
-//else
+if (event.ctrlKey && event.altKey && event.shiftKey) defineShortcut(input, input.getRootNode().host, input.dataset.name);
+else if (isNumericInput(input)) {
 if(event.ctrlKey) toggleAutomation(input);
-else defineAutomation(input, input.getRootNode().host, input.getAttribute("data-name"));
+else defineAutomation(input, input.getRootNode().host, input.dataset.name);
+} // if
 } // case Enter
 break
 
@@ -109,6 +120,10 @@ default: return true;
 } // switch
 
 return false;
+
+function isNumericInput (input) {
+return input.type === "number" || input.type === "range"
+} // isNumericInput
 } // handleSpecialKeys
 
 function handleRangeInput(key, input) {
@@ -129,7 +144,6 @@ function checkRange (min, max) {
 return Number(min) <= Number(max);
 } // checkRange
 
-
 function inRange (value, min = 0, max = 1) {
 return typeof(min) === "number" && typeof(max) === "number" && typeof(value) === "number" && min <= value <= max;
 } // inRange
@@ -149,6 +163,18 @@ context.statusMessage(old);
 context.statusMessage(`No saved value; press enter to save.`);
 } // if
 } // swapValues
+
+
+function defineShortcut (input, host, property) {
+const text = keymap.findKey(input);
+
+context.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
+keymap.defineKey(response, input);
+input.focus();
+});
+} // defineShortcut
+
+
 
 export function enableAutomation () {
 // process collected automation requests specified in the markup (need to run asynch because shadowRoot not available yet)
@@ -186,7 +212,7 @@ automationQueue.get(input)
 : {input, labelText, host, property, text: "", function: null, enabled: false};
 console.debug("automation data: ", automationData);
 
-context.prompt(labelText, automationData.text, text => {
+context.prompt(`automation for ${labelText}: `, automationData.text, text => {
 console.debug(`response: ${text}`);
 if (text) {
 const _function = compileFunction(text);
@@ -235,6 +261,33 @@ console.error(e);
 context.statusMessage(e);
 } // catch
 } // processAutomationRequests
+
+
+export function requestKeyDefinition (definition) {
+definitionRequests.push(definition);
+} // requestKeyDefinition
+
+function processKeyDefinitionRequests () {
+console.log(`processing ${definitionRequests.length} definition requests`);
+try {
+let request;
+while (request = definitionRequests.shift()) {
+//console.debug("definition request: ", request);
+const input = findUiControl(request.host, request.property);
+
+if (input) {
+keymap.defineKey(request.text, input);
+
+} else {
+throw new Error(`$bad shortcut definition specified for ${request.host._id}.${request.property}; skipped`);
+} // if
+} // while
+
+} catch (e) {
+console.error(e);
+context.statusMessage(e);
+} // catch
+} // processKeyDefinitionRequests
 
 export function findUiControl (host, property) {
 const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);

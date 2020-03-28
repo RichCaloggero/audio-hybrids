@@ -282,7 +282,7 @@ const data = getData(host, key, ui.parse(host.getAttribute(key)));
 console.debug("processAttribute: data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
-if (data.shortcut) keymap.requestKeyDefinition(data.shortcut);
+if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
 if (data.default) return data.default;
 return undefined;
 
@@ -299,11 +299,6 @@ if (operator === "default") return {default: operand};
 }) // map
 ); // assign
 } // getData
-
-
-function processShortcut () {
-// not implemented
-} // processShortcut
 } // processAttribute
 
 export function isContainer (host) {

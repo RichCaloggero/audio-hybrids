@@ -1,13 +1,9 @@
 import * as ui from "./ui.js";
 
 const keymap = new Map();
-const definitionRequests = [];
 let defaultModifiers = "control shift";
 
 document.addEventListener("keyup", e => {
-if (definitionRequests.length > 0) {
-enableKeymap();
-} // if
 
 const text = keyToText(eventToKey(e));
 if (!text) return true;
@@ -27,33 +23,8 @@ else input.focus();
 } // execute
 
 
-export function requestKeyDefinition (definition) {
-definitionRequests.push(definition);
-} // requestKeyDefinition
 
-export function enableKeymap () {
-console.log(`processing ${definitionRequests.length} definition requests`);
-try {
-let request;
-while (request = definitionRequests.shift()) {
-//console.debug("definition request: ", request);
-const input = ui.findUiControl(request.host, request.property);
-
-if (input) {
-defineKey(request.text, input);
-
-} else {
-throw new Error(`$bad shortcut definition specified for ${request.host._id}.${request.property}; skipped`);
-} // if
-} // while
-
-} catch (e) {
-console.error(e);
-context.statusMessage(e);
-} // catch
-} // enableKeymap
-
-function defineKey (text, input) {
+export function defineKey (text, input) {
 text = normalizeKeyText(text);
 //console.debug("defineKey: ", text, input);
 
@@ -63,6 +34,12 @@ statusMessage(`key ${text} is already defined; aborting`);
 keymap.set(text, input);
 } // if
 } // defineKey
+
+export function findKey (input) {
+const entry = [...keymap.entries()].find(item => item[1] === input);
+return entry? entry[0] : "";
+} // findKey
+
 
 export function textToKey (text) {
 if (!text) return null;
@@ -137,3 +114,4 @@ return allowed.includes(text.trim().toLowerCase());
 function capitalize (s) {
 return `${s[0].toUpperCase()}${s.slice(1)}`;
 } // capitalize
+

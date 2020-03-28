@@ -46,8 +46,8 @@ ${ui.number("automation interval", "automationInterval", automationInterval, 0.0
 ${message}
 </div>
 
-<div class="prompt" role="region" aria-label="">
-${prompt && html`<label>automation for ${prompt}:
+<div class="prompt" role="region" aria-label="prompt">
+${prompt && html`<label>${prompt}:
 <input type="text" id="prompt" value="${response}" oninput="${html.set("response")}" onkeyup="${processResponse}">
 </label>
 `}
@@ -80,13 +80,10 @@ root.response = response;
 function processResponse (host, event) {
 if (event.key === "Enter" || event.key === "Escape") {
 if (event.key === "Escape") host.response = "";
-if (host.responseCallback(host.response)){
+host.responseCallback(host.response);
 host.prompt = "";
 host.response = "";
 host.responseCallback = null;
-} else {
-host.response = "";
-} // if
 } // if
 } // processResponse
 
