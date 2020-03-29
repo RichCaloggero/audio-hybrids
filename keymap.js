@@ -1,7 +1,41 @@
 import * as ui from "./ui.js";
+import * as context from "./context.js";
+import {html} from "./hybrids/index.js";
 
-const keymap = new Map();
 let defaultModifiers = "control shift";
+const keymap = new Map([
+["control /", {
+help: "display keyboard help", function: displayKeyboardHelp
+}], ["control space", {
+help: "save value", function: ui.saveValue
+}],["control shift space", {
+help: "swap saved and current values", function: ui.swap
+}], ["control alt shift enter", {
+help: "define key", function: getKey
+}], ["enter", {
+help: "define automation", function: ui.defineAutomation
+}], ["control enter", {
+help: "toggle automation", function: ui.toggleAutomation
+}], ["1", {
+help: "set slider to value = 1", function: ui.setValue1
+}], ["0", {
+help: "set slider to value = 0", function: ui.setValue0
+}], ["-", {
+help: "negate slider's value", function: ui.negateValue
+}], ["home", {
+help: "maximum value", function: ui.setValueMax
+}], ["end", {
+help: "minimum value", function: ui.setValueMin
+}], ["pageUp", {
+help: "increase by 10 times step", function: ui.increase10
+}], ["shift pageUp", {
+help: "increase by 100 times step", function: ui.increase100
+}], ["pageDown", {
+help: "decrease by 10 times step", function: ui.decrease10
+}], ["shift pageDown", {
+help: "decrease by 100 times step", function: ui.decrease100
+}]
+]); // new map
 
 document.addEventListener("keyup", e => {
 
@@ -10,30 +44,47 @@ if (!text) return true;
 
 if (!keymap.has(text)) return true;
 e.preventDefault();
-execute(text);
+execute(e.composed? e.target.shadowRoot.activeElement : e.target, text);
 }); // keyboard handler
 
-function execute (text) {
+function execute (target, text) {
 if (!keymap.has(text)) return
-const input = keymap.get(text);
-//console.debug("execute: ", input);
+const entry = keymap.get(text);
+console.debug("execute: ", entry);
 
-if (input.type === "checkbox" || input.tagName.toLowerCase() === "button") input.click();
-else input.focus();
+if (entry instanceof HTMLElement) {
+console.debug(`activate UI 	element`);
+if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry.click();
+else entry.focus();
+} else if (entry instanceof Object && entry.function) {
+console.debug(`execute function`);
+entry.function (target, text);
+} // if
 } // execute
 
 
 
-export function defineKey (text, input) {
+export function defineKey (input, text) {
 text = normalizeKeyText(text);
 //console.debug("defineKey: ", text, input);
 
 if (keymap.has (text)) {
-statusMessage(`key ${text} is already defined; aborting`);
+context.statusMessage(`key ${text} is already defined; aborting`);
 } else {
 keymap.set(text, input);
-} // if
+} // if	
 } // defineKey
+
+function getKey (input) {
+const host = input.getRootNode().host;
+const property = input.dataset.name;
+const text = findKey(input);
+
+context.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
+defineKey(input, response);
+input.focus();
+});
+} // getKey
 
 export function findKey (input) {
 const entry = [...keymap.entries()].find(item => item[1] === input);
@@ -67,8 +118,8 @@ let text = "";
 if (key.ctrlKey) text += "control ";
 if (key.altKey) text += "alt ";
 if (key.shiftKey) text += "shift ";
-if (key.key) text += key.key.toLowerCase();
-return text.trim();
+if (key.key) text += key.key;
+return text.toLowerCase();
 } keyToText
 
 export function normalizeKeyText (text) {
@@ -115,3 +166,28 @@ function capitalize (s) {
 return `${s[0].toUpperCase()}${s.slice(1)}`;
 } // capitalize
 
+
+function displayKeyboardHelp (input) {
+context.displayDialog({
+title: "Keyboard Help",
+description: "",
+content: getKeyboardHelp(input)
+});
+} // displayKeyboardHelp
+
+function getKeyboardHelp (input) {
+return html`<table>
+<tr><th>key</th><th>description</th></tr>
+${[...keymap.entries()].map(entry =>
+html`<tr><th>${entry[0]}</th>
+<td>${getHelpText(entry[1])}</td></tr>
+`)}
+</table>
+`; // end
+
+function getHelpText (item) {
+return item instanceof HTMLElement?
+`activate ${item.getRootNode().host._id} ${ui.getLabelText(item) || item.dataset.name}`
+: item.help;
+} // getHelpText
+} // keyboardHelp

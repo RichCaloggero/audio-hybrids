@@ -10,7 +10,6 @@ const defaults = {};
 const Context = element.create("context", defaults, initialize, element.connect, {
 message: "",
 responseCallback: undefined,
-//response: "",
 
 prompt: {
 connect: (host, key) => host[key] = "",
@@ -32,8 +31,12 @@ connect: (host, key) => host[key] = Number(host.getAttribute("automation-interva
 observe: (host, value) => ui.setAutomationInterval(Number(value))
 }, // automationInterval
 
+dialog: {
+connect: (host, key) => host.dialog= {open: false},
+observe: (host, value) => value.open = true
+}, // dialog
 
-render: ({ label, message, prompt, response, hideOnBypass, enableAutomation, automationInterval }) => {
+render: ({ label, message, prompt, response, dialog, hideOnBypass, enableAutomation, automationInterval }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="context">
@@ -53,6 +56,19 @@ ${prompt && html`<label>${prompt}:
 `}
 </div>
 
+${dialog.open && html`
+<div role="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description" style="position:relative;">
+<div class="wrapper" style="position:absolute; left:0; top:0; width:100%; height:100%;">
+<div class="head">
+<h2 id="dialog-title" style="display:inline-block;">${dialog.title}</h2>
+<button id="dialog-close" aria-label="close" onclick="${(host, target) => host.dialog.open = false}">X</button>
+</div><div class="body">
+<div id="dialog-description">${dialog.description}</div>
+<div class="content">${dialog.content}</div>
+</div><!-- .body -->
+</div><!-- .wrapper -->
+</div><!-- dialog -->
+`}
 </fieldset>
 <slot></slot>
 `;
@@ -86,6 +102,10 @@ host.response = "";
 host.responseCallback = null;
 } // if
 } // processResponse
+
+export function displayDialog (dialog) {
+root.dialog = dialog;
+} // displayDialog
 
 function initialize(host, key) {
 if (!element.isInitialized(host)) {

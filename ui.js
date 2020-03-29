@@ -34,7 +34,7 @@ console.error(e);
 [min, max, step, type] = rest;
 } // if
 
-return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}" onkeyup="${handleSpecialKeys}"
+return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}"
 min="${min}" max="${max}" step="${step}"
 accesskey="${name[0]}"
 data-name="${name}">
@@ -91,7 +91,7 @@ ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.ste
 } // commonControls
 
 
-function handleSpecialKeys (host, event) {
+/*function handleSpecialKeys (host, event) {
 const key = event.key;
 const input = event.target;
 
@@ -108,7 +108,7 @@ else e.preventDefault();
 break;
 
 case "Enter": {
-if (event.ctrlKey && event.altKey && event.shiftKey) defineShortcut(input, input.getRootNode().host, input.dataset.name);
+if (event.ctrlKey && event.altKey && event.shiftKey) keymap.getKey(input, input.getRootNode().host, input.dataset.name);
 else if (isNumericInput(input)) {
 if(event.ctrlKey) toggleAutomation(input);
 else defineAutomation(input, input.getRootNode().host, input.dataset.name);
@@ -121,10 +121,37 @@ default: return true;
 
 return false;
 
+} // handleSpecialKeys
+*/
+
 function isNumericInput (input) {
 return input.type === "number" || input.type === "range"
 } // isNumericInput
-} // handleSpecialKeys
+
+function isInRange(x, min, max) {
+return Number(min) <= Number(x) <= Number(max);
+} // isInRange
+
+function setValue1 (input) {
+if (isInRange(1, input.min, input.max)) input.value = 1;
+} // setValue1
+
+function setValue0 (input) {
+if (isInRange(0, input.min, input.max)) input.value = 0;
+} // setValue0
+
+function negateValue (input) {
+if (isInRange(-1*input.value, input.min, input.max)) input.value = -1*input.value;
+} // negateValue
+
+function setValueMax (input) {
+input.value = isInRange(input.max, input.min, input.max)? input.max : 1;
+} // setValueMax
+
+function setValueMin (input) {
+input.value = isInRange(input.min, input.min, input.max)? input.min : 0;
+} // setValueMin
+
 
 function handleRangeInput(key, input) {
 const [min, max, value] = [Number(input.min), Number(input.max), Number(input.value)];
@@ -139,10 +166,6 @@ default: return false;
 
 return false;
 } // handleRangeInput
-
-function checkRange (min, max) {
-return Number(min) <= Number(max);
-} // checkRange
 
 function inRange (value, min = 0, max = 1) {
 return typeof(min) === "number" && typeof(max) === "number" && typeof(value) === "number" && min <= value <= max;
@@ -165,21 +188,10 @@ context.statusMessage(`No saved value; press enter to save.`);
 } // swapValues
 
 
-function defineShortcut (input, host, property) {
-const text = keymap.findKey(input);
-
-context.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
-keymap.defineKey(response, input);
-input.focus();
-});
-} // defineShortcut
 
 
 
 export function enableAutomation () {
-// process collected automation requests specified in the markup (need to run asynch because shadowRoot not available yet)
-processAutomationRequests();
-
 automator = setInterval(() => {
 automationQueue.forEach(e => automate(e));
 }, 1000*automationInterval); // startAutomation
@@ -204,8 +216,10 @@ context.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.p
 } // if
 } // toggleAutomation
 
-function defineAutomation (input, host, property) {
-console.debug(`defining automation for ${host._id}.${property}:`);
+export function defineAutomation (input) {
+const host = input.getRootNode().host;
+const property = input.dataset.name;
+console.debug("defining automation for ", host, property);
 const labelText = getLabelText(input);
 const automationData = automationQueue.has(input)?
 automationQueue.get(input)
@@ -276,7 +290,7 @@ while (request = definitionRequests.shift()) {
 const input = findUiControl(request.host, request.property);
 
 if (input) {
-keymap.defineKey(request.text, input);
+keymap.defineKey(input, request.text);
 
 } else {
 throw new Error(`$bad shortcut definition specified for ${request.host._id}.${request.property}; skipped`);
@@ -288,6 +302,7 @@ console.error(e);
 context.statusMessage(e);
 } // catch
 } // processKeyDefinitionRequests
+
 
 export function findUiControl (host, property) {
 const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);
@@ -339,6 +354,6 @@ return Array.from(document.querySelectorAll("audio-context *"))
 .flat(9);
 } // findAllUiElements
 
-function getLabelText (input) {
+export function getLabelText (input) {
 return input.parentElement.textContent.trim();
 } // getLabelText
