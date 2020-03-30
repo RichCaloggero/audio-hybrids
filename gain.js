@@ -12,7 +12,7 @@ const Gain = element.create("gain", defaults, "createGain", element.connect, ["g
 render: ({ mix, bypass, label, _depth, gain }) => {
 console.debug(`${label}: rendering...`);
 return html`
-<fieldset class="destination">
+<fieldset class="gain">
 <legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
 ${ui.commonControls(bypass, mix, defaults)}
 ${ui.number("gain", "gain", gain, defaults)}

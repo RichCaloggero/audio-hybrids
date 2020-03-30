@@ -4,7 +4,8 @@
 
 // connectors
 "series",
-"parallel",
+//"parallel",
+"split",
 
 // processors
 "player",
@@ -13,6 +14,7 @@
 "delay",
 "filter",
 "panner",
+"stereoProcessor",
 ].forEach(src => {
 const s = document.createElement("script");
 s.type="module";

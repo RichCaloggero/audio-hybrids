@@ -21,11 +21,8 @@ define ("audio-destination", Destination);
 
 
 function initialize (host) {
-console.log("destination: initialize called...");
-if (!element.isInitialized(host)) {
 host.node = audio.context.destination;
 host.input.connect(host.node);
 host.output = null;
 element.signalReady(host);
-} // if
 } // initialize

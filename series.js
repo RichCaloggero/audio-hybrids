@@ -16,15 +16,15 @@ _gain: null,
 
 
 delay: {
-get: (host, value) => host._isReady? host._delay.delayTime.value : 0,
-set: (host, value) => host._isReady? host._delay.delayTime.value = value : 0,
+get: (host, value) => host._delay.delayTime.value,
+set: (host, value) => host._delay.delayTime.value = Number(value),
 connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
+//observe: (host, value) => host._delay.delayTime.value = Number(value)
 }, // delay
 
 gain: {
-get: (host, value) => host._isReady ? host._gain.gain.value : 0,
-set: (host, value) => host._isReady? host._gain.gain.value = value : 0,
 connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
+observe: (host, value) => host._gain.gain.value = Number(value)
 }, // gain
 
 feedback: {
@@ -61,8 +61,7 @@ ${feedback && ui.number("gain", "gain", gain, defaults)}
 define ("audio-series", Series);
 
 function initialize (host, key) {
-if (!element.isInitialized(host)) {
-host.container = true;
+//host.container = true;
 host._delay = audio.context.createDelay();
 host._gain = audio.context.createGain();
 host._gain.gain.value = 0;
@@ -87,13 +86,5 @@ if (host.feedback) {
 
 console.log(`${host._id}: ${children.length} children connected in series`);
 }); // waitForChildren
-
-/*} else {
-// initialized, so set defaults for key
-const value = host.getAttribute(key) || defaults[key]?.default || 1;
-host[key] = value;
-console.debug(`${host._id}(${key}) connected and defaulted to ${value}`);
-*/
-} // if
 } // initialize
 

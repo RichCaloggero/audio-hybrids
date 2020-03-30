@@ -133,6 +133,7 @@ throw new Error(`create: duplicate descriptors generated: ${_id}; aborting`);
 } // if
 
 return {
+_depth: 0,
 _name: () => name,
 _connected: property(true, connect),
 
@@ -143,7 +144,15 @@ if (host.shadowRoot) host.shadowRoot.querySelector("fieldset").hidden = !value
 }
 },
 
-_depth: 0,
+hide: {
+connect: (host, key) => host[key] = host.getAttribute(key) || "",
+observe: (host, value) => {
+host._hide = value? stringToList(value) : [];
+if (value && host.shadowRoot) host.shadowRoot.querySelectorAll("input,select").forEach(x => {
+if (x.dataset.name) x.hidden = host._hide.includes(x.dataset.name);
+}); // forEach
+} // observe
+}, // hide
 
 bypass: {
 connect: (host, key) => host[key] = host.hasAttribute(key) || false,
@@ -153,10 +162,8 @@ hideOnBypass(host);
 } // observe
 },  // bypass
 
-
 silentBypass: {
 }, // silentBypass
-
 
 mix: {
 get: (host, value) => host._mix,
@@ -305,3 +312,9 @@ export function isContainer (host) {
 const containers = ["series", "parallel"];
 return host.children.lengt > 0 || host.container || containers.includes(host._name);
 } // isContainer
+
+function stringToList (s) {
+const r = /, *?| +?/i;
+return s.split(r);
+} // stringToList
+

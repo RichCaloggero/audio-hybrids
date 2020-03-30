@@ -44,7 +44,7 @@ set: (host, value) => value,
 currentTime: 0,
 
 render: ({ label, _depth, src, play, seek, currentTime, duration }) => {
-console.debug(`${label}: rendering...`);
+//console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="player">
 <legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>

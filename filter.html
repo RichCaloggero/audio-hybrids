@@ -17,7 +17,7 @@
 <audio-player label="player" src="t1.mp3"></audio-player>
 
 <audio-series label="feedback delay" feedback delay=".5" gain=".5">
-<audio-filter label="filter" type="default{highpass} shortcut{t}" frequency="default{555} automate{s(t/2, 400, 1400)}" q="7"></audio-filter>
+<audio-filter label="filter" type="default{highpass} shortcut{t}" frequency="default{555} automate{s(t/2, 400, 1400)}" q="7" hide="gain detune mix"></audio-filter>
 </audio-series>
 
 <audio-gain label="volume"></audio-gain>
