@@ -136,5 +136,4 @@ e = e.parentElement;
 
 //console.debug(`${start._id}: depth = ${_depth}\ndone.\n`);
 return _depth;
-
 } // depth

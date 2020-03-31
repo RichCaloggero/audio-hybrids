@@ -4,7 +4,7 @@
 
 // connectors
 "series",
-//"parallel",
+"parallel",
 "split",
 
 // processors

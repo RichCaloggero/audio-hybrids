@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>split and swap</title>
+<script src="load.js"></script>
+</head>
+<body>
+
+<audio-context hide-on-bypass automation-interval="default{0.05} shortcut{a}" label="split and swap"> 
+<audio-series>
+<audio-player label="player" src="default{t1.mp3} shortcut{u}"></audio-player play="{shortcut{p}" seek="shortcut{k}">
+
+<audio-split label="wide delay" hide="mix">
+<audio-gain></audio-gain>
+<audio-delay label="delay" delay="0.010" hide="bypass mix"></audio-delay>
+</audio-split>
+
+<audio-split label="html swapper" swap-inputs>
+<audio-gain></audio-gain>
+<audio-gain></audio-gain>
+</audio-split>
+
+<audio-swap label="swap"></audio-swap>
+
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-context>
+
+</body>
+</html>

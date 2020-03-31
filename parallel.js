@@ -7,7 +7,7 @@ import * as ui from "./ui.js";
 const defaults = {}; // sefaults
 
 
-const Parallel = element.create("series", defaults, initialize, element.connect, {
+const Parallel = element.create("parallel", defaults, initialize, element.connect, {
 
 
 render: ({ label, mix, bypass, _depth }) => {
@@ -24,7 +24,6 @@ ${ui.commonControls(bypass, mix, defaults)}
 define ("audio-parallel", Parallel);
 
 function initialize (host, key) {
-if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
 
 if (children.length < 2) {
@@ -39,6 +38,5 @@ child.output.connect(host.wet.input);
 host.wet.gain.value = 1 / children.length;
 console.log(`${host._id}: ${children.length} children connected in parallel`);
 }); // waitForChildren
-} // if
 } // initialize
 

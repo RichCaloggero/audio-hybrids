@@ -149,8 +149,11 @@ hide: {
 connect: (host, key) => host[key] = host.getAttribute(key) || "",
 observe: (host, value) => {
 host._hide = value? stringToList(value) : [];
-if (value && host.shadowRoot) host.shadowRoot.querySelectorAll("input,select").forEach(x => {
-if (x.dataset.name) x.hidden = host._hide.includes(x.dataset.name);
+if (value && host.shadowRoot)
+host.shadowRoot.querySelectorAll("input,select").forEach(x => {
+if (x.dataset.name)
+(x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
+.hidden = host._hide.includes(x.dataset.name);
 }); // forEach
 } // observe
 }, // hide
@@ -310,8 +313,8 @@ if (operator === "default") return {default: operand};
 } // processAttribute
 
 export function isContainer (host) {
-const containers = ["series", "parallel"];
-return host.children.lengt > 0 || host.container || containers.includes(host._name);
+const containers = ["series", "parallel", "split"];
+return containers.includes(host._name);
 } // isContainer
 
 function stringToList (s) {
