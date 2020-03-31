@@ -15,6 +15,7 @@
 "filter",
 "panner",
 "stereoProcessor",
+"swap", 
 ].forEach(src => {
 const s = document.createElement("script");
 s.type="module";

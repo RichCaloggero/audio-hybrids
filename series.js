@@ -16,15 +16,15 @@ _gain: null,
 
 
 delay: {
-get: (host, value) => host._delay.delayTime.value,
-set: (host, value) => host._delay.delayTime.value = Number(value),
+//get: (host, value) => host._delay.delayTime.value,
+//set: (host, value) => host._delay.delayTime.value = Number(value),
 connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
 //observe: (host, value) => host._delay.delayTime.value = Number(value)
 }, // delay
 
 gain: {
 connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
-observe: (host, value) => host._gain.gain.value = Number(value)
+//observe: (host, value) => host._gain.gain.value = Number(value)
 }, // gain
 
 feedback: {

@@ -336,7 +336,7 @@ export function parse (expression) {
 if (!expression) return [];
 
 let parser =
-/^(\d+)$|^(\w+)$|(\w+)\{(.+?)\}/gi;
+/^([\d.+\-]+)$|^(\w+)$|(\w+)\{(.+?)\}/gi;
 //console.debug("intermediate: ", [...expression.matchAll(parser)]);
 
 const result = [...expression.matchAll(parser)]

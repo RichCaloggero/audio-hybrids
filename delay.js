@@ -9,7 +9,7 @@ delay: {default: 0.5, min: 0, max: 1, step: 0.001}
 
 const Delay = element.create("delay", defaults, "createDelay", element.connect, [["delay", "delayTime"]], {
 
-render: ({ mix, bypass, label, depth, delay }) => {
+render: ({ mix, bypass, label, _depth, delay }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="delay">

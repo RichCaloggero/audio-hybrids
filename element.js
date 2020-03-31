@@ -48,7 +48,7 @@ const key = prop;
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
 set: (host, value) => {
-//console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
+console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
 return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
 },
 connect: _connect
@@ -92,7 +92,8 @@ return;
 } // if
 
 const _defaults = getHostInfo(host).defaults;
-//console.debug(`${host._id}(${key}: connecting`);
+console.debug(`defaults for ${host._id}: `, _defaults);
+//if (host._id === "gain2" && key === "gain") debugger;
 
 let value = host.hasAttribute(key)? processAttribute(host, key) : _defaults[key]?.default;
 console.debug(`connect: default value for ${host._id}.${key} = ${value}`);
