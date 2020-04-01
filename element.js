@@ -146,15 +146,13 @@ if (host.shadowRoot) host.shadowRoot.querySelector("fieldset").hidden = !value
 },
 
 hide: {
-connect: (host, key) => host[key] = host.getAttribute(key) || "",
+connect: (host, key) => {
+host[key] = host.getAttribute(key) || "";
+host._hide = [];
+}, // connect
 observe: (host, value) => {
 host._hide = value? stringToList(value) : [];
-if (value && host.shadowRoot)
-host.shadowRoot.querySelectorAll("input,select").forEach(x => {
-if (x.dataset.name)
-(x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
-.hidden = host._hide.includes(x.dataset.name);
-}); // forEach
+processHide(host);
 } // observe
 }, // hide
 
@@ -163,6 +161,7 @@ connect: (host, key) => host[key] = host.hasAttribute(key) || false,
 observe: (host, value) => {
 host.__bypass(value);
 hideOnBypass(host);
+if (!value) processHide(host);
 } // observe
 },  // bypass
 
@@ -197,9 +196,13 @@ export function waitForChildren (element, callback) {
 let children = Array.from(element.children)
 .filter(child => !child._isReady);
 
-if (children.length === 0) runCallback(element, callback);
-else element.addEventListener("elementReady", handleChildReady);
+if (children.length === 0) {
+runCallback(element, callback);
+} else {
+element.addEventListener("elementReady", handleChildReady);
 console.log(`${element._id}: waiting for ${children.length} children`);
+} // if
+
 
 function handleChildReady (e) {
 if (!children.includes(e.target)) return;
@@ -212,9 +215,9 @@ if (children.length > 0) return;
 // no more children left, so remove this handler and signal ready on this element
 element.removeEventListener("elementReady", handleChildReady);
 
-setTimeout(() => {
+//setTimeout(() => {
 runCallback(element, callback);
-}, 0);
+//}, 0);
 } // handleChildReady
 
 function runCallback (element, callback) {
@@ -237,7 +240,7 @@ console.log(`abort: ${e}\n${e.stack}\n`);
 export function signalReady (element) {
 element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
 element._isReady = true;
-console.log (`${element._id} signaling ready`);
+console.debug (`${element._id} signaling ready`);
 } // signalReady
 
 function getPropertyInfo (node, _alias = []) {
@@ -311,6 +314,15 @@ if (operator === "default") return {default: operand};
 ); // assign
 } // getData
 } // processAttribute
+
+function processHide (host) {
+if (host._hide.length > 0 && host.shadowRoot)
+host.shadowRoot.querySelectorAll("input,select").forEach(x => {
+if (x.dataset.name)
+(x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
+.hidden = host._hide.includes(x.dataset.name);
+}); // forEach
+} // processHide
 
 export function isContainer (host) {
 const containers = ["series", "parallel", "split"];

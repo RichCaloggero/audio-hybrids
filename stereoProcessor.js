@@ -58,6 +58,7 @@ audio.context.audioWorklet.addModule("stereoProcessor.worklet.js")
 .then(() => {
 console.log(`${host._id}: audio worklet created`);
 host.processor = new AudioWorkletNode(audio.context, "stereo-processor");
+debugger;
 host.input.connect(host.processor).connect(host.wet);
 element.signalReady(host);
 }).catch(e => context.statusMessage(`${host._id}: ${e}`));

@@ -23,6 +23,7 @@ ${ui.list("type", "type", type, [
 ["high pass", "highpass"],
 ["band pass", "bandpass"],
 "notch",
+"peaking",
 ["all pass", "allpass"],
 ["low shelf", "lowshelf"],
 ["high shelf", "highshelf"],

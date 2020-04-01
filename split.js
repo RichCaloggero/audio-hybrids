@@ -53,13 +53,13 @@ console.debug("split: ", channel1, channel2, swapInputs, swapOutputs);
 if (channel1) {
 host.split.connect (channel1.input, swapInputs? 1 : 0, 0);
 channel1.output.connect (host.merge, 0, swapOutputs? 1 : 0);
-console.log(`- channel 1: ${channel1.name} connected`);
+console.log(`- channel 1: ${channel1._id} connected`);
 } // if
 
 if (channel2) {
 host.split.connect (channel2.input, swapInputs? 0 : 1, 0);
 channel2.output.connect (host.merge, 0, swapOutputs? 0 : 1);
-console.log(`- channel 2: ${channel2.name} connected`);
+console.log(`- channel 2: ${channel2._id} connected`);
 } // if
 } // connect
 } // initialize

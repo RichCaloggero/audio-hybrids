@@ -23,16 +23,16 @@ ${ui.commonControls(bypass, mix, defaults)}
 
 define ("audio-parallel", Parallel);
 
-function initialize (host, key) {
+function initialize (host) {
 element.waitForChildren(host, children => {
-
 if (children.length < 2) {
 console.error(`${host._id}: must have at least two children; aborting`);
 throw new Error(`must have at least two children`);
 } // if
 
-children.forEach((child, index) => {
-child.output.connect(host.wet.input);
+children.forEach(child => {
+host.input.connect(child.input);
+child.output.connect(host.wet);
 }); // forEach
 
 host.wet.gain.value = 1 / children.length;
