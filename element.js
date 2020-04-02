@@ -91,18 +91,19 @@ if (creator instanceof Function) {
 return;
 } // if
 
-const _defaults = getHostInfo(host).defaults;
+const _defaults = getHostInfo(host)?.defaults;
 console.debug(`defaults for ${host._id}: `, _defaults);
-//if (host._id === "gain2" && key === "gain") debugger;
 
-let value = host.hasAttribute(key)? processAttribute(host, key) : _defaults[key]?.default;
-console.debug(`connect: default value for ${host._id}.${key} = ${value}`);
-
+let value = getDefault(host, key, _defaults);
 value = Number(value)? Number(value) : value;
 host[key] = value;
 //console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // if
 } // connect
+
+export function getDefault (host, key, defaults) {
+return processAttribute(host, key) || defaults[key]?.default;
+} // getDefault
 
 
 function getHostInfo (host) {
@@ -291,9 +292,10 @@ yield `${name}${count}`;
 } // idGen
 
 export function processAttribute (host, key) {
-//console.debug(`processAttribute: ${host._id}, ${key}`);
+if (!host.hasAttribute(key)) return undefined;
+if (host.getAttribute(key) === "") return true;
 const data = getData(host, key, ui.parse(host.getAttribute(key)));
-console.debug("processAttribute: data = ", data);
+console.debug("processAttribute: ", host, " data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
 if (data.shortcut) ui.requestKeyDefinition(data.shortcut);

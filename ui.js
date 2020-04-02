@@ -44,13 +44,13 @@ data-name="${name}">
 } // number
 
 export function text (label, name, defaultValue) {
-return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"></label>`;
+return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}" data-name="${name}"></label>`;
 } // text
 
 export function boolean (label, name, defaultValue) {
 return html`<label>${label}
-${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}">`
-: html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}">`
+${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}" data-name="${name}">`
+: html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}" data-name="${name}">`
 }</label>`;
 } // boolean
 
@@ -217,8 +217,10 @@ context.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.p
 } // toggleAutomation
 
 export function defineAutomation (input) {
-const host = input.getRootNode().host;
+if (!input.dataset.name) return;
+if (!input.getRootNode()) return;
 const property = input.dataset.name;
+const host = input.getRootNode().host;
 console.debug("defining automation for ", host, property);
 const labelText = getLabelText(input);
 const automationData = automationQueue.has(input)?

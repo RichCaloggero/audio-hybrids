@@ -15,22 +15,22 @@ balance: {default: 0, min: -100, max: 100, step: 1},
 
 const StereoProcessor = element.create("stereoProcessor", defaults, initialize, element.connect, {
 rotation: {
-connect: (host, key) => host[key] = element.processAttribute(host, "rotation"),
+connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "rotation", value)
 }, // rotation
 
 width: {
-connect: (host, key) => host[key] = element.processAttribute(host, "width"),
+connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "width", value)
 }, // width
 
 center: {
-connect: (host, key) => host[key] = element.processAttribute(host, "center"),
+connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "center", value)
 }, // center
 
 balance: {
-connect: (host, key) => host[key] = element.processAttribute(host, "balance"),
+connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "balance", value)
 }, // balance
 
@@ -56,9 +56,8 @@ host.processor = null;
 
 audio.context.audioWorklet.addModule("stereoProcessor.worklet.js")
 .then(() => {
-console.log(`${host._id}: audio worklet created`);
 host.processor = new AudioWorkletNode(audio.context, "stereo-processor");
-debugger;
+console.log(`${host._id}: audio worklet created`);
 host.input.connect(host.processor).connect(host.wet);
 element.signalReady(host);
 }).catch(e => context.statusMessage(`${host._id}: ${e}`));

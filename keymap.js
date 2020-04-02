@@ -42,15 +42,15 @@ document.addEventListener("keyup", e => {
 const text = keyToText(eventToKey(e));
 if (!text) return true;
 
-if (!keymap.has(text)) return true;
-e.preventDefault();
-execute(e.composed? e.target.shadowRoot.activeElement : e.target, text);
+execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e);
 }); // keyboard handler
 
-function execute (target, text) {
+function execute (target, text, e) {
+if (!target) return;
 if (!keymap.has(text)) return
+e.preventDefault();
 const entry = keymap.get(text);
-console.debug("execute: ", entry);
+console.debug("execute: target = ", target, " entry = ", entry);
 
 if (entry instanceof HTMLElement) {
 console.debug(`activate UI 	element`);
@@ -78,7 +78,7 @@ keymap.set(text, input);
 function getKey (input) {
 const host = input.getRootNode().host;
 const property = input.dataset.name;
-const text = findKey(input);
+const text = findKey(input) || "";
 
 context.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
 defineKey(input, response);
@@ -171,7 +171,8 @@ function displayKeyboardHelp (input) {
 context.displayDialog({
 title: "Keyboard Help",
 description: "",
-content: getKeyboardHelp(input)
+content: getKeyboardHelp(input),
+returnFocus: input
 });
 } // displayKeyboardHelp
 

@@ -41,7 +41,7 @@ const data = e.data;
 const name = data[0];
 const value = data[1];
 this[name] = value;
-//console.debug(`parameter ${name} set to ${value}`);
+console.debug(`worklet: parameter ${name} set to ${value}`);
 };
 
 console.log("AudioWorkletProcessor initialized...");
@@ -51,13 +51,12 @@ process (inputs, outputs, parameters) {
 const inputBuffer = inputs[0];
 const outputBuffer = outputs[0];
 if (inputBuffer.length > 0) {
-processAudio.call (this, inputBuffer, outputBuffer);
+this.processAudio(inputBuffer, outputBuffer);
 } // if
 return true;
 } // process
-} // class StereoProcessor
 
-function processAudio (inputBuffer, outputBuffer) {
+processAudio (inputBuffer, outputBuffer) {
 if (inputBuffer.length !== 2 || outputBuffer.length !== 2) throw new Error("processAudio: can only process stereo signals");
 
 const inLeft = inputBuffer[0];
@@ -73,6 +72,8 @@ outLeft[i] = rotatedEnhanced[0];
 outRight[i] = rotatedEnhanced[1];
 } // for each sample
 } // processAudio
+
+} // class StereoProcessor
 
 
 registerProcessor("stereo-processor", _StereoProcessor);
