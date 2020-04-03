@@ -37,13 +37,12 @@ help: "decrease by 100 times step", function: ui.decrease100
 }]
 ]); // new map
 
-document.addEventListener("keyup", e => {
-
+export function globalKeyboardHandler (e) {
 const text = keyToText(eventToKey(e));
 if (!text) return true;
 
 execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e);
-}); // keyboard handler
+} // global keyboard handler
 
 function execute (target, text, e) {
 if (!target) return;

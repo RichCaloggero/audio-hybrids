@@ -6,6 +6,11 @@
 <script src="load.js"></script>
 </head>
 <body>
+<fieldset>
+<legend><h2>Parameters</h2></legend>
+<label>frequency: <input type="number" id="frequency" value="700"></label>
+<label>overlap: <input type="range" id="overlap" value="35"> %</label>
+</fieldset>
 
 <audio-context hide-on-bypass automation-interval="default{0.05} shortcut{a}" label="Phase Panner"> 
 <audio-series>
@@ -23,12 +28,11 @@
 <audio-swap></audio-swap>
 <audio-parallel>
 <audio-series silent-bypass id="lowband" label="low band" hide="mix">
-<audio-filter type="lowpass" frequency="1000" q="4"></audio-filter>
-<!--<audio-swap></audio-swap>-->
+<audio-filter label="low filter" type="lowpass" frequency="1000" q="4" hide="mix type gain detune"></audio-filter>
 <audio-stereo-processor label="rotate low" rotate="default{-45} automate{s(t/2, -135,135)}" hide="bypass mix width center balance"></audio-stereo-processor>
 
 </audio-series><audio-series silent-bypass id="highband" label="high band" hide="mix">
-<audio-filter type="highpass" frequency="1000" q="4"></audio-filter>
+<audio-filter label="high filter" type="highpass" frequency="1000" q="4" hide="mix type gain detune"></audio-filter>
 <audio-stereo-processor label="rotate high" rotate="default{57} automate{-1*s(t/7, -90,90)}" hide="bypass mix  width center balance"></audio-stereo-processor>
 <audio-gain label="gain" gain="2.0" hide="mix bypass"></audio-gain>
 </audio-series>
@@ -45,7 +49,30 @@
 </audio-context>
 
 <script>
-document.querySelector("audio-context").addEventListener("complete", e => e.target.message = "Ready.");
+document.querySelector("audio-context").addEventListener("complete", e => {
+e.target.message = "Ready.";
+const frequency = document.querySelector("#frequency");
+const overlap = document.querySelector("#overlap");
+frequency.addEventListener("change", setFilterFrequencies);
+overlap.addEventListener("change", setFilterFrequencies);
+setFilterFrequencies();
+
+function setFilterFrequencies () {
+setFrequenciesWithOverlap (
+Number(frequency.value),
+Number(overlap.value),
+...document.querySelectorAll("#lowband audio-filter, #highband audio-filter")
+);
+} // setFilterFrequencies
+
+function setFrequenciesWithOverlap (frequency, percentOverlap, f1, f2) {
+// f1 should be low band
+const overlap = frequency * percentOverlap*.01;
+f1.frequency = frequency + overlap;
+f2.frequency = frequency - overlap;
+//console.debug("overlap: ", frequency, percentOverlap, overlap, f1, f2);
+} // setFrequenciesWithOverlap 
+}); // ready
 </script>
 
 </body>

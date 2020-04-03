@@ -55,26 +55,26 @@ ${ui.number("automation interval", "automationInterval", automationInterval, 0.0
 ${message}
 </div>
 
-<div class="prompt" role="region" aria-label="prompt">
-${_focusPrompt && html`<label>${_prompt}:
+${_focusPrompt && html`<div class="prompt" role="region" aria-label="prompt">
+<label>${_prompt}:
 <input type="text" id="prompt" defaultValue="${_response}"  oninput="${(host, event) => _response = event.target.value}"
 onclick="${processResponse}" onkeyup="${handleKey}">
 </label>
-`}
 </div>
+`}
 
-<div id="dialog" role="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description" style="position:relative;">
+${_focusDialog && html`<div id="dialog" role="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description" style="position:relative;">
 <div class="wrapper" style="position:absolute; left:0; top:0; width:100%; height:100%;">
-${_focusDialog && html`<div class="head">
+<div class="head">
 <h2 id="dialog-title" style="display:inline-block;">${_dialog.title}</h2>
 <button class="close" aria-label="close" onclick="${(host, event) => {host._focusDialog = false; _dialog.returnFocus.focus()}}">X</button>
 </div><div class="body">
 <div id="dialog-description">${_dialog.description}</div>
 <div class="content">${_dialog.content}</div>
 </div><!-- .body -->
-`}
 </div><!-- .wrapper -->
 </div><!-- dialog -->
+`}
 </fieldset>
 <slot></slot>
 `;
@@ -118,9 +118,10 @@ if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
 console.log(`${host._id} is complete`);
 root = host;
-//debugger;
+//setTimeout(() => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
+root.addEventListener("focusin", ui.initialize);
 //}, 0);
 
 

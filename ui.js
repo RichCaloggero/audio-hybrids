@@ -10,12 +10,12 @@ const automationQueue = new Map();
 const automationRequests = [];
 const definitionRequests = [];
 
-document.addEventListener("focusin", initialize);
 
-function initialize () {
+export function initialize (e) {
 processAutomationRequests();
 processKeyDefinitionRequests();
-document.removeEventListener("focusin", initialize);
+e.currentTarget.addEventListener("keyup", keymap.globalKeyboardHandler);
+e.currentTarget.removeEventListener("focusin", initialize);
 console.log("UI initialization complete.");
 } // initialize
 
