@@ -6,7 +6,7 @@ import * as ui from "./ui.js";
 
 const defaults = {};
 
-const Split = element.create("split", defaults, initialize, element.connect, {
+const Split = element.create("split", defaults, initialize, {
 swapInputs: {
 connect: (host, key) => host[key] = host.hasAttribute("swap-inputs") || false
 }, // swapInputs

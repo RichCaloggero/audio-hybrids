@@ -43,7 +43,7 @@ const data = e.data;
 const name = data[0];
 const value = data[1];
 this[name] = value;
-console.debug(`worklet: parameter ${name} set to ${value}`);
+//console.debug(`worklet: parameter ${name} set to ${value}`);
 };
 
 console.log("AudioWorkletProcessor initialized...");

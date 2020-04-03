@@ -13,7 +13,7 @@ let _dialog = {open: false};
 
 const defaults = {};
 
-const Context = element.create("context", defaults, initialize, element.connect, {
+const Context = element.create("context", defaults, initialize, {
 message: "",
 
 _focusPrompt: {

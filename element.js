@@ -7,7 +7,7 @@ import * as keymap from "./keymap.js";
 const prefix = "audio";
 const registry = Object.create(null);
 
-export function create (name, defaults, creator, _connect, ...definitions) {
+export function create (name, defaults, creator, ...definitions) {
 console.debug(`create(${name}):`);
 
 const descriptors = Object.assign(
@@ -129,7 +129,7 @@ console.log (`${host._id}: initialization complete`);
 } // initializeHost
 
 
-export function commonProperties (name) {
+function commonProperties (name) {
 if (registry[name]) {
 throw new Error(`create: duplicate descriptors generated: ${_id}; aborting`);
 } // if

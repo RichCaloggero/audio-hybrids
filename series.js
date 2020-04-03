@@ -10,7 +10,7 @@ delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
 }; // sefaults
 
 
-const Series = element.create("series", defaults, initialize, element.connect, {
+const Series = element.create("series", defaults, initialize, {
 _delay: null,
 _gain: null,
 

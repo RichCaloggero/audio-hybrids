@@ -10,8 +10,7 @@ q: {default: 0, step: .02, min: -20, max: 20, type: "range"},
 type: {default: "highpass"}
 };
 
-const Filter = element.create("filter", defaults, "createBiquadFilter", element.connect,
-["type", "frequency", ["q", "Q"], "gain", "detune"], {
+const Filter = element.create("filter", defaults, "createBiquadFilter", ["type", "frequency", ["q", "Q"], "gain", "detune"], {
 
 render: ({ bypass, mix, label, _depth, type, frequency, q, gain, detune }) => {
 	return html`

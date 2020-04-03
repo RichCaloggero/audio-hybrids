@@ -7,7 +7,7 @@ const defaults = {
 panningModel: {default: "HRTF"}
 };
 
-const audioPanner = element.create("panner", defaults, "createPanner", element.connect, [
+const audioPanner = element.create("panner", defaults, "createPanner", [
 ["x", "positionX"],
 ["y", "positionY"],
 ["z", "positionZ"],

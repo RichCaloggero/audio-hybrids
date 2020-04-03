@@ -5,7 +5,7 @@ import * as ui from "./ui.js";
 
 const defaults = {};
 
-const Destination = element.create("destination", defaults, initialize, element.connect, {
+const Destination = element.create("destination", defaults, initialize, {
 render: ({ label, _depth }) => {
 console.debug(`${label}: rendering...`);
 return html`

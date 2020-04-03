@@ -13,7 +13,7 @@ center: {default: 0, min: -100, max: 100, step: 1},
 balance: {default: 0, min: -100, max: 100, step: 1},
 };
 
-const StereoProcessor = element.create("stereoProcessor", defaults, initialize, element.connect, {
+const StereoProcessor = element.create("stereoProcessor", defaults, initialize, {
 rotation: {
 connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "rotation", value)

@@ -7,7 +7,7 @@ import * as ui from "./ui.js";
 const defaults = {}; // sefaults
 
 
-const Parallel = element.create("parallel", defaults, initialize, element.connect, {
+const Parallel = element.create("parallel", defaults, initialize, {
 
 
 render: ({ label, mix, bypass, _depth }) => {

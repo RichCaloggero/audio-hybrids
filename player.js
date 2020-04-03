@@ -6,7 +6,7 @@ import * as ui from "./ui.js";
 
 const defaults = {};
 
-const Player = element.create("player", defaults, initialize, element.connect, {
+const Player = element.create("player", defaults, initialize, {
 
 src: {
 get: (host, value) => host.audioElement.src,
