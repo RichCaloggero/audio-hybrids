@@ -1,3 +1,5 @@
+let flag = false;
+
 class _StereoProcessor extends AudioWorkletProcessor {
 /*static get parameterDescriptors () {
 return [{
@@ -50,13 +52,19 @@ console.log("AudioWorkletProcessor initialized...");
 process (inputs, outputs, parameters) {
 const inputBuffer = inputs[0];
 const outputBuffer = outputs[0];
+
 if (inputBuffer.length > 0) {
-this.processAudio(inputBuffer, outputBuffer);
+processAudio.call(this, inputBuffer, outputBuffer);
 } // if
 return true;
 } // process
 
-processAudio (inputBuffer, outputBuffer) {
+
+} // class StereoProcessor
+
+registerProcessor("stereo-processor", _StereoProcessor);
+
+function processAudio (inputBuffer, outputBuffer) {
 if (inputBuffer.length !== 2 || outputBuffer.length !== 2) throw new Error("processAudio: can only process stereo signals");
 
 const inLeft = inputBuffer[0];
@@ -72,11 +80,6 @@ outLeft[i] = rotatedEnhanced[0];
 outRight[i] = rotatedEnhanced[1];
 } // for each sample
 } // processAudio
-
-} // class StereoProcessor
-
-
-registerProcessor("stereo-processor", _StereoProcessor);
 
 
 

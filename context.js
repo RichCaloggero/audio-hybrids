@@ -57,7 +57,8 @@ ${message}
 
 <div class="prompt" role="region" aria-label="prompt">
 ${_focusPrompt && html`<label>${_prompt}:
-<input type="text" id="prompt" defaultValue="${_response}"  oninput="${(host, event) => _response = event.target.value}" onclick="${processResponse}" onkeyup="${handleKey}">
+<input type="text" id="prompt" defaultValue="${_response}"  oninput="${(host, event) => _response = event.target.value}"
+onclick="${processResponse}" onkeyup="${handleKey}">
 </label>
 `}
 </div>
