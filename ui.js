@@ -129,29 +129,6 @@ function isNumericInput (input) {
 return input.type === "number" || input.type === "range"
 } // isNumericInput
 
-function isInRange(x, min, max) {
-return Number(min) <= Number(x) <= Number(max);
-} // isInRange
-
-function setValue1 (input) {
-if (isInRange(1, input.min, input.max)) input.value = 1;
-} // setValue1
-
-function setValue0 (input) {
-if (isInRange(0, input.min, input.max)) input.value = 0;
-} // setValue0
-
-function negateValue (input) {
-if (isInRange(-1*input.value, input.min, input.max)) input.value = -1*input.value;
-} // negateValue
-
-function setValueMax (input) {
-input.value = isInRange(input.max, input.min, input.max)? input.max : 1;
-} // setValueMax
-
-function setValueMin (input) {
-input.value = isInRange(input.min, input.min, input.max)? input.min : 0;
-} // setValueMin
 
 
 function handleRangeInput(key, input) {
@@ -358,3 +335,40 @@ return Array.from(document.querySelectorAll("audio-context *"))
 export function getLabelText (input) {
 return input.parentElement.textContent.trim();
 } // getLabelText
+
+/// keymap functions
+
+function isInRange(x, min, max) {
+return Number(min) <= Number(x) <= Number(max);
+} // isInRange
+
+function setValue1 (input) {
+if (isInRange(1, input.min, input.max)) input.value = 1;
+} // setValue1
+
+function setValue0 (input) {
+if (isInRange(0, input.min, input.max)) input.value = 0;
+} // setValue0
+
+function negateValue (input) {
+if (isInRange(-1*input.value, input.min, input.max)) input.value = -1*input.value;
+} // negateValue
+
+function setValueMax (input) {
+input.value = isInRange(input.max, input.min, input.max)? input.max : 1;
+} // setValueMax
+
+function setValueMin (input) {
+input.value = isInRange(input.min, input.min, input.max)? input.min : 0;
+} // setValueMin
+
+function increaseBy10 (input) {input.value = Number(input.value) + 10 * (Number(input.step || 1));}
+function increaseBy100 (input) {input.value = Number(input.value) + 100 * (Number(input.step || 1));}
+function decreaseBy10 (input) {input.value = Number(input.value) - 10 * (Number(input.step || 1));}
+function decreaseBy100 (input) {input.value = Number(input.value) - 100 * (Number(input.step || 1));}
+
+//function setValue1 (input) {input.value = 1;}
+//function setValue0 (input) {input.value = 0;}
+//function setValueMax (input) {input.value = Number(input.max) || 1;}
+//function setValueMin (input) {input.value = Number(input.min) || 0;}
+//function negateValue (input) {input.value = -1*Number(input.value);}

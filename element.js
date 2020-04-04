@@ -157,7 +157,7 @@ bypass: {
 connect: (host, key) => host[key] = host.hasAttribute(key) || false,
 observe: (host, value) => {
 host.__bypass(value);
-host.__silentBypass(value);
+host.__silentBypass(host.silentBypass && value);
 hideOnBypass(host);
 if (!value) processHide(host);
 } // observe

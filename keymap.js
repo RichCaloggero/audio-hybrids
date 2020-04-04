@@ -27,13 +27,13 @@ help: "maximum value", function: ui.setValueMax
 }], ["end", {
 help: "minimum value", function: ui.setValueMin
 }], ["pageUp", {
-help: "increase by 10 times step", function: ui.increase10
+help: "increase by 10 times step", function: ui.increaseBy10
 }], ["shift pageUp", {
-help: "increase by 100 times step", function: ui.increase100
+help: "increase by 100 times step", function: ui.increaseBy100
 }], ["pageDown", {
-help: "decrease by 10 times step", function: ui.decrease10
+help: "decrease by 10 times step", function: ui.decreaseBy10
 }], ["shift pageDown", {
-help: "decrease by 100 times step", function: ui.decrease100
+help: "decrease by 100 times step", function: ui.decreaseBy100
 }]
 ]); // new map
 

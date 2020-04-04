@@ -21,7 +21,6 @@ this._mix = this.wet.gain.value = value;
 
 element.__bypass = function (value) {
 if (!this.output) return;
-//console.debug(`${this.name}.bypass ${value} ${this.wet.gain.value} ${this.dry.gain.value} ${this._bypass}`);
 if (value) {
 this.dry.disconnect();
 this.wet.disconnect();
@@ -42,8 +41,8 @@ element.__mix(1);
 element.__bypass(false);
 element.__silentBypass(false);
 
+//console.log(`${element._id}: webaudio nodes created`);
 return element;
-console.log(`${element._id}: webaudio nodes created`);
 } // initialize
 
 console.debug(`audio: ${context}`);
