@@ -290,22 +290,25 @@ yield `${name}${count}`;
 } // while
 } // idGen
 
-export function processAttribute (host, key) {
-if (!host.hasAttribute(key)) return undefined;
-if (host.getAttribute(key) === "") return true;
-const data = getData(host, key, ui.parse(host.getAttribute(key)));
-//console.debug("processAttribute: ", host._id, key, host.getAttribute(key), " data = ", data);
+export function processAttribute (host, key, attribute) {
+if (!attribute) attribute = key;
+if (!host.hasAttribute(attribute)) return undefined;
+const value = host.getAttribute(attribute);
+if (value === "") return true;
+const data = getData(host, key, ui.parse(value));
+if (value.includes("shortcut")) console.debug("processAttribute: ", host._id, key, attribute, value, "\n data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
 if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
 if (data.default) return data.default;
-return undefined;
+return true;
 
 function getData (host, property, data) {
 //console.debug("getData: ", data);
 return Object.assign({}, ...data.map(item => {
-if (item.length === 1) return {default: item[0]};
-else {
+if (item.length === 1) {
+return {default: item[0]};
+} else {
 const [operator, operand] = item;
 if (operator === "automate") return {automate: {host, property, text: operand}};
 if (operator === "shortcut") return {shortcut: {host, property, text: operand}};

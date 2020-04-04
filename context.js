@@ -32,12 +32,12 @@ observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypa
 }, // hideOnBypass
 
 enableAutomation: {
-connect: (host, key) => host[key] = host.hasAttribute("enable-automation") || false,
+connect: (host, key) => host[key] = element.processAttribute(host, key, "enable-automation") || false,
 observe: (host, value) => value? ui.enableAutomation() : ui.disableAutomation()
 }, // enableAutomation
 
 automationInterval: {
-connect: (host, key) => host[key] = Number(host.getAttribute("automation-interval")) || ui.automationInterval,
+connect: (host, key) => host[key] = Number(element.processAttribute(host, key, "automation-interval")) || ui.automationInterval,
 observe: (host, value) => ui.setAutomationInterval(Number(value))
 }, // automationInterval
 

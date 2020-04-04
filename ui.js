@@ -13,7 +13,7 @@ const definitionRequests = [];
 
 export function initialize (e) {
 processAutomationRequests();
-//processKeyDefinitionRequests();
+processKeyDefinitionRequests();
 e.currentTarget.addEventListener("keyup", keymap.globalKeyboardHandler);
 //console.debug(`${e.currentTarget} listening for keyup events`);
 
@@ -48,12 +48,30 @@ return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" o
 accesskey="${name[0]}" data-name="${name}"></label>`;
 } // text
 
-export function boolean (label, name, defaultValue) {
+export function boolean (label, name, initialValue) {
+//console.debug(`boolean: ${name}, ${initialValue}`);
+return html`<button aria-label="${label}"
+aria-pressed="${pressed(initialValue)}"
+onclick="${(host,event) => {
+host[name] = !initialValue;
+event.target.setAttribute('aria-pressed', pressed(!initialValue));
+//console.debug(`- changed to ${host[name]}, ${event.target.getAttribute('aria-pressed')}`);
+ }}"
+data-name="${name}"
+accesskey="${name[0]}">
+${!initialValue? 'X' : 'O'}
+</button>`;
+
+function pressed (value) {return value? "true" : "false";}
+} // boolean
+
+/*export function boolean (label, name, defaultValue) {
 return html`<label>${label}
 ${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}" accesskey="${name[0]}" data-name="${name}">`
 : html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}"  accesskey="${name[0]}" data-name="${name}">`
 }</label>`;
 } // boolean
+*/
 
 export function list(label, name, defaultValue, options) {
 return html`<label>${label}: <select onchange="${html.set(name)}"  accesskey="${name[0]}" data-name="${name}">
@@ -85,7 +103,7 @@ defaultValue === option[0].toLowerCase().trim() || defaultValue === option[1].to
 
 export function commonControls (bypass, mix, defaults) {
 return html`
-${boolean("bypass", "bypass", false)}
+${boolean("bypass", "bypass", bypass)}
 ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step, defaults.mix.type)}
 <br>
 `; // return
@@ -200,19 +218,19 @@ if (!input.getRootNode()) return;
 const property = input.dataset.name;
 const host = input.getRootNode().host;
 console.debug("defining automation for ", host, property);
-const labelText = getLabelText(input);
+const labelText = getLabelText(input) || property;
 const automationData = automationQueue.has(input)?
 automationQueue.get(input)
 : {input, labelText, host, property, text: "", function: null, enabled: false};
-console.debug("automation data: ", automationData);
+//console.debug("automation data: ", automationData);
 
-context.prompt(`automation for ${labelText}: `, automationData.text, text => {
-console.debug(`response: ${text}`);
+context.prompt(`automation for ${labelText}`, automationData.text, text => {
+//console.debug(`response: ${text}`);
 if (text) {
 const _function = compileFunction(text);
 
 if (_function) {
-console.debug(`response: compiled to ${_function}`);
+//console.debug(`response: compiled to ${_function}`);
 automationQueue.set(input,
 Object.assign(automationData, {text, function: _function, enabled: true })
 );
@@ -333,7 +351,8 @@ return Array.from(document.querySelectorAll("audio-context *"))
 } // findAllUiElements
 
 export function getLabelText (input) {
-return input.parentElement.textContent.trim();
+const groupLabel = input.closest("fieldset").querySelector("[role='heading']").textContent;
+return (`${groupLabel} / ${input.parentElement.textContent}`).trim();
 } // getLabelText
 
 /// keymap functions

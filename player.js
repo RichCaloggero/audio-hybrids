@@ -17,7 +17,7 @@ host.audioElement.src = value;
 context.statusMessage(e);
 } // try
 }, // set
-connect: (host, key) => host[key] = host.getAttribute(key) || "",
+connect: (host, key) => host[key] = element.processAttribute(host, key) || "",
 }, // src
 
 play: {
