@@ -2,7 +2,7 @@ import * as ui from "./ui.js";
 import * as context from "./context.js";
 import {html} from "./hybrids/index.js";
 
-let defaultModifiers = "control shift";
+let defaultModifiers = "control";
 const keymap = new Map([
 ["control /", {
 help: "display keyboard help", function: displayKeyboardHelp
@@ -41,13 +41,16 @@ export function globalKeyboardHandler (e) {
 const text = keyToText(eventToKey(e));
 if (!text) return true;
 
-execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e);
+return execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e);
 } // global keyboard handler
 
 function execute (target, text, e) {
-if (!target) return;
-if (!keymap.has(text)) return
+if (!target) return true;
+if (!keymap.has(text)) return true;
 e.preventDefault();
+//e.stopPropagation();
+e.stopImmediatePropagation();
+e.cancelBubble = true;
 const entry = keymap.get(text);
 console.debug("execute: target = ", target, " entry = ", entry);
 
@@ -55,10 +58,13 @@ if (entry instanceof HTMLElement) {
 console.debug(`activate UI 	element`);
 if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry.click();
 else entry.focus();
+
 } else if (entry instanceof Object && entry.function) {
 console.debug(`execute function`);
 entry.function (target, text);
 } // if
+
+return false;
 } // execute
 
 
@@ -67,11 +73,11 @@ export function defineKey (input, text) {
 text = normalizeKeyText(text);
 //console.debug("defineKey: ", text, input);
 
-if (keymap.has (text)) {
-context.statusMessage(`key ${text} is already defined; aborting`);
-} else {
+//if (keymap.has (text)) {
+//context.statusMessage(`key ${text} is already defined; aborting`);
+//} else {
 keymap.set(text, input);
-} // if	
+//} // if	
 } // defineKey
 
 function getKey (input) {

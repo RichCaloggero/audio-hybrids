@@ -13,8 +13,10 @@ const definitionRequests = [];
 
 export function initialize (e) {
 processAutomationRequests();
-processKeyDefinitionRequests();
+//processKeyDefinitionRequests();
 e.currentTarget.addEventListener("keyup", keymap.globalKeyboardHandler);
+//console.debug(`${e.currentTarget} listening for keyup events`);
+
 e.currentTarget.removeEventListener("focusin", initialize);
 console.log("UI initialization complete.");
 } // initialize
@@ -39,23 +41,22 @@ min="${min}" max="${max}" step="${step}"
 accesskey="${name[0]}"
 data-name="${name}">
 </label>`;
-
-
 } // number
 
 export function text (label, name, defaultValue) {
-return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}" data-name="${name}"></label>`;
+return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"
+accesskey="${name[0]}" data-name="${name}"></label>`;
 } // text
 
 export function boolean (label, name, defaultValue) {
 return html`<label>${label}
-${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}" data-name="${name}">`
-: html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}" data-name="${name}">`
+${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}" accesskey="${name[0]}" data-name="${name}">`
+: html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}"  accesskey="${name[0]}" data-name="${name}">`
 }</label>`;
 } // boolean
 
 export function list(label, name, defaultValue, options) {
-return html`<label>${label}: <select onchange="${html.set(name)}" data-name="${name}">
+return html`<label>${label}: <select onchange="${html.set(name)}"  accesskey="${name[0]}" data-name="${name}">
 ${init(options, defaultValue)}
 </select></label>`;
 
@@ -338,17 +339,15 @@ export function parse (expression) {
 if (!expression) return [];
 
 let parser =
-/^([\d.+\-]+)$|^(\w+)$|(\w+)\{(.+?)\}/gi;
+/^([\d.+\-]+)$|^(\w+)$|(\w+?)\{(.+?)\}/gi;
 //console.debug("intermediate: ", [...expression.matchAll(parser)]);
 
 const result = [...expression.matchAll(parser)]
 .map(a => a.filter(x => x))
 .map(a => a.slice(1));
-//console.debug("final: ", result);
+//console.debug("parse: ", result);
 return result;
-
-
-} // parser
+} // parse
 
 export function findAllUiElements () {
 return Array.from(document.querySelectorAll("audio-context *"))

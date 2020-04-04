@@ -12,10 +12,8 @@ console.debug(`create(${name}):`);
 
 const descriptors = Object.assign(
 commonProperties(name),
-...definitions.map(definition => definition instanceof Array?
-createDescriptors(definition)
-: definition
-)); // assign
+...definitions.map(definition => definition instanceof Array? createDescriptors(definition) : definition)
+); // assign
 
 const _defaults = Object.assign({}, commonDefaults(), defaults);
 if (typeof(creator) === "string" && creator in audio.context) {
@@ -31,7 +29,7 @@ idGen: idGen(name)
 return descriptors;
 } // create
 
-export function createDescriptors (props, _connect = connect) {
+export function createDescriptors (props) {
 const aliases = {};
 const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
 result.aliases = () => aliases;
@@ -51,7 +49,7 @@ set: (host, value) => {
 console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
 return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
 },
-connect: _connect
+connect: connect
 }};
 } // createDescriptor
 
@@ -82,8 +80,7 @@ signalReady(host);
 } else {
 throw new Error(`bad creator; aborting`);
 } // if
-
-} else {
+} // if
 // we're initialized, so set defaults for key
 
 if (creator instanceof Function) {
@@ -92,13 +89,12 @@ return;
 } // if
 
 const _defaults = getHostInfo(host)?.defaults;
-console.debug(`defaults for ${host._id}: `, _defaults);
+//console.debug(`defaults for ${host._id}: `, _defaults);
 
 let value = getDefault(host, key, _defaults);
 value = Number(value)? Number(value) : value;
 host[key] = value;
-//console.debug(`${host._id}(${key}): defaulted to ${value}`);
-} // if
+console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // connect
 
 export function getDefault (host, key, defaults) {
@@ -161,12 +157,15 @@ bypass: {
 connect: (host, key) => host[key] = host.hasAttribute(key) || false,
 observe: (host, value) => {
 host.__bypass(value);
+host.__silentBypass(value);
 hideOnBypass(host);
 if (!value) processHide(host);
 } // observe
 },  // bypass
 
 silentBypass: {
+connect: (host, key) => host[key] = host.hasAttribute("silent-bypass"),
+observe: (host, value) => host.__silentBypass(value)
 }, // silentBypass
 
 mix: {
@@ -295,7 +294,7 @@ export function processAttribute (host, key) {
 if (!host.hasAttribute(key)) return undefined;
 if (host.getAttribute(key) === "") return true;
 const data = getData(host, key, ui.parse(host.getAttribute(key)));
-console.debug("processAttribute: ", host, " data = ", data);
+//console.debug("processAttribute: ", host._id, key, host.getAttribute(key), " data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
 if (data.shortcut) ui.requestKeyDefinition(data.shortcut);

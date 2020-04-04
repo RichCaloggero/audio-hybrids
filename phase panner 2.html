@@ -12,9 +12,9 @@
 <label>overlap: <input type="range" id="overlap" value="35"> %</label>
 </fieldset>
 
-<audio-context hide-on-bypass automation-interval="default{0.05} shortcut{a}" label="Phase Panner"> 
+<audio-context label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{alt shift i}" enable-automation="shortcut{alt shift e}"> 
 <audio-series>
-<audio-player label="player" src="default{t1.mp3} shortcut{u}" play="shortcut{p}" seek="shortcut{k}"></audio-player>
+<audio-player label="player" src="t1.mp3" play="shortcut{p}" seek="shortcut{k}"></audio-player>
 
 
 <!--<audio-split label="wide delay" hide="mix">
@@ -29,11 +29,11 @@
 <audio-parallel>
 <audio-series silent-bypass id="lowband" label="low band" hide="mix">
 <audio-filter label="low filter" type="lowpass" frequency="1000" q="4" hide="mix type gain detune"></audio-filter>
-<audio-stereo-processor label="rotate low" rotate="default{-45} automate{s(t/2, -135,135)}" hide="bypass mix width center balance"></audio-stereo-processor>
+<audio-stereo-processor label="rotate low" rotation="default{-45} automate{s(t/2, -135,135)}" hide="bypass mix width center balance"></audio-stereo-processor>
 
 </audio-series><audio-series silent-bypass id="highband" label="high band" hide="mix">
 <audio-filter label="high filter" type="highpass" frequency="1000" q="4" hide="mix type gain detune"></audio-filter>
-<audio-stereo-processor label="rotate high" rotate="default{57} automate{-1*s(t/7, -90,90)}" hide="bypass mix  width center balance"></audio-stereo-processor>
+<audio-stereo-processor label="rotate high" rotation="default{57} automate{-1*s(t/7, -90,90)}" hide="bypass mix  width center balance"></audio-stereo-processor>
 <audio-gain label="gain" gain="2.0" hide="mix bypass"></audio-gain>
 </audio-series>
 </audio-parallel>

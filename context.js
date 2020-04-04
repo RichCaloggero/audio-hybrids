@@ -32,7 +32,7 @@ observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypa
 }, // hideOnBypass
 
 enableAutomation: {
-connect: (host, key) => host[key] = false,
+connect: (host, key) => host[key] = host.hasAttribute("enable-automation") || false,
 observe: (host, value) => value? ui.enableAutomation() : ui.disableAutomation()
 }, // enableAutomation
 
@@ -114,7 +114,6 @@ debugger;
 } // displayDialog
 
 function initialize(host, key) {
-if (!element.isInitialized(host)) {
 element.waitForChildren(host, children => {
 console.log(`${host._id} is complete`);
 root = host;
@@ -122,13 +121,12 @@ root = host;
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 root.addEventListener("focusin", ui.initialize);
+
 //}, 0);
 
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });
-
-} // if
 } // initialize
 
 export function depth (start, _depth = 2) {

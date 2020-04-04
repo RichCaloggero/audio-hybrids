@@ -35,13 +35,7 @@ this._bypass.disconnect();
 } // __bypass
 
 element.__silentBypass = function (value) {
-if (value) {
-//this._silentBypass = true;
-this._bypass.gain.value = 0;
-} else {
-//this._silentBypass = false;
-this._bypass.gain.value = 1.0;
-} // if
+this._bypass.gain.value = value? 0 : 1;
 } // __silentBypass
 
 element.__mix(1);
