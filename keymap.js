@@ -3,39 +3,51 @@ import * as context from "./context.js";
 import {html} from "./hybrids/index.js";
 
 let defaultModifiers = "control";
-const keymap = new Map([
-["control /", {
-help: "display keyboard help", function: displayKeyboardHelp
-}], ["control space", {
-help: "save value", function: ui.saveValue
-}],["control shift space", {
-help: "swap saved and current values", function: ui.swap
-}], ["control alt shift enter", {
-help: "define key", function: getKey
-}], ["enter", {
-help: "define automation", function: ui.defineAutomation
-}], ["control enter", {
-help: "toggle automation", function: ui.toggleAutomation
-}], ["1", {
-help: "set slider to value = 1", function: ui.setValue1
-}], ["0", {
-help: "set slider to value = 0", function: ui.setValue0
-}], ["-", {
-help: "negate slider's value", function: ui.negateValue
-}], ["home", {
-help: "maximum value", function: ui.setValueMax
-}], ["end", {
-help: "minimum value", function: ui.setValueMin
-}], ["pageUp", {
-help: "increase by 10 times step", function: ui.increaseBy10
-}], ["shift pageUp", {
-help: "increase by 100 times step", function: ui.increaseBy100
-}], ["pageDown", {
-help: "decrease by 10 times step", function: ui.decreaseBy10
-}], ["shift pageDown", {
-help: "decrease by 100 times step", function: ui.decreaseBy100
-}]
-]); // new map
+const keymap = new Map([[
+"control /",
+{help: "display keyboard help", function: displayKeyboardHelp}
+], [
+"control space",
+{help: "save value", function: ui.saveValue}
+],[
+"control shift space",
+{help: "swap saved and current values", function: ui.swap}
+], [
+"control alt shift enter",
+{help: "define key", function: getKey}
+], [
+"enter",
+{help: "define automation", function: ui.defineAutomation}
+], [
+"control enter",
+{help: "toggle automation", function: ui.toggleAutomation}
+], [
+"1",
+{type: "range", help: "set slider to value = 1", function: ui.setValue1}
+], [
+"0",
+{type: "range", help: "set slider to value = 0", function: ui.setValue0}
+], [
+"-",
+{type: "range", help: "negate slider's value", function: ui.negateValue}
+], [
+"home",
+{type: "range, number", help: "maximum value", function: ui.setValueMax}
+], ["end",
+{type: "range, number", help: "minimum value", function: ui.setValueMin}
+], [
+"pageUp",
+{type: "range, number", help: "increase by 10 times step", function: ui.increaseBy10}
+], [
+"shift pageUp",
+{type: "range, number", help: "increase by 100 times step", function: ui.increaseBy100}
+], [
+"pageDown",
+{type: "range, number", help: "decrease by 10 times step", function: ui.decreaseBy10}
+], [
+"shift pageDown",
+{type: "range, number", help: "decrease by 100 times step", function: ui.decreaseBy100}
+]]); // new map
 
 export function globalKeyboardHandler (e) {
 const text = keyToText(eventToKey(e));
@@ -47,24 +59,32 @@ return execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e
 function execute (target, text, e) {
 if (!target) return true;
 if (!keymap.has(text)) return true;
-e.preventDefault();
-//e.stopPropagation();
-e.stopImmediatePropagation();
-e.cancelBubble = true;
+
 const entry = keymap.get(text);
-console.debug("execute: target = ", target, " entry = ", entry);
+console.debug("execute: ", text, " target = ", target, " entry = ", entry);
 
 if (entry instanceof HTMLElement) {
 console.debug(`activate UI 	element`);
+preventDefaultAction();
 if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry.click();
 else entry.focus();
 
 } else if (entry instanceof Object && entry.function) {
+if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return;
+preventDefaultAction();
 console.debug(`execute function`);
 entry.function (target, text);
 } // if
 
 return false;
+
+function preventDefaultAction() {
+e.preventDefault();
+//e.stopPropagation();
+e.stopImmediatePropagation();
+e.cancelBubble = true;
+} // preventDefaultAction
+
 } // execute
 
 

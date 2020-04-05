@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>parallel test</title>
+<script src="load.js"></script>
+</head>
+<body>
+
+<audio-context hide-on-bypass automation-interval="default{0.05} shortcut{a}" label="parallel"> 
+<audio-series>
+<audio-player label="player" src="default{t1.mp3} shortcut{alt u}"  play="{shortcut{p}" seek="shortcut{k}"></audio-player>
+
+<audio-parallel>
+<audio-filter label="band 1" type="peaking" hide="type mix detune"></audio-filter>
+<audio-filter label="band 2" type="peaking" hide="type mix detune"></audio-filter>
+</audio-parallel>
+
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-context>
+
+</body>
+</html>

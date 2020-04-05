@@ -355,36 +355,42 @@ const groupLabel = input.closest("fieldset").querySelector("[role='heading']").t
 return (`${groupLabel} / ${input.parentElement.textContent}`).trim();
 } // getLabelText
 
+export function stringToList (s) {
+const r = /, *?| +?/i;
+return s.split(r);
+} // stringToList
+
 /// keymap functions
 
 function isInRange(x, min, max) {
 return Number(min) <= Number(x) <= Number(max);
 } // isInRange
 
-function setValue1 (input) {
+export function setValue1 (input) {
 if (isInRange(1, input.min, input.max)) input.value = 1;
 } // setValue1
 
-function setValue0 (input) {
+export function setValue0 (input) {
 if (isInRange(0, input.min, input.max)) input.value = 0;
 } // setValue0
 
-function negateValue (input) {
+export function negateValue (input) {
 if (isInRange(-1*input.value, input.min, input.max)) input.value = -1*input.value;
 } // negateValue
 
-function setValueMax (input) {
+export function setValueMax (input) {
 input.value = isInRange(input.max, input.min, input.max)? input.max : 1;
 } // setValueMax
 
-function setValueMin (input) {
+export function setValueMin (input) {
 input.value = isInRange(input.min, input.min, input.max)? input.min : 0;
 } // setValueMin
 
-function increaseBy10 (input) {input.value = Number(input.value) + 10 * (Number(input.step || 1));}
-function increaseBy100 (input) {input.value = Number(input.value) + 100 * (Number(input.step || 1));}
-function decreaseBy10 (input) {input.value = Number(input.value) - 10 * (Number(input.step || 1));}
-function decreaseBy100 (input) {input.value = Number(input.value) - 100 * (Number(input.step || 1));}
+export function increaseBy10 (input) {input.value = Number(input.value) + 10 * (Number(input.step || 1));}
+export function increaseBy100 (input) {input.value = Number(input.value) + 100 * (Number(input.step || 1));}
+export function decreaseBy10 (input) {input.value = Number(input.value) - 10 * (Number(input.step || 1));}
+export function decreaseBy100 (input) {input.value = Number(input.value) - 100 * (Number(input.step || 1));}
+
 
 //function setValue1 (input) {input.value = 1;}
 //function setValue0 (input) {input.value = 0;}

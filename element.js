@@ -333,7 +333,7 @@ const containers = ["series", "parallel", "split"];
 return containers.includes(host._name);
 } // isContainer
 
-function stringToList (s) {
+export function stringToList (s) {
 const r = /, *?| +?/i;
 return s.split(r);
 } // stringToList
