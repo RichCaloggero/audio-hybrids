@@ -46,7 +46,7 @@ const key = prop;
 return {[prop]: {
 get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
 set: (host, value) => {
-console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
+//console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
 return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
 },
 connect: connect
@@ -81,9 +81,9 @@ signalReady(host);
 throw new Error(`bad creator; aborting`);
 } // if
 } // if
-// we're initialized, so set defaults for key
 
-if (creator instanceof Function) {
+// we're initialized, so set defaults for key
+if (creator instanceof Function && key !== "mix") {
 //creator(host, key);
 return;
 } // if
@@ -94,7 +94,7 @@ const _defaults = getHostInfo(host)?.defaults;
 let value = getDefault(host, key, _defaults);
 value = Number(value)? Number(value) : value;
 host[key] = value;
-console.debug(`${host._id}(${key}): defaulted to ${value}`);
+//console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // connect
 
 export function getDefault (host, key, defaults) {
@@ -148,7 +148,7 @@ host[key] = host.getAttribute(key) || "";
 host._hide = [];
 }, // connect
 observe: (host, value) => {
-host._hide = value? stringToList(value) : [];
+host._hide = value? ui.stringToList(value) : [];
 processHide(host);
 } // observe
 }, // hide
@@ -171,7 +171,7 @@ observe: (host, value) => host.__silentBypass(value)
 mix: {
 get: (host, value) => host._mix,
 	set: (host, value) => host.__mix(value),
-connect: connect
+connect: (host, key) => connect(host, key)
 }, // mix
 }; // properties
 }// commonProperties
@@ -296,7 +296,7 @@ if (!host.hasAttribute(attribute)) return undefined;
 const value = host.getAttribute(attribute);
 if (value === "") return true;
 const data = getData(host, key, ui.parse(value));
-if (value.includes("shortcut")) console.debug("processAttribute: ", host._id, key, attribute, value, "\n data = ", data);
+if (key === "mix") console.debug("processAttribute: ", host._id, key, attribute, value, "\n data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
 if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
@@ -333,8 +333,4 @@ const containers = ["series", "parallel", "split"];
 return containers.includes(host._name);
 } // isContainer
 
-export function stringToList (s) {
-const r = /, *?| +?/i;
-return s.split(r);
-} // stringToList
 

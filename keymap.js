@@ -31,21 +31,22 @@ const keymap = new Map([[
 "-",
 {type: "range", help: "negate slider's value", function: ui.negateValue}
 ], [
-"home",
+"control home",
 {type: "range, number", help: "maximum value", function: ui.setValueMax}
-], ["end",
+], [
+"control end",
 {type: "range, number", help: "minimum value", function: ui.setValueMin}
 ], [
-"pageUp",
+"control arrowUp",
 {type: "range, number", help: "increase by 10 times step", function: ui.increaseBy10}
 ], [
-"shift pageUp",
+"control shift arrowUp",
 {type: "range, number", help: "increase by 100 times step", function: ui.increaseBy100}
 ], [
-"pageDown",
+"control arrowDown",
 {type: "range, number", help: "decrease by 10 times step", function: ui.decreaseBy10}
 ], [
-"shift pageDown",
+"control shift arrowDown",
 {type: "range, number", help: "decrease by 100 times step", function: ui.decreaseBy100}
 ]]); // new map
 
@@ -58,11 +59,12 @@ return execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e
 
 function execute (target, text, e) {
 if (!target) return true;
-if (!keymap.has(text)) return true;
+if (!isDefined(keymap, text)) return true;
 
-const entry = keymap.get(text);
+const entry = getDefinition(keymap, text);
 console.debug("execute: ", text, " target = ", target, " entry = ", entry);
 
+//two types of entries: if entry is an html element then activate it, else it's an object, so call it's function property
 if (entry instanceof HTMLElement) {
 console.debug(`activate UI 	element`);
 preventDefaultAction();
@@ -70,24 +72,33 @@ if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry
 else entry.focus();
 
 } else if (entry instanceof Object && entry.function) {
-if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return;
+if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return true;
 preventDefaultAction();
 console.debug(`execute function`);
 entry.function (target, text);
+target.focus();
 } // if
 
 return false;
 
 function preventDefaultAction() {
 e.preventDefault();
-//e.stopPropagation();
+e.stopPropagation();
 e.stopImmediatePropagation();
 e.cancelBubble = true;
+return false;
 } // preventDefaultAction
 
 } // execute
 
+function isDefined (keymap, text) {
+return keymap.has(text) || !!getDefinition(keymap, text);
+} // isDefined
 
+function getDefinition (keymap, text) {
+const entry = [...keymap.entries()].find(entry => entry[0].toLowerCase().trim() === text);
+return entry? entry[1] : null;
+} // getDefinition
 
 export function defineKey (input, text) {
 text = normalizeKeyText(text);

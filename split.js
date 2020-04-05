@@ -48,7 +48,7 @@ connect (host.swapInputs, host.swapOutputs);
 function connect (swapInputs, swapOutputs) {
 const channel1 = host.children[0];
 const channel2 = host.children.length === 1? null : host.children[1];
-console.debug("split: ", channel1, channel2, swapInputs, swapOutputs);
+//console.debug("split: ", channel1, channel2, swapInputs, swapOutputs);
 
 if (channel1) {
 host.split.connect (channel1.input, swapInputs? 1 : 0, 0);

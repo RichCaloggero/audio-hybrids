@@ -362,38 +362,22 @@ return s.split(r);
 
 /// keymap functions
 
-function isInRange(x, min, max) {
-return Number(min) <= Number(x) <= Number(max);
-} // isInRange
-
-export function setValue1 (input) {
-if (isInRange(1, input.min, input.max)) input.value = 1;
-} // setValue1
-
-export function setValue0 (input) {
-if (isInRange(0, input.min, input.max)) input.value = 0;
-} // setValue0
-
-export function negateValue (input) {
-if (isInRange(-1*input.value, input.min, input.max)) input.value = -1*input.value;
-} // negateValue
-
-export function setValueMax (input) {
-input.value = isInRange(input.max, input.min, input.max)? input.max : 1;
-} // setValueMax
-
-export function setValueMin (input) {
-input.value = isInRange(input.min, input.min, input.max)? input.min : 0;
-} // setValueMin
-
-export function increaseBy10 (input) {input.value = Number(input.value) + 10 * (Number(input.step || 1));}
-export function increaseBy100 (input) {input.value = Number(input.value) + 100 * (Number(input.step || 1));}
-export function decreaseBy10 (input) {input.value = Number(input.value) - 10 * (Number(input.step || 1));}
-export function decreaseBy100 (input) {input.value = Number(input.value) - 100 * (Number(input.step || 1));}
+function clamp (value, min=0, max=1) {
+console.debug(`clamp: ${value}, ${min}, ${max}`);
+if (value > max) return max;
+else if (value < min) return min;
+else return value;
+} // clamp
 
 
-//function setValue1 (input) {input.value = 1;}
-//function setValue0 (input) {input.value = 0;}
-//function setValueMax (input) {input.value = Number(input.max) || 1;}
-//function setValueMin (input) {input.value = Number(input.min) || 0;}
-//function negateValue (input) {input.value = -1*Number(input.value);}
+export function setValue1 (input) {input.value = clamp(1, input.min, input.max);}
+export function setValue0 (input) {input.value = clamp(0, input.min, input.max);}
+export function negateValue (input) {input.value = clamp(-1*input.value, input.min, input.max);}
+export function setValueMax (input) {input.value = clamp(input.max, input.min, input.max);}
+export function setValueMin (input) {input.value = clamp(input.min, input.min, input.max);}
+
+export function increaseBy10 (input) {input.value = clamp(Number(input.value) + (10 * Number(input.step)), Number(input.min), Number(input.max));}
+export function increaseBy100 (input) {input.value = clamp(Number(input.value) + (100 * Number(input.step)), Number(input.min), Number(input.max));}
+
+export function decreaseBy10 (input) {input.value = clamp(Number(input.value) - (10 * Number(input.step)), Number(input.min), Number(input.max));}
+export function decreaseBy100 (input) {input.value = clamp(Number(input.value) - (100 * Number(input.step)), Number(input.min), Number(input.max));}
