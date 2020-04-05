@@ -76,6 +76,7 @@ if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return tru
 preventDefaultAction();
 console.debug(`execute function`);
 entry.function (target, text);
+target.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 target.focus();
 } // if
 

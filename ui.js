@@ -23,7 +23,6 @@ console.log("UI initialization complete.");
 
 
 export function number (label, name, defaultValue, ...rest) {
-//console.debug(`ui.number: ${name} default is ${defaultValue}`);
 let min, max, step, type;
 if (rest.length === 1 && rest[0] instanceof Object) {
 try {
@@ -36,6 +35,7 @@ console.error(e);
 [min, max, step, type] = rest;
 } // if
 
+if (name === "mix") console.debug(`ui.number: ${name} default is ${defaultValue}, ${min}, ${max}, ${step}`);
 return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}"
 min="${min}" max="${max}" step="${step}"
 accesskey="${name[0]}"
@@ -102,6 +102,7 @@ defaultValue === option[0].toLowerCase().trim() || defaultValue === option[1].to
 } // list
 
 export function commonControls (bypass, mix, defaults) {
+//console.debug("common: mix = ", mix);
 return html`
 ${boolean("bypass", "bypass", bypass)}
 ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step, defaults.mix.type)}

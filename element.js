@@ -169,9 +169,8 @@ observe: (host, value) => host.__silentBypass(value)
 }, // silentBypass
 
 mix: {
-get: (host, value) => host._mix,
-	set: (host, value) => host.__mix(value),
-connect: (host, key) => connect(host, key)
+connect: (host, key) => connect(host, key),
+observe: (host, value) => host.__mix(value)
 }, // mix
 }; // properties
 }// commonProperties
@@ -186,7 +185,7 @@ if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot")
 
 export function commonDefaults () {
 return {
-mix: {default: 1, min: -1, max: 1, step: 0.1, type: "range"},
+mix: {default: 1.0, min: -1.0, max: 1.0, step: 0.1, type: "range"},
 };
 } // commonDefaults
 

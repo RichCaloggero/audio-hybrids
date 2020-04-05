@@ -12,7 +12,7 @@
 <label>overlap: <input type="range" id="overlap" value="35"> %</label>
 </fieldset>
 
-<audio-context label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{alt shift i}" enable-automation="shortcut{alt shift e}"> 
+<audio-context label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{alt shift i}" > 
 <audio-series>
 <audio-player label="player" src="default{t.mp3} shortcut{y}" play="shortcut{x}"></audio-player>
 
@@ -27,21 +27,20 @@
 <audio-swap></audio-swap>
 <audio-parallel>
 <audio-series silent-bypass label="side band">
-<audio-swap mix="0.5"></audio-swap>
+<audio-swap mix="-0.5" hide="mix"></audio-swap>
 <audio-gain label="boost" gain="2.0" hide="mix bypass"></audio-gain>
 
 </audio-series><audio-series silent-bypass id="lowband" label="low band" hide="mix">
-<audio-filter label="low filter" type="lowpass" frequency="1000" q="4" hide="mix type gain detune"></audio-filter>
+<audio-filter label="low filter" type="lowpass" frequency="1000" q="4.2" hide="mix type gain detune"></audio-filter>
 <audio-stereo-processor label="rotate low" rotation="default{-45} automate{s(t/2, -135,135)}" hide="bypass mix width center balance"></audio-stereo-processor>
 
 </audio-series><audio-series silent-bypass id="highband" label="high band" hide="mix">
-<audio-filter label="high filter" type="highpass" frequency="1000" q="4" hide="mix type gain detune"></audio-filter>
+<audio-filter label="high filter" type="highpass" frequency="1000" q="4.2" hide="mix type gain detune"></audio-filter>
 <audio-stereo-processor label="rotate high" rotation="default{57} automate{-1*s(t/7, -90,90)}" hide="bypass mix  width center balance"></audio-stereo-processor>
 </audio-series>
 </audio-parallel>
 
-
-<audio-filter label="bass" type="lowshelf" frequency="150" gain="4.0" hide="mix type q detune"></audio-filter>
+<audio-filter label="bass" type="lowshelf" frequency="150" gain="8.0" hide="mix type q detune"></audio-filter>
 </audio-series><!-- master -->
 
 <audio-gain label="volume" gain="1.0" hide="mix bypass"></audio-gain>

@@ -21,6 +21,15 @@ connect: (host, key) => host[key] = element.processAttribute(host, key) || "",
 }, // src
 
 play: {
+connect: (host, key) => element.getDefault(host, key) || false,
+observe: (host, value) => {
+if (value) host.audioElement.play();
+else host.audioElement.pause();
+//host.play = !value;
+} // observe
+}, // play
+
+/*play: {
 get: (host, value) => !host.audioElement.paused,
 set: (host, value) => {
 if (value) {
@@ -30,6 +39,7 @@ host.audioElement.pause();
 } // if
 } // set
 }, // play property
+*/
 
 seek: {
 connect: (host, key) => 0,

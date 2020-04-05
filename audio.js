@@ -17,6 +17,7 @@ element.__mix = function (value) {
 //console.debug(`mix: ${this.name} ${this.value} ${!this.output} ${!this.wet}`);
 this.dry.gain.value = 1-Math.abs(value);
 this._mix = this.wet.gain.value = value;
+return value;
 } // __mix
 
 element.__bypass = function (value) {
