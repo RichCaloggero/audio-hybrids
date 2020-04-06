@@ -1,25 +1,18 @@
-[ // order is important; context, controllers, and connectors need to be loaded before processors
+
 // root
-"context",
+import   "./context.js";
 
 // connectors
-"series",
-"parallel",
-"split",
+import   "./series.js";
+import   "./parallel.js";
+import   "./split.js";
 
 // processors
-"player",
-"destination",
-"gain",
-"delay",
-"filter",
-"panner",
-"stereoProcessor",
-"swap", 
-].forEach(src => {
-const s = document.createElement("script");
-s.type="module";
-s.crossorigin="anonymous"
-s.src = `${src}.js`;
-document.querySelector("head").appendChild(s);
-});
+import   "./player.js";
+import   "./destination.js";
+import   "./gain.js";
+import   "./delay.js";
+import   "./filter.js";
+import   "./panner.js";
+import   "./stereoProcessor.js";
+import   "./swap.js";

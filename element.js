@@ -1,3 +1,5 @@
+const registry = Object.create(null);
+
 import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as context from "./context.js";
@@ -5,7 +7,6 @@ import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
 
 const prefix = "audio";
-const registry = Object.create(null);
 
 export function create (name, defaults, creator, ...definitions) {
 console.debug(`create(${name}):`);
@@ -185,7 +186,7 @@ if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot")
 
 export function commonDefaults () {
 return {
-mix: {default: 1.0, min: -1.0, max: 1.0, step: 0.1, type: "range"},
+mix: {default: 1.0, min: -1.0, max: 1.0, step: 0.1},
 };
 } // commonDefaults
 

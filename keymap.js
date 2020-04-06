@@ -28,8 +28,8 @@ const keymap = new Map([[
 "0",
 {type: "range", help: "set slider to value = 0", function: ui.setValue0}
 ], [
-"-",
-{type: "range", help: "negate slider's value", function: ui.negateValue}
+"control m",
+{type: "number, range", help: "negate slider's value", function: ui.negateValue}
 ], [
 "control home",
 {type: "range, number", help: "maximum value", function: ui.setValueMax}

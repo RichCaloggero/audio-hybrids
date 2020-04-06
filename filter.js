@@ -6,7 +6,7 @@ import * as ui from "./ui.js";
 const defaults = {
 frequency: {default: 500, step: 10},
 gain: {type: "range", min: -30, max: 30, step: 1, default: 0},
-q: {default: 1.33, step: .02, min: -20, max: 20, type: "range"},
+q: {default: 1.33, step: 0.05, min: -50, max: 50},
 type: {default: "highpass"}
 };
 

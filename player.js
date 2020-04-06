@@ -70,10 +70,10 @@ define ("audio-player", Player);
 
 
 function initialize (host, key) {
-if (!element.isInitialized(host)) {
 host.input = null;
 host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
+//host.audioElement.setAttribute("crossorigin", "anonymous");
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
 
@@ -85,7 +85,4 @@ if (e.target.currentTime - value > 1) host.currentTime= e.target.currentTime;
 
 element.signalReady(host);
 
-} else {
-host[key] = host.getAttribute(key) || "";
-} // if
 } // initialize
