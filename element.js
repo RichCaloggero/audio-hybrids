@@ -145,8 +145,8 @@ if (host.shadowRoot) host.shadowRoot.querySelector("fieldset").hidden = !value
 
 hide: {
 connect: (host, key) => {
-host[key] = host.getAttribute(key) || "";
 host._hide = [];
+host[key] = host.getAttribute(key) || "";
 }, // connect
 observe: (host, value) => {
 host._hide = value? ui.stringToList(value) : [];
@@ -321,7 +321,7 @@ if (operator === "default") return {default: operand};
 
 function processHide (host) {
 if (host._hide.length > 0 && host.shadowRoot)
-host.shadowRoot.querySelectorAll("input,select").forEach(x => {
+host.shadowRoot.querySelectorAll("button,input,select").forEach(x => {
 if (x.dataset.name)
 (x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
 .hidden = host._hide.includes(x.dataset.name);
