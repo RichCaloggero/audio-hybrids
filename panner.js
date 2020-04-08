@@ -28,8 +28,8 @@ panningModel, innerAngle, outerAngle, outerGain,
 }) => {
 	return html`
 <fieldset class="panner">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 
 ${ui.number("x", "x", x, defaults)}
 ${ui.number("y", "y", y, defaults)}

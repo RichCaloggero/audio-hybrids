@@ -1,6 +1,6 @@
 
 // root
-import   "./context.js";
+import   "./app.js";
 
 // connectors
 import   "./series.js";

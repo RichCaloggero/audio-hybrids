@@ -15,8 +15,8 @@ const Filter = element.create("filter", defaults, "createBiquadFilter", ["type",
 render: ({ bypass, mix, label, _depth, type, frequency, q, gain, detune }) => {
 	return html`
 <fieldset class="filter">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 ${ui.list("type", "type", type, [
 ["low pass", "lowpass"],
 ["high pass", "highpass"],

@@ -10,7 +10,7 @@ render: ({ label, _depth }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="destination">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
+${ui.legend({ label, _depth })}
 <p>Audio Destination.</p>
 </fieldset>
 `;

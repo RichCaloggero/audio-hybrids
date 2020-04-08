@@ -2,6 +2,7 @@ import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
 import * as ui from "./ui.js";
+import * as app from "./app.js";
 
 
 const defaults = {};
@@ -19,8 +20,8 @@ connect: (host, key) => host[key] = host.hasAttribute("swap-outputs") || false
 render: ({ mix, bypass, label, _depth }) => {
 return html`
 <fieldset class="split">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 </fieldset>
 <slot></slot>
 `; // template
@@ -36,7 +37,7 @@ host.merge = audio.context.createChannelMerger();
 
 element.waitForChildren(host, children => {
 if (children.length === 0 || children.length > 2) {
-context.statusMessage(`${host._id}: must have at least one, and no more than two child elements`);
+app.statusMessage(`${host._id}: must have at least one, and no more than two child elements`);
 return;
 } // if
 

@@ -1,17 +1,18 @@
 import * as ui from "./ui.js";
-import * as context from "./context.js";
+import * as app from "./app.js";
 import {html} from "./hybrids/index.js";
 
 let defaultModifiers = "control";
+const savedValues = new Map();
 const keymap = new Map([[
 "control /",
 {help: "display keyboard help", function: displayKeyboardHelp}
 ], [
 "control space",
-{help: "save value", function: ui.saveValue}
+{help: "save value", function: saveValue}
 ],[
 "control shift space",
-{help: "swap saved and current values", function: ui.swap}
+{help: "swap saved and current values", function: swapValues}
 ], [
 "control alt shift enter",
 {help: "define key", function: getKey}
@@ -23,31 +24,31 @@ const keymap = new Map([[
 {help: "toggle automation", function: ui.toggleAutomation}
 ], [
 "1",
-{type: "range", help: "set slider to value = 1", function: ui.setValue1}
+{type: "range", help: "set slider to value = 1", function: setValue1}
 ], [
 "0",
-{type: "range", help: "set slider to value = 0", function: ui.setValue0}
+{type: "range", help: "set slider to value = 0", function: setValue0}
 ], [
 "control m",
-{type: "number, range", help: "negate slider's value", function: ui.negateValue}
+{type: "number, range", help: "negate slider's value", function: negateValue}
 ], [
 "control home",
-{type: "range, number", help: "maximum value", function: ui.setValueMax}
+{type: "range, number", help: "maximum value", function: setValueMax}
 ], [
 "control end",
-{type: "range, number", help: "minimum value", function: ui.setValueMin}
+{type: "range, number", help: "minimum value", function: setValueMin}
 ], [
 "control arrowUp",
-{type: "range, number", help: "increase by 10 times step", function: ui.increaseBy10}
+{type: "range, number", help: "increase by 10 times step", function: increaseBy10}
 ], [
 "control shift arrowUp",
-{type: "range, number", help: "increase by 100 times step", function: ui.increaseBy100}
+{type: "range, number", help: "increase by 100 times step", function: increaseBy100}
 ], [
 "control arrowDown",
-{type: "range, number", help: "decrease by 10 times step", function: ui.decreaseBy10}
+{type: "range, number", help: "decrease by 10 times step", function: decreaseBy10}
 ], [
 "control shift arrowDown",
-{type: "range, number", help: "decrease by 100 times step", function: ui.decreaseBy100}
+{type: "range, number", help: "decrease by 100 times step", function: decreaseBy100}
 ]]); // new map
 
 export function globalKeyboardHandler (e) {
@@ -117,7 +118,7 @@ const host = input.getRootNode().host;
 const property = input.dataset.name;
 const text = findKey(input) || "";
 
-context.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
+app.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
 defineKey(input, response);
 input.focus();
 });
@@ -143,7 +144,7 @@ key.key = t[t.length-1];
 //console.debug("- key: ", key);
 
 if (!key.key) throw new Error(`textToKey: ${text} is an invalid key descriptor; character must be last component as in "control shift x"`);
-else if (key.key.length > 1) key.key = capitalize(key.key);
+else if (key.key.length > 1) key.key = ui.capitalize(key.key);
 else key.key = key.key.toLowerCase();
 //console.debug("textToKey: ", text, key);
 return key;
@@ -199,13 +200,25 @@ const allowed = "Enter, Home, End, PageUp, PageDown, ArrowUp, ArrowDown, ArrowLe
 return allowed.includes(text.trim().toLowerCase());
 } // allowedUnmodified
 
-function capitalize (s) {
-return `${s[0].toUpperCase()}${s.slice(1)}`;
-} // capitalize
+export function saveValue (input) {
+savedValues.set(input, input.value);
+app.statusMessage(`${input.value}: value saved.`);
+} // saveValue
+
+export function swapValues (input) {
+if (savedValues.has(input)) {
+const old = savedValues.get(input);
+savedValues.set(input, input.value);
+input.value = old;
+app.statusMessage(old);
+} else {
+app.statusMessage(`No saved value; press enter to save.`);
+} // if
+} // swapValues
 
 
 function displayKeyboardHelp (input) {
-context.displayDialog({
+app.displayDialog({
 title: "Keyboard Help",
 description: "",
 content: getKeyboardHelp(input),
@@ -229,3 +242,26 @@ return item instanceof HTMLElement?
 : item.help;
 } // getHelpText
 } // keyboardHelp
+
+
+
+function clamp (value, min=0, max=1) {
+console.debug(`clamp: ${value}, ${min}, ${max}`);
+if (value > max) return max;
+else if (value < min) return min;
+else return value;
+} // clamp
+
+
+function setValue1 (input) {input.value = clamp(1, input.min, input.max);}
+function setValue0 (input) {input.value = clamp(0, input.min, input.max);}
+function negateValue (input) {input.value = clamp(-1*input.value, input.min, input.max);}
+
+function setValueMax (input) {input.value = clamp(input.max, input.min, input.max);}
+function setValueMin (input) {input.value = clamp(input.min, input.min, input.max);}
+
+function increaseBy10 (input) {input.value = clamp(Number(input.value) + (10 * Number(input.step)), Number(input.min), Number(input.max));}
+function increaseBy100 (input) {input.value = clamp(Number(input.value) + (100 * Number(input.step)), Number(input.min), Number(input.max));}
+
+function decreaseBy10 (input) {input.value = clamp(Number(input.value) - (10 * Number(input.step)), Number(input.min), Number(input.max));}
+function decreaseBy100 (input) {input.value = clamp(Number(input.value) - (100 * Number(input.step)), Number(input.min), Number(input.max));}

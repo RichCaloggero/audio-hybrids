@@ -11,8 +11,8 @@ const Swap = element.create("swap", defaults, initialize, {
 render: ({ mix, bypass, label, _depth }) => {
 return html`
 <fieldset class="swap">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 </fieldset>
 `; // template
 } // render

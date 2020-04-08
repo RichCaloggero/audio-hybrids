@@ -1,7 +1,7 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
-import * as context from "./context.js";
+import * as app from "./app.js";
 import * as ui from "./ui.js";
 
 console.debug("defining audio-stereo-processor...");
@@ -37,8 +37,8 @@ observe: (host, value) => _set(host, "balance", value)
 render: ({ mix, bypass, label, _depth, rotation, width, center, balance }) => {
 return html`
 <fieldset class="stereoProcessor">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 ${ui.number("rotation", "rotation", rotation, defaults)}
 ${ui.number("width", "width", width, defaults)}
 ${ui.number("center", "center", center, defaults)}
@@ -60,7 +60,7 @@ host.processor = new AudioWorkletNode(audio.context, "stereo-processor");
 console.log(`${host._id}: audio worklet created`);
 host.input.connect(host.processor).connect(host.wet);
 element.signalReady(host);
-}).catch(e => context.statusMessage(`${host._id}: ${e}`));
+}).catch(e => app.statusMessage(`${host._id}: ${e}`));
 } // initialize
 
 function _set (host, name, value) {

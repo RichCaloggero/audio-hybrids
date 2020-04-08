@@ -13,8 +13,8 @@ render: ({ mix, bypass, label, _depth, delay }) => {
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="delay">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 ${ui.number("delay", "delay", delay, defaults)}
 </fieldset>
 `; // template

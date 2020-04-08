@@ -11,7 +11,7 @@
 <label>overlap: <input type="range" id="overlap" value="35"> %</label>
 </fieldset>
 
-<audio-context label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{alt shift i}" > 
+<audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{alt shift i}" > 
 <audio-series>
 <audio-player label="player" src="default{t.mp3} shortcut{y}" play="shortcut{x}"></audio-player>
 
@@ -46,10 +46,10 @@
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>
-</audio-context>
+</audio-app>
 
 <script>
-document.querySelector("audio-context").addEventListener("complete", e => {
+document.querySelector("audio-app").addEventListener("complete", e => {
 e.target.message = "Ready.";
 const frequency = document.querySelector("#frequency");
 const overlap = document.querySelector("#overlap");

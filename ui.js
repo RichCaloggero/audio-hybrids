@@ -1,9 +1,8 @@
 import {html} from "./hybrids/index.js";
-import * as context from "./context.js";
+import * as app from "./app.js";
 import * as audio from "./audio.js";
 import * as keymap from "./keymap.js";
 
-const savedValues = new Map();
 let automator = null;
 export let automationInterval = 0.03; // seconds
 const automationQueue = new Map();
@@ -20,6 +19,43 @@ e.currentTarget.addEventListener("keyup", keymap.globalKeyboardHandler);
 e.currentTarget.removeEventListener("focusin", initialize);
 console.log("UI initialization complete.");
 } // initialize
+
+export function legend ({ _depth=1, label } = {}) {
+return html`<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>`;
+} // legend
+
+export function commonControls ({ bypass, mix, defaults } = {}) {
+//console.debug("common: mix = ", mix);
+return html`
+${boolean({ name: "bypass", defaultValue: bypass })}
+${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step, defaults.mix.type)}
+<br>
+`; // return
+} // commonControls
+
+export function text ({ label, name, defaultValue }) {
+if (!label) label = separateWords(name) || "";
+return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"
+accesskey="${name[0]}" data-name="${name}"></label>`;
+} // text
+
+export function boolean ({ label, name, defaultValue } = {}) {
+if (!label) label = separateWords(name) || "";
+//console.debug(`boolean: ${name}, ${defaultValue}`);
+return html`<button aria-label="${label}"
+aria-pressed="${pressed(defaultValue)}"
+onclick="${(host,event) => {
+host[name] = !defaultValue;
+event.target.setAttribute('aria-pressed', pressed(!defaultValue));
+//console.debug(`- changed to ${host[name]}, ${event.target.getAttribute('aria-pressed')}`);
+ }}"
+data-name="${name}"
+accesskey="${name[0]}">
+${!defaultValue? 'X' : 'O'}
+</button>`;
+
+function pressed (value) {return value? "true" : "false";}
+} // boolean
 
 
 export function number (label, name, defaultValue, ...rest) {
@@ -43,35 +79,7 @@ data-name="${name}">
 </label>`;
 } // number
 
-export function text (label, name, defaultValue) {
-return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"
-accesskey="${name[0]}" data-name="${name}"></label>`;
-} // text
 
-export function boolean (label, name, initialValue) {
-//console.debug(`boolean: ${name}, ${initialValue}`);
-return html`<button aria-label="${label}"
-aria-pressed="${pressed(initialValue)}"
-onclick="${(host,event) => {
-host[name] = !initialValue;
-event.target.setAttribute('aria-pressed', pressed(!initialValue));
-//console.debug(`- changed to ${host[name]}, ${event.target.getAttribute('aria-pressed')}`);
- }}"
-data-name="${name}"
-accesskey="${name[0]}">
-${!initialValue? 'X' : 'O'}
-</button>`;
-
-function pressed (value) {return value? "true" : "false";}
-} // boolean
-
-/*export function boolean (label, name, defaultValue) {
-return html`<label>${label}
-${defaultValue? html`<input type="checkbox" checked onclick="${(host, event) => host[name] = event.target.checked}" accesskey="${name[0]}" data-name="${name}">`
-: html`<input type="checkbox" onclick="${(host, event) => host[name] = event.target.checked}"  accesskey="${name[0]}" data-name="${name}">`
-}</label>`;
-} // boolean
-*/
 
 export function list(label, name, defaultValue, options) {
 return html`<label>${label}: <select onchange="${html.set(name)}"  accesskey="${name[0]}" data-name="${name}">
@@ -101,14 +109,6 @@ defaultValue === option[0].toLowerCase().trim() || defaultValue === option[1].to
 } // init
 } // list
 
-export function commonControls (bypass, mix, defaults) {
-//console.debug("common: mix = ", mix);
-return html`
-${boolean("bypass", "bypass", bypass)}
-${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step, defaults.mix.type)}
-<br>
-`; // return
-} // commonControls
 
 
 /*function handleSpecialKeys (host, event) {
@@ -168,21 +168,6 @@ function inRange (value, min = 0, max = 1) {
 return typeof(min) === "number" && typeof(max) === "number" && typeof(value) === "number" && min <= value <= max;
 } // inRange
 
-export function saveValue (input) {
-savedValues.set(input, input.value);
-context.statusMessage(`${input.value}: value saved.`);
-} // saveValue
-
-export function swapValues (input) {
-if (savedValues.has(input)) {
-const old = savedValues.get(input);
-savedValues.set(input, input.value);
-input.value = old;
-context.statusMessage(old);
-} else {
-context.statusMessage(`No saved value; press enter to save.`);
-} // if
-} // swapValues
 
 
 
@@ -209,7 +194,7 @@ if (automationQueue.has(input)) {
 const e = automationQueue.get(input);
 e.enabled = !e.enabled;
 automationQueue.set(input, e);
-context.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.property}`);
+app.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.property}`);
 } // if
 } // toggleAutomation
 
@@ -225,7 +210,7 @@ automationQueue.get(input)
 : {input, labelText, host, property, text: "", function: null, enabled: false};
 //console.debug("automation data: ", automationData);
 
-context.prompt(`automation for ${labelText}`, automationData.text, text => {
+app.prompt(`automation for ${labelText}`, automationData.text, text => {
 //console.debug(`response: ${text}`);
 if (text) {
 const _function = compileFunction(text);
@@ -271,7 +256,7 @@ throw new Error(`$bad automation specified for ${request.host._id}.${request.pro
 
 } catch (e) {
 console.error(e);
-context.statusMessage(e);
+app.statusMessage(e);
 } // catch
 } // processAutomationRequests
 
@@ -298,7 +283,7 @@ throw new Error(`$bad shortcut definition specified for ${request.host._id}.${re
 
 } catch (e) {
 console.error(e);
-context.statusMessage(e);
+app.statusMessage(e);
 } // catch
 } // processKeyDefinitionRequests
 
@@ -322,7 +307,7 @@ return ${text};
 `); // new Function
 
 } catch (e) {
-context.statusMessage(e);
+app.statusMessage(e);
 return null;
 } // try
 } // compileFunction
@@ -361,24 +346,11 @@ const r = /, *?| +?/i;
 return s.split(r);
 } // stringToList
 
-/// keymap functions
 
-function clamp (value, min=0, max=1) {
-console.debug(`clamp: ${value}, ${min}, ${max}`);
-if (value > max) return max;
-else if (value < min) return min;
-else return value;
-} // clamp
+export function capitalize (s) {
+return `${s[0].toUpperCase()}${s.slice(1)}`;
+} // capitalize
 
-
-export function setValue1 (input) {input.value = clamp(1, input.min, input.max);}
-export function setValue0 (input) {input.value = clamp(0, input.min, input.max);}
-export function negateValue (input) {input.value = clamp(-1*input.value, input.min, input.max);}
-export function setValueMax (input) {input.value = clamp(input.max, input.min, input.max);}
-export function setValueMin (input) {input.value = clamp(input.min, input.min, input.max);}
-
-export function increaseBy10 (input) {input.value = clamp(Number(input.value) + (10 * Number(input.step)), Number(input.min), Number(input.max));}
-export function increaseBy100 (input) {input.value = clamp(Number(input.value) + (100 * Number(input.step)), Number(input.min), Number(input.max));}
-
-export function decreaseBy10 (input) {input.value = clamp(Number(input.value) - (10 * Number(input.step)), Number(input.min), Number(input.max));}
-export function decreaseBy100 (input) {input.value = clamp(Number(input.value) - (100 * Number(input.step)), Number(input.min), Number(input.max));}
+export function separateWords (s) {
+return capitalize(s.replace(/([A-Z])/g, " $1").toLowerCase().trim());
+} // separateWords

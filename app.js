@@ -13,7 +13,7 @@ let _dialog = {open: false};
 
 const defaults = {};
 
-const Context = element.create("context", defaults, initialize, {
+const App = element.create("context", defaults, initialize, {
 message: "",
 
 _focusPrompt: {
@@ -46,9 +46,9 @@ render: ({ label, message,  _focusPrompt, _focusDialog, hideOnBypass, enableAuto
 console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="context">
-<legend><h1>${label}</h1></legend>
-${ui.boolean("hide on bypass", "hideOnBypass", true)}
-${ui.boolean("enable automation", "enableAutomation", enableAutomation)}
+${ui.legend({ label })}
+${ui.boolean({ label: "hide on bypass", name: "hideOnBypass", defaultValue: hideOnBypass })}
+${ui.boolean({ label: "enable automation", name: "enableAutomation", defaultValue: enableAutomation })}
 ${ui.number("automation interval", "automationInterval", automationInterval, 0.01, 0.3, 0.01)}
 
 <div aria-live="polite" aria-atomic="true" id="status">
@@ -81,7 +81,7 @@ ${_focusDialog && html`<div id="dialog" role="dialog" aria-labelledby="dialog-ti
 } // render
 }); // Context
 
-define ("audio-context", Context);
+define ("audio-app", App);
 
 
 export function prompt (message, defaultResponse, callback) {
@@ -144,6 +144,7 @@ return _depth;
 } // depth
 export function statusMessage (text) {
 //document.querySelector("audio-context").message = "";
-document.querySelector("audio-context").message = text;
+root.message = "";
+root.message = text;
 } // statusMessage
 

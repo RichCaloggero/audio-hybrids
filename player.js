@@ -1,7 +1,7 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as element from "./element.js";
-import * as context from "./context.js";
+import * as app from "./app.js";
 import * as ui from "./ui.js";
 
 const defaults = {};
@@ -13,8 +13,9 @@ get: (host, value) => host.audioElement.src,
 set: (host, value) => {
 try {
 host.audioElement.src = value;
+return value;
 } catch (e) {
-context.statusMessage(e);
+app.statusMessage(e);
 } // try
 }, // set
 connect: (host, key) => host[key] = element.processAttribute(host, key) || "",
@@ -57,9 +58,9 @@ render: ({ label, _depth, src, play, seek, currentTime, duration }) => {
 //console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="player">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.text("src", "src", src)}
-${ui.boolean("play", "play", play)}
+${ui.legend({ label, _depth })}
+${ui.text({ label: "source file", name: "src", defaultValue: src })}
+${ui.boolean({ name: "play", defaultValue: play })}
 <label>seek: <input type="range" value="${currentTime}" oninput="${html.set(`seek`)}" min="0" max="${duration}" step="5"></label>
 </fieldset>
 `;
@@ -73,7 +74,7 @@ function initialize (host, key) {
 host.input = null;
 host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
-//host.audioElement.setAttribute("crossorigin", "anonymous");
+host.audioElement.addEventListener ("error", e => app.statusMessage(e.target.error));
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
 

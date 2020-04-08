@@ -46,8 +46,8 @@ feedforward: false,
 render: ({ mix, bypass, label, _depth, feedback, feedforward, delay, gain }) => {
 return html`
 <fieldset class="series">
-<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>
-${ui.commonControls(bypass, mix, defaults)}
+${ui.legend({ label, _depth })}
+${ui.commonControls({ bypass, mix, defaults })}
 <div id="feedback-panel">
 ${feedback && ui.number("delay", "delay", delay, defaults)}
 ${feedback && ui.number("gain", "gain", gain, defaults)}

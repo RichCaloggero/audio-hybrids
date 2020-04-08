@@ -2,7 +2,7 @@ const registry = Object.create(null);
 
 import {define, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as context from "./context.js";
+import * as app from "./app.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
 
@@ -179,8 +179,8 @@ observe: (host, value) => host.__mix(value)
 export function hideOnBypass (host) {
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
-.slice(2).forEach(x => x.hidden =  context.root?.hideOnBypass && host.bypass);
-if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = context.root?.hideOnBypass && host.bypass;
+.slice(2).forEach(x => x.hidden =  app.root?.hideOnBypass && host.bypass);
+if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = app.root?.hideOnBypass && host.bypass;
 } // if
 } // hideOnBypass
 
