@@ -13,10 +13,12 @@ const definitionRequests = [];
 export function initialize (e) {
 processAutomationRequests();
 processKeyDefinitionRequests();
-e.currentTarget.addEventListener("keyup", keymap.globalKeyboardHandler);
+app.root.addEventListener("keydown", keymap.globalKeyboardHandler);
+
+//e.currentTarget.addEventListener("keydown", keymap.globalKeyboardHandler);
 //console.debug(`${e.currentTarget} listening for keyup events`);
 
-e.currentTarget.removeEventListener("focusin", initialize);
+//e.currentTarget.removeEventListener("focusin", initialize);
 console.log("UI initialization complete.");
 } // initialize
 

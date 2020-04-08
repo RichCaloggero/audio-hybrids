@@ -178,7 +178,7 @@ k1.ctrlKey === k2.ctrlKey
 } // compareKeys
 
 
-function eventToKey (e) {
+export function eventToKey (e) {
 if (isModifierKey(e.key)) return null;
 
 return {ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, key: e.key};
@@ -186,7 +186,7 @@ return {ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, key: e.key};
 
 
 export function isModifierKey (key) {
-return key === "Control" || key === "Alt" || key === "Shift";
+return ["control", "ctrl", "shift", "alt", "meta"].includes(key.toLowerCase());
 } // isModifierKey
 
 export function hasModifierKeys (e) {

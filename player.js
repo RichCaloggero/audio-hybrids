@@ -74,7 +74,7 @@ function initialize (host, key) {
 host.input = null;
 host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
-host.audioElement.addEventListener ("error", e => app.statusMessage(e.target.error));
+host.audioElement.addEventListener ("error", e => app.statusMessage(e.target.error.message));
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
 

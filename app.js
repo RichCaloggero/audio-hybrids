@@ -58,7 +58,7 @@ ${message}
 ${_focusPrompt && html`<div class="prompt" role="region" aria-label="prompt">
 <label>${_prompt}:
 <input type="text" id="prompt" defaultValue="${_response}"  oninput="${(host, event) => _response = event.target.value}"
-onclick="${processResponse}" onkeyup="${handleKey}">
+onclick="${processResponse}" onkeydown="${handleKey}">
 </label>
 </div>
 `}
@@ -117,13 +117,9 @@ function initialize(host, key) {
 element.waitForChildren(host, children => {
 console.log(`${host._id} is complete`);
 root = host;
-//setTimeout(() => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
-root.addEventListener("focusin", ui.initialize);
-
-//}, 0);
-
+ui.initialize()
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 });
@@ -144,7 +140,7 @@ return _depth;
 } // depth
 export function statusMessage (text) {
 //document.querySelector("audio-context").message = "";
-root.message = "";
 root.message = text;
+setTimeout(() => root.message = "", 3000);
 } // statusMessage
 
