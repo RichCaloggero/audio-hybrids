@@ -9,10 +9,10 @@ const keymap = new Map([[
 {help: "display keyboard help", function: displayKeyboardHelp}
 ], [
 "control space",
-{help: "save value", function: saveValue}
+{type: "number, range", help: "save value", function: saveValue}
 ],[
 "control shift space",
-{help: "swap saved and current values", function: swapValues}
+{type: "range, number", help: "swap saved and current values", function: swapValues}
 ], [
 "control alt shift enter",
 {help: "define key", function: getKey}
@@ -68,13 +68,13 @@ console.debug("execute: ", text, " target = ", target, " entry = ", entry);
 //two types of entries: if entry is an html element then activate it, else it's an object, so call it's function property
 if (entry instanceof HTMLElement) {
 console.debug(`activate UI 	element`);
-preventDefaultAction();
+preventDefaultAction(e);
 if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry.click();
 else entry.focus();
 
 } else if (entry instanceof Object && entry.function) {
 if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return true;
-preventDefaultAction();
+preventDefaultAction(e);
 console.debug(`execute function`);
 entry.function (target, text);
 target.dispatchEvent(new CustomEvent("change", {bubbles: false}));
@@ -83,15 +83,16 @@ target.focus();
 
 return false;
 
-function preventDefaultAction() {
+
+} // execute
+
+export function preventDefaultAction(e) {
 e.preventDefault();
 e.stopPropagation();
 e.stopImmediatePropagation();
 e.cancelBubble = true;
 return false;
 } // preventDefaultAction
-
-} // execute
 
 function isDefined (keymap, text) {
 return keymap.has(text) || !!getDefinition(keymap, text);
@@ -104,27 +105,25 @@ return entry? entry[1] : null;
 
 export function defineKey (input, text) {
 text = normalizeKeyText(text);
-//console.debug("defineKey: ", text, input);
+console.debug("defineKey: ", text, input);
 
-//if (keymap.has (text)) {
-//context.statusMessage(`key ${text} is already defined; aborting`);
-//} else {
+const oldKey = findKey(keymap, input);
+if (oldKey) keymap.delete(oldKey);
 keymap.set(text, input);
-//} // if	
 } // defineKey
 
 function getKey (input) {
 const host = input.getRootNode().host;
 const property = input.dataset.name;
-const text = findKey(input) || "";
+const text = findKey(keymap, input) || "";
 
 app.prompt(`shortcut for ${host._id} ${property}:`, text, response => {
-defineKey(input, response);
+if (response !== false) defineKey(input, response);
 input.focus();
 });
 } // getKey
 
-export function findKey (input) {
+export function findKey (keymap, input) {
 const entry = [...keymap.entries()].find(item => item[1] === input);
 return entry? entry[0] : "";
 } // findKey

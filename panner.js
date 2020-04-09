@@ -7,7 +7,7 @@ const defaults = {
 panningModel: {default: "HRTF"}
 };
 
-const audioPanner = element.create("panner", defaults, "createPanner", [
+const Panner = element.create("panner", defaults, "createPanner", [
 ["x", "positionX"],
 ["y", "positionY"],
 ["z", "positionZ"],
@@ -39,8 +39,8 @@ ${ui.number("orientationX", "orientationX", orientationX, defaults)}
 ${ui.number("orientationY", "orientationY", orientationY, defaults)}
 ${ui.number("orientationZ", "orientationZ", orientationZ, defaults)}
 
-${ui.text("panningModel", "panningModel", panningModel)}
-${ui.text("distanceModel", "distanceModel", distanceModel)}
+${ui.text({ name: "panningModel",  defaultValue: panningModel })}
+${ui.text({ name: "distanceModel", defaultValue: distanceModel })}
 ${ui.number("maxDistance", "maxDistance", maxDistance, defaults)}
 ${ui.number("refDistance", "refDistance", refDistance, defaults)}
 ${ui.number("rolloffFactor", "rolloffFactor", rolloffFactor, defaults)}
@@ -53,3 +53,4 @@ ${ui.number("outerGain", "outerGain", outerGain, defaults)}
 } // render
 });
 
+define ("audio-panner", Panner);

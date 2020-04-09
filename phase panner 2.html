@@ -11,9 +11,9 @@
 <label>overlap: <input type="range" id="overlap" value="35"> %</label>
 </fieldset>
 
-<audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{alt shift i}" > 
+<audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="default{t.mp3} shortcut{y}" play="shortcut{x}"></audio-player>
+<audio-player label="player" src="default{media/fas/In Memory of Danny Gatton.mp3} shortcut{y}" play="shortcut{x}"></audio-player>
 
 
 <audio-split hide="bypass mix">
@@ -21,10 +21,14 @@
 <audio-delay label="widen" delay="0.010" hide="bypass mix"></audio-delay>
 </audio-split>
 
-<audio-series id="master" label="master" mix="-0.5">
+<audio-panner label="panner" panningModel="HRTF"></audio-panner>
 
-<audio-swap></audio-swap>
-<audio-parallel>
+<audio-series id="master" label="master" mix="-0.5">
+<audio-delay label="delay"></audio-delay>
+<audio-swap label="channel swap" mix="1.0" hide="mix"></audio-swap>
+<audio-gain label="gain" gain="0.7" hide="mix bypass"></audio-gain>
+
+<audio-parallel bypass label="parallel">
 <audio-series silent-bypass label="side band">
 <audio-swap mix="-0.5" hide="mix"></audio-swap>
 <audio-gain label="boost" gain="2.0" hide="mix bypass"></audio-gain>

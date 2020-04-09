@@ -13,7 +13,7 @@ let _dialog = {open: false};
 
 const defaults = {};
 
-const App = element.create("context", defaults, initialize, {
+const App = element.create("app", defaults, initialize, {
 message: "",
 
 _focusPrompt: {
@@ -45,7 +45,7 @@ observe: (host, value) => ui.setAutomationInterval(Number(value))
 render: ({ label, message,  _focusPrompt, _focusDialog, hideOnBypass, enableAutomation, automationInterval }) => {
 console.debug(`${label}: rendering...`);
 return html`
-<fieldset class="context">
+<fieldset class="app">
 ${ui.legend({ label })}
 ${ui.boolean({ label: "hide on bypass", name: "hideOnBypass", defaultValue: hideOnBypass })}
 ${ui.boolean({ label: "enable automation", name: "enableAutomation", defaultValue: enableAutomation })}
@@ -79,7 +79,7 @@ ${_focusDialog && html`<div id="dialog" role="dialog" aria-labelledby="dialog-ti
 <slot></slot>
 `;
 } // render
-}); // Context
+}); // app
 
 define ("audio-app", App);
 
@@ -96,8 +96,8 @@ root._focusPrompt = true;
 
 function handleKey (host, event) {
 if (event.key === "Enter" || event.key === "Escape") {
-event.preventDefault();
-if (event.key === "Escape") _response = "";
+keymap.preventDefaultAction(event);
+if (event.key === "Escape") _response = false;
 processResponse(host);
 } // if
 } // handleKey
@@ -139,7 +139,6 @@ e = e.parentElement;
 return _depth;
 } // depth
 export function statusMessage (text) {
-//document.querySelector("audio-context").message = "";
 root.message = text;
 setTimeout(() => root.message = "", 3000);
 } // statusMessage

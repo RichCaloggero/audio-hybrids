@@ -294,13 +294,21 @@ export function processAttribute (host, key, attribute) {
 if (!attribute) attribute = key;
 if (!host.hasAttribute(attribute)) return undefined;
 const value = host.getAttribute(attribute);
+
+// case boolean attribute, presence with no value means true
 if (value === "") return true;
+
+
 const data = getData(host, key, ui.parse(value));
-if (key === "mix") console.debug("processAttribute: ", host._id, key, attribute, value, "\n data = ", data);
 
 if (data.automate) ui.requestAutomation(data.automate);
 if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
-if (data.default) return data.default;
+if (data.default) {
+if (data.default === "true") return true;
+else if (data.default === "false") return false;
+else return data.default;
+} // if
+
 return true;
 
 function getData (host, property, data) {
