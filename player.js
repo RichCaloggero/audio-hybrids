@@ -22,25 +22,13 @@ connect: (host, key) => host[key] = element.processAttribute(host, key) || "",
 }, // src
 
 play: {
-connect: (host, key) => element.getDefault(host, key) || false,
+connect: (host, key) => element.getDefault(host, key, {}) || false,
 observe: (host, value) => {
 if (value) host.audioElement.play();
 else host.audioElement.pause();
-//host.play = !value;
 } // observe
 }, // play
 
-/*play: {
-get: (host, value) => !host.audioElement.paused,
-set: (host, value) => {
-if (value) {
-host.audioElement.play();
-} else {
-host.audioElement.pause();
-} // if
-} // set
-}, // play property
-*/
 
 seek: {
 connect: (host, key) => 0,
@@ -75,6 +63,9 @@ host.input = null;
 host.output = audio.context.createGain();
 host.audioElement = document.createElement("audio");
 host.audioElement.addEventListener ("error", e => app.statusMessage(e.target.error.message));
+host.audioElement.addEventListener("ended", () => host.play = false);
+
+
 host.node = audio.context.createMediaElementSource(host.audioElement);
 host.node.connect(host.output);
 

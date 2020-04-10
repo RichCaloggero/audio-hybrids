@@ -4,7 +4,6 @@ import * as element from "./element.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
 
-console.debug("defining audio-stereo-processor...");
 
 const defaults = {
 rotation: {default: 0, min: -90, max: 90, step: 1},
@@ -60,7 +59,7 @@ host.processor = new AudioWorkletNode(audio.context, "stereo-processor");
 console.log(`${host._id}: audio worklet created`);
 host.input.connect(host.processor).connect(host.wet);
 element.signalReady(host);
-}).catch(e => app.statusMessage(`${host._id}: ${e}`));
+}).catch(e => console.error(`${host._id}: ${e}`));
 } // initialize
 
 function _set (host, name, value) {

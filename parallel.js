@@ -35,7 +35,7 @@ host.input.connect(child.input);
 child.output.connect(host.wet);
 }); // forEach
 
-host.wet.gain.value = 1 / children.length;
+host.output.gain.value = 1 / children.length;
 console.log(`${host._id}: ${children.length} children connected in parallel`);
 }); // waitForChildren
 } // initialize

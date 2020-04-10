@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <title>StereoProcessor test</title>
-<script src="load.js"></script>
+<script type="module" src="load.js"></script>
 </head>
 <body>
-<audio-context label="audio components test">
+<audio-app label="audio components test">
 <audio-series>
 <audio-player label="player" src="t1.mp3"></audio-player>
 
-<audio-series label="feedback delay" feedback delay=".5" gain=".5">
+<audio-series>
 <audio-stereo-processor label="rotate" hide="mix"></audio-stereo-processor>
 
 <audio-filter bypass label="bass" type="lowshelf" frequency="default{150}" gain="default{4.0}" hide="mix type q detune"></audio-filter>
@@ -19,10 +19,10 @@
 <audio-gain label="volume"></audio-gain>
 <audio-destination label="speakers"></audio-destination>
 </audio-series>
-</audio-context>
+</audio-app>
 
 <script>
-document.querySelector("audio-context").addEventListener("complete", e => e.target.message = "Ready.");
+document.querySelector("audio-app").addEventListener("complete", e => e.target.message = "Ready.");
 </script>
 
 </body>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Phase Panner</title>
+<script type="module" src="load.js"></script>
 </head>
 <body>
 <fieldset>
@@ -11,39 +12,43 @@
 <label>overlap: <input type="range" id="overlap" value="35"> %</label>
 </fieldset>
 
-<audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.05} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
+<audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="default{media/fas/In Memory of Danny Gatton.mp3} shortcut{y}" play="shortcut{x}"></audio-player>
+<audio-player label="player" src="default{media/shack-man/Bubblehouse.mp3} shortcut{control shift u}" play="shortcut{control shift x}"></audio-player>
 
 
-<audio-split hide="bypass mix">
+<audio-split>
 <audio-gain></audio-gain>
-<audio-delay label="widen" delay="0.010" hide="bypass mix"></audio-delay>
+<audio-delay label="widen" delay="default{0} automate{s(t, 0,.001)}" hide="mix"></audio-delay>
 </audio-split>
 
-<audio-panner label="panner" panningModel="HRTF"></audio-panner>
+<audio-panner bypass label="panner" panningModel="HRTF"
+x="automate{c(t, -10,10)}" z="automate{s(t, -10,10)}"
+orientationX="0" refDistance="10"></audio-panner>
 
-<audio-series id="master" label="master" mix="-0.5">
-<audio-delay label="delay"></audio-delay>
+<audio-series id="master" label="master" mix="-0.4">
+<audio-delay label="delay" delay="default{0.00003} automate{c(t/2, 0, 0.00007)}"></audio-delay>
 <audio-swap label="channel swap" mix="1.0" hide="mix"></audio-swap>
-<audio-gain label="gain" gain="0.7" hide="mix bypass"></audio-gain>
 
-<audio-parallel bypass label="parallel">
-<audio-series silent-bypass label="side band">
+<audio-parallel label="parallel" hide="mix">
+<audio-series bypass silent-bypass label="side band" hide="mix">
 <audio-swap mix="-0.5" hide="mix"></audio-swap>
 <audio-gain label="boost" gain="2.0" hide="mix bypass"></audio-gain>
+</audio-series>
 
-</audio-series><audio-series silent-bypass id="lowband" label="low band" hide="mix">
-<audio-filter label="low filter" type="lowpass" frequency="1000" q="4.2" hide="mix type gain detune"></audio-filter>
-<audio-stereo-processor label="rotate low" rotation="default{-45} automate{s(t/2, -135,135)}" hide="bypass mix width center balance"></audio-stereo-processor>
+<audio-series silent-bypass id="lowband" label="low band" hide="mix">
+<audio-filter label="low filter" type="lowpass" frequency="1000" q="1" hide="mix type gain detune"></audio-filter>
+<audio-stereo-processor label="rotate low" rotation="default{-45} automate{s(t/2, 0,80)}" hide="bypass mix width center balance"></audio-stereo-processor>
+</audio-series>
 
-</audio-series><audio-series silent-bypass id="highband" label="high band" hide="mix">
-<audio-filter label="high filter" type="highpass" frequency="1000" q="4.2" hide="mix type gain detune"></audio-filter>
-<audio-stereo-processor label="rotate high" rotation="default{57} automate{-1*s(t/7, -90,90)}" hide="bypass mix  width center balance"></audio-stereo-processor>
+<audio-series silent-bypass id="highband" label="high band" hide="mix">
+<audio-filter label="high filter" type="highpass" frequency="1000" q="1" hide="mix type gain detune"></audio-filter>
+<audio-stereo-processor label="rotate high" rotation="default{57} automate{s(t/2, -45,45)}" hide="bypass mix  width center balance"></audio-stereo-processor>
 </audio-series>
 </audio-parallel>
 
-<audio-filter label="bass" type="lowshelf" frequency="150" gain="8.0" hide="mix type q detune"></audio-filter>
+<audio-filter label="bass" type="lowshelf" frequency="150" q="1" gain="8.0" hide="mix type q detune"></audio-filter>
+<audio-gain label="boost" gain="1.0" hide="mix bypass"></audio-gain>
 </audio-series><!-- master -->
 
 <audio-gain label="volume" gain="1.0" hide="mix bypass"></audio-gain>
@@ -77,9 +82,13 @@ f2.frequency = frequency - overlap;
 //console.debug("overlap: ", frequency, percentOverlap, overlap, f1, f2);
 } // setFrequenciesWithOverlap 
 }); // ready
+
+function $ (selector, context = document) {
+return context.querySelector(selector);
+} // $
+
 </script>
 
-<script type="module" src="load.js" crossorigin="anonymous"></script>
 
 </body>
 </html>

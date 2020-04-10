@@ -139,7 +139,7 @@ e = e.parentElement;
 return _depth;
 } // depth
 export function statusMessage (text) {
-root.message = text;
-setTimeout(() => root.message = "", 3000);
+App.message = text;
+setTimeout(() => App.message = "", 3000);
 } // statusMessage
 

@@ -166,7 +166,7 @@ if (!value) processHide(host);
 
 silentBypass: {
 connect: (host, key) => host[key] = host.hasAttribute("silent-bypass"),
-observe: (host, value) => host.__silentBypass(value)
+observe: (host, value) => host.__silentBypass(host.bypass && value)
 }, // silentBypass
 
 mix: {

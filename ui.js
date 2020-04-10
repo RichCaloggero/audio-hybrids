@@ -113,58 +113,11 @@ defaultValue === option[0].toLowerCase().trim() || defaultValue === option[1].to
 
 
 
-/*function handleSpecialKeys (host, event) {
-const key = event.key;
-const input = event.target;
-
-if (input.type === "range" && handleRangeInput(key, input)) return false;
-
-switch (key) {
-case " ": {
-if (isNumericInput(input)) {
-if(event.ctrlKey && event.shiftKey) swapValues(input);
-else if(event.ctrlKey) saveValue(input);
-else e.preventDefault();
-} // if
-} // case spaceBar
-break;
-
-case "Enter": {
-if (event.ctrlKey && event.altKey && event.shiftKey) keymap.getKey(input, input.getRootNode().host, input.dataset.name);
-else if (isNumericInput(input)) {
-if(event.ctrlKey) toggleAutomation(input);
-else defineAutomation(input, input.getRootNode().host, input.dataset.name);
-} // if
-} // case Enter
-break
-
-default: return true;
-} // switch
-
-return false;
-
-} // handleSpecialKeys
-*/
-
 function isNumericInput (input) {
 return input.type === "number" || input.type === "range"
 } // isNumericInput
 
 
-
-function handleRangeInput(key, input) {
-const [min, max, value] = [Number(input.min), Number(input.max), Number(input.value)];
-switch (key) {
-case "0": input.value = Number(0); return true;
-case "1": input.value = Number(1); return true;
-case "-": input.value = Number(-1 * value); return true;
-case ".": if (checkRange(min, max)) input.value = Number((max-min)/2); return true;
-
-default: return false;
-} // switch
-
-return false;
-} // handleRangeInput
 
 function inRange (value, min = 0, max = 1) {
 return typeof(min) === "number" && typeof(max) === "number" && typeof(value) === "number" && min <= value <= max;
@@ -173,20 +126,24 @@ return typeof(min) === "number" && typeof(max) === "number" && typeof(value) ===
 
 
 
-
-
 export function enableAutomation () {
 automator = setInterval(() => {
 automationQueue.forEach(e => automate(e));
 }, 1000*automationInterval); // startAutomation
+
+app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
 } // startAutomation
 
-export function disableAutomation () {clearInterval(automator); automator = null;}
+export function disableAutomation () {
+clearInterval(automator); automator = null;
+app.statusMessage("Automation disabled.");
+} // disableAutomation
 
 function automate (e) {
 if (e.enabled) {
 e.host[e.property] = e.function(audio.context.currentTime);
 //e.input.value = Number(e.function(audio.context.currentTime));
+//e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 //console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
 } // if
 } // automate
@@ -248,7 +205,9 @@ const input = findUiControl(request.host, request.property);
 
 if (input) {
 request.function = compileFunction(request.text);
-if (request.function) automationQueue.set (input, Object.assign({}, request, {labelText: getLabelText(input), enabled: true}));
+if (request.function) automationQueue.set (input,
+Object.assign({}, request, {input: input}, {labelText: getLabelText(input), enabled: true})
+); // set
 else throw new Error(`${request.text}: cannot compile; aborting`);
 
 } else {
