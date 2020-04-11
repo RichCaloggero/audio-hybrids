@@ -159,7 +159,7 @@ connect: (host, key) => host[key] = host.hasAttribute(key) || false,
 observe: (host, value) => {
 host.__bypass(value);
 host.__silentBypass(host.silentBypass && value);
-hideOnBypass(host);
+hideOnBypass(host, app.root?.hideOnBypass && value);
 if (!value) processHide(host);
 } // observe
 },  // bypass
@@ -176,11 +176,11 @@ observe: (host, value) => host.__mix(value)
 }; // properties
 }// commonProperties
 
-export function hideOnBypass (host) {
+export function hideOnBypass (host, value) {
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
-.slice(2).forEach(x => x.hidden =  app.root?.hideOnBypass && host.bypass);
-if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = app.root?.hideOnBypass && host.bypass;
+.slice(2).forEach(x => x.hidden =  value);
+if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = value;
 } // if
 } // hideOnBypass
 

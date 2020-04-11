@@ -114,15 +114,15 @@ debugger;
 } // displayDialog
 
 function initialize(host, key) {
-element.waitForChildren(host, children => {
-console.log(`${host._id} is complete`);
 root = host;
+element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 ui.initialize()
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
-});
+console.log(`${host._id} is complete`);
+}); // wait for children
 } // initialize
 
 export function depth (start, _depth = 2) {

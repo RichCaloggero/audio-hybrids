@@ -15,10 +15,6 @@ processAutomationRequests();
 processKeyDefinitionRequests();
 app.root.addEventListener("keydown", keymap.globalKeyboardHandler);
 
-//e.currentTarget.addEventListener("keydown", keymap.globalKeyboardHandler);
-//console.debug(`${e.currentTarget} listening for keyup events`);
-
-//e.currentTarget.removeEventListener("focusin", initialize);
 console.log("UI initialization complete.");
 } // initialize
 
@@ -162,7 +158,7 @@ if (!input.dataset.name) return;
 if (!input.getRootNode()) return;
 const property = input.dataset.name;
 const host = input.getRootNode().host;
-console.debug("defining automation for ", host, property);
+//console.debug("defining automation for ", host, property);
 const labelText = getLabelText(input) || property;
 const automationData = automationQueue.has(input)?
 automationQueue.get(input)
@@ -192,7 +188,7 @@ return true;
 
 export function requestAutomation (data) {
 automationRequests.push (data);
-console.debug("requestAutomation: ", data);
+//console.debug("requestAutomation: ", data);
 } // requestAutomation
 
 function processAutomationRequests () {
@@ -200,7 +196,7 @@ console.log(`processing ${automationRequests.length} automation requests`);
 try {
 let request;
 while (request = automationRequests.shift()) {
-console.debug("automation request: ", request);
+//console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
 
 if (input) {
@@ -251,7 +247,7 @@ app.statusMessage(e);
 
 export function findUiControl (host, property) {
 const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);
-console.debug(`uiControl: ${host._id}.${property}: ${element}`);
+//console.debug(`uiControl: ${host._id}.${property}: ${element}`);
 return element;
 } // findUiControl
 

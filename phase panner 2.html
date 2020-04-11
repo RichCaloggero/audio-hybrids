@@ -18,8 +18,8 @@
 
 
 <audio-split>
-<audio-gain></audio-gain>
-<audio-delay label="widen" delay="default{0} automate{s(t, 0,.001)}" hide="mix"></audio-delay>
+<audio-delay label="widen left" delay="default{0} automate{c(t, 0,.001)}" hide="mix"></audio-delay>
+<audio-delay label="widen right" delay="default{0} automate{s(t, 0,.001)}" hide="mix"></audio-delay>
 </audio-split>
 
 <audio-panner bypass label="panner" panningModel="HRTF"

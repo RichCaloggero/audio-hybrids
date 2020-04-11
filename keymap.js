@@ -75,7 +75,7 @@ else entry.focus();
 } else if (entry instanceof Object && entry.function) {
 if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return true;
 preventDefaultAction(e);
-console.debug(`execute function`);
+//console.debug(`execute function`);
 entry.function (target, text);
 target.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 target.focus();
