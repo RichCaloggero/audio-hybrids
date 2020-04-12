@@ -123,23 +123,25 @@ return typeof(min) === "number" && typeof(max) === "number" && typeof(value) ===
 
 
 export function enableAutomation () {
-automator = setInterval(() => {
+automator = setTimeout(function _tick () {
 automationQueue.forEach(e => automate(e));
+if (automator) setTimeout(_tick, 1000*automationInterval);
 }, 1000*automationInterval); // startAutomation
 
 app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
-} // startAutomation
+} // enableAutomation
 
 export function disableAutomation () {
-clearInterval(automator); automator = null;
+clearTimeout(automator);
+automator = null;
 app.statusMessage("Automation disabled.");
 } // disableAutomation
 
 function automate (e) {
 if (e.enabled) {
-e.host[e.property] = e.function(audio.context.currentTime);
-//e.input.value = Number(e.function(audio.context.currentTime));
-//e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
+//e.host[e.property] = e.function(audio.context.currentTime);
+e.input.value = Number(e.function(audio.context.currentTime));
+e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 //console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
 } // if
 } // automate

@@ -2,19 +2,50 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>StereoProcessor test</title>
+<title>Stereo</title>
 <script type="module" src="load.js"></script>
 </head>
 <body>
-<audio-app label="audio components test">
+<audio-app label="stereo">
 <audio-series>
-<audio-player label="player" src="t1.mp3"></audio-player>
+<audio-player label="player" src="default{media/shack-man/Bubblehouse.mp3} shortcut{control shift u}" play="shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-<audio-series>
-<audio-stereo-processor label="rotate" hide="mix"></audio-stereo-processor>
-
-<audio-filter bypass label="bass" type="lowshelf" frequency="default{150}" gain="default{4.0}" hide="mix type q detune"></audio-filter>
+<audio-parallel label="mid side processing" hide="mix">
+<audio-series label="side" silent-bypass hide="mix">
+<audio-swap  mix="-0.5" hide="mix bypass"></audio-swap>
+<audio-split>
+<audio-delay label="widen left" delay="default{0} automate{c(t/2, 0, 0.004)}" hide="mix"></audio-delay>
+<audio-delay label="widen right" delay="default{0} automate{c(t/2, 0, 0.002)}" hide="mix"></audio-delay>
+</audio-split>
+<audio-gain label="boost" gain="2.0" hide="mix bypass"></audio-gain>
 </audio-series>
+
+<audio-series label="mid" silent-bypass hide="mix">
+<audio-swap  mix="0.5" hide="mix bypass"></audio-swap>
+<audio-gain label="mid gain" gain="2.0" hide="mix bypass"></audio-gain>
+</audio-series>
+</audio-parallel>
+
+
+<audio-series bypass id="funk" label="funky processor" mix="-0.5">
+<audio-delay label="delay" delay="default{0.00003} automate{c(t/2, 0, 0.00007)}"></audio-delay>
+<audio-swap label="channel swap" mix="1.0" hide="mix"></audio-swap>
+
+<audio-parallel label="parallel" hide="mix">
+<audio-series silent-bypass id="lowband" label="low band" hide="mix">
+<audio-filter label="low filter" type="lowpass" frequency="1000" q="1" hide="mix type gain detune"></audio-filter>
+<audio-stereo-processor label="rotate low" rotation="default{-45} automate{s(t/2, 0,80)}" hide="bypass mix width center balance"></audio-stereo-processor>
+</audio-series>
+
+<audio-series silent-bypass id="highband" label="high band" hide="mix">
+<audio-filter label="high filter" type="highpass" frequency="1000" q="1" hide="mix type gain detune"></audio-filter>
+<audio-stereo-processor label="rotate high" rotation="default{57} automate{s(t/2, -45,45)}" hide="bypass mix  width center balance"></audio-stereo-processor>
+</audio-series>
+</audio-parallel>
+
+<audio-filter label="bass" type="lowshelf" frequency="150" q="1" gain="8.0" hide="mix type q detune"></audio-filter>
+<audio-gain label="boost" gain="1.0" hide="mix bypass"></audio-gain>
+</audio-series><!-- master -->
 
 <audio-gain label="volume"></audio-gain>
 <audio-destination label="speakers"></audio-destination>
@@ -23,6 +54,10 @@
 
 <script>
 document.querySelector("audio-app").addEventListener("complete", e => e.target.message = "Ready.");
+
+function $ (selector, context = document) {
+return context.querySelector(selector);
+} // $
 </script>
 
 </body>

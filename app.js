@@ -15,6 +15,7 @@ const defaults = {};
 
 const App = element.create("app", defaults, initialize, {
 message: "",
+statusMessage: () => statusMessage,
 
 _focusPrompt: {
 connect: (host, key) => host[key] = false,
@@ -139,7 +140,7 @@ e = e.parentElement;
 return _depth;
 } // depth
 export function statusMessage (text) {
-App.message = text;
+(App).message = text;
 setTimeout(() => App.message = "", 3000);
 } // statusMessage
 
