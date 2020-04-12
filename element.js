@@ -98,7 +98,7 @@ host[key] = value;
 //console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // connect
 
-export function getDefault (host, key, defaults) {
+export function getDefault (host, key, defaults = {}) {
 return processAttribute(host, key) || defaults[key]?.default;
 } // getDefault
 

@@ -14,12 +14,12 @@
 
 <audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="default{media/shack-man/Bubblehouse.mp3} shortcut{control shift u}" play="shortcut{control shift x}"></audio-player>
+<audio-player label="player" src="default{media/shack-man/Bubblehouse.mp3} shortcut{control shift u}" play="shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
 
 <audio-split>
-<audio-delay label="widen left" delay="default{0} automate{c(t, 0,.001)}" hide="mix"></audio-delay>
-<audio-delay label="widen right" delay="default{0} automate{s(t, 0,.001)}" hide="mix"></audio-delay>
+<audio-delay label="widen left" delay="default{0} automate{c(t/2, 0,.0001)}" hide="mix"></audio-delay>
+<audio-delay label="widen right" delay="default{0} automate{s(t/2, 0,.0001)}" hide="mix"></audio-delay>
 </audio-split>
 
 <audio-panner bypass label="panner" panningModel="HRTF"
