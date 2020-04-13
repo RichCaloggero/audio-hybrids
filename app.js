@@ -140,7 +140,7 @@ e = e.parentElement;
 return _depth;
 } // depth
 export function statusMessage (text) {
-(App).message = text;
-setTimeout(() => App.message = "", 3000);
+(root || App).message = text;
+setTimeout(() => (root || App).message = "", 3000);
 } // statusMessage
 

@@ -53,7 +53,7 @@
 </audio-app>
 
 <script>
-document.querySelector("audio-app").addEventListener("complete", e => e.target.message = "Ready.");
+document.querySelector("audio-app").addEventListener("complete", e => e.target.statusMessage("Ready."));
 
 function $ (selector, context = document) {
 return context.querySelector(selector);

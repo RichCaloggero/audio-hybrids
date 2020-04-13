@@ -146,7 +146,7 @@ e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 } // if
 } // automate
 
-function toggleAutomation (input) {
+export function toggleAutomation (input) {
 if (automationQueue.has(input)) {
 const e = automationQueue.get(input);
 e.enabled = !e.enabled;

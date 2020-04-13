@@ -177,11 +177,13 @@ observe: (host, value) => host.__mix(value)
 }// commonProperties
 
 export function hideOnBypass (host, value) {
+setTimeout(() => {
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
 .slice(2).forEach(x => x.hidden =  value);
 if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = value;
 } // if
+}, 0);
 } // hideOnBypass
 
 export function commonDefaults () {
@@ -328,12 +330,15 @@ if (operator === "default") return {default: operand};
 } // processAttribute
 
 function processHide (host) {
-if (host._hide.length > 0 && host.shadowRoot)
+setTimeout(() => {
+if (host._hide.length > 0 && host.shadowRoot) {
 host.shadowRoot.querySelectorAll("button,input,select").forEach(x => {
 if (x.dataset.name)
 (x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
 .hidden = host._hide.includes(x.dataset.name);
 }); // forEach
+} // if
+}, 0); // timeout
 } // processHide
 
 export function isContainer (host) {
