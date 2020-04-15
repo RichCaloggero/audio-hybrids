@@ -8,13 +8,24 @@
 <body>
 <fieldset>
 <legend><h2>Parameters</h2></legend>
+<label>delay factor: <input type="range" id="delayFactor" value="1" min="0" max="10" step="0.05"></label>
+<label>time factor: <input type="range" id="timeFactor" value="1" min="0" max="2" step="0.05"></label>
+
+<label>left delay: <input type="number" id="leftDelay" value="0.004" min="0" max="0.05" step="0.00002"></label>
+<label>right delay: <input type="number" id="rightDelay" value="0.002" min="0" max="0.05" step="0.00002"></label>
+<label>center delay: <input type="number" id="centerDelay" value="0.0007" min="0" max="0.05" step="0.00002"></label>
+
+<label>left time: <input type="number" id="leftTime" value="0.5" min="0" max="2" step="0.05"></label>
+<label>right time: <input type="number" id="rightTime" value="0.33" min="0" max="2" step="0.05"></label>
+<label>center time: <input type="number" id="centerTime" value="1.0" min="0" max="2" step="0.05"></label>
+
 <label>frequency: <input type="number" id="frequency" value="700"></label>
 <label>overlap: <input type="range" id="overlap" value="35"> %</label>
 </fieldset>
 
 <audio-app label="Phase Panner" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="default{media/shack-man/Bubblehouse.mp3} shortcut{control shift u}" play="shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
+<audio-player label="player" src="default{media/shack-man/Henduck.mp3} shortcut{control shift u}" play="shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
 
 <audio-series bypass label="mono" hide="mix">
@@ -26,18 +37,20 @@
 x="automate{c(t, -10,10)}" z="automate{s(t, -10,10)}"
 orientationX="0" refDistance="10"></audio-panner>
 
-<audio-series id="master" label="master" mix="-0.4">
+<audio-series id="master" label="master" mix="1">
 <audio-parallel label="mid side" hide="mix">
 <audio-series label="side" silent-bypass hide="mix">
 <audio-split>
-<audio-delay bypass label="widen left" delay="default{0} automate{c(t/2, 0, 0.004)}" hide="mix"></audio-delay>
-<audio-delay label="widen right" delay="default{0} automate{c(t/2, 0, 0.002)}" hide="mix"></audio-delay>
+<audio-delay label="left delay" delay="default{0.0025} automate{c(timeFactor**leftTime*t, 0, delayFactor*leftDelay)}" hide="mix"></audio-delay>
+<audio-delay label="right delay" delay="default{0.0019} automate{c(timeFactor**rightTime*t, 0, delayFactor*rightDelay)}" hide="mix"></audio-delay>
 </audio-split>
+
 <audio-swap  mix="-0.5" hide="mix bypass"></audio-swap>
 <audio-gain label="side boost" gain="2.0" hide="mix bypass"></audio-gain>
 </audio-series>
 
 <audio-series label="mid" silent-bypass hide="mix">
+<audio-delay label="center delay" delay="default{0.00009} automate{s(timeFactor*centerTime*t, 0, delayFactor*centerDelay)}" hide="mix"></audio-delay>
 <audio-swap  mix="0.5" hide="mix bypass"></audio-swap>
 <audio-gain label="mid gain" gain="1.0" hide="mix bypass"></audio-gain>
 </audio-series>
@@ -66,7 +79,7 @@ orientationX="0" refDistance="10"></audio-panner>
 </audio-series><!-- funk -->
 
 <audio-filter label="bass" type="lowshelf" frequency="150" q="1" gain="8.0" hide="mix type q detune"></audio-filter>
-<audio-gain label="boost" gain="1.0" hide="mix bypass"></audio-gain>
+<audio-gain label="boost" gain="2.0" hide="mix bypass"></audio-gain>
 </audio-series><!-- master -->
 
 <audio-gain label="volume" gain="1.0" hide="mix bypass"></audio-gain>
@@ -76,6 +89,20 @@ orientationX="0" refDistance="10"></audio-panner>
 </audio-app>
 
 <script>
+window.leftDelay = _valueOf("leftDelay");
+window.rightDelay = _valueOf("rightDelay");
+window.centerDelay = _valueOf("centerDelay");
+
+window.leftTime = _valueOf("leftTime");
+window.rightTime = _valueOf("rightTime");
+window.centerTime = _valueOf("centerTime");
+
+window.delayFactor = _valueOf("delayFactor");
+window.timeFactor = _valueOf("timeFactor");
+
+$("#delayFactor").addEventListener("change", e => window.delayFactor = Number(e.target.value));
+$("#timeFactor").addEventListener("change", e => window.timeFactor = Number(e.target.value));
+
 document.querySelector("audio-app").addEventListener("complete", e => {
 e.target.message = "Ready.";
 const frequency = document.querySelector("#frequency");
@@ -100,6 +127,9 @@ f2.frequency = frequency - overlap;
 //console.debug("overlap: ", frequency, percentOverlap, overlap, f1, f2);
 } // setFrequenciesWithOverlap 
 }); // ready
+
+
+function _valueOf (id) {return Number(document.querySelector(`#${id}`).value);}
 
 function $ (selector, context = document) {
 return context.querySelector(selector);
