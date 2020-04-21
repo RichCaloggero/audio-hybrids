@@ -9,7 +9,8 @@
 <fieldset>
 <legend><h2>Parameters</h2></legend>
 <label>delay factor: <input type="range" id="delayFactor" value="1" min="0" max="10" step="0.05"></label>
-<label>time factor: <input type="range" id="timeFactor" value="1" min="0" max="2" step="0.05"></label>
+<label>time factor: <input type="range" id="timeFactor" value="1" min="0" max="2" step="0.005"></label>
+<label>Phase: <input type="range" id="phase" value="0.0" min="-7.0" max="7.0" step="0.02"></label>
 
 <label>left delay: <input type="number" id="leftDelay" value="0.004" min="0" max="0.05" step="0.00002"></label>
 <label>right delay: <input type="number" id="rightDelay" value="0.002" min="0" max="0.05" step="0.00002"></label>
@@ -28,7 +29,7 @@
 <audio-player label="player" src="default{media/shack-man/Henduck.mp3} shortcut{control shift u}" play="shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
 
-<audio-series bypass label="mono" hide="mix">
+<!--<audio-series bypass label="mono" hide="mix">
 <audio-swap mix="0.5"></audio-swap>
 <audio-gain gain="0.5"></audio-gain>
 </audio-series>
@@ -36,15 +37,17 @@
 <audio-panner bypass label="panner" panningModel="HRTF"
 x="automate{c(t, -10,10)}" z="automate{s(t, -10,10)}"
 orientationX="0" refDistance="10"></audio-panner>
+-->
 
 <audio-series id="master" label="master" mix="1">
 <audio-parallel label="mid side" hide="mix">
 <audio-series label="side" silent-bypass hide="mix">
 <audio-split>
-<audio-delay label="left delay" delay="default{0.0025} automate{c(timeFactor**leftTime*t, 0, delayFactor*leftDelay)}" hide="mix"></audio-delay>
-<audio-delay label="right delay" delay="default{0.0019} automate{c(timeFactor**rightTime*t, 0, delayFactor*rightDelay)}" hide="mix"></audio-delay>
+<audio-delay label="left delay" delay="default{0.0025} automate{c(timeFactor*leftTime*t, 0, delayFactor*leftDelay)}" hide="mix"></audio-delay>
+<audio-delay label="right delay" delay="default{0.0019} automate{s(timeFactor*rightTime*t+phase, 0, delayFactor*rightDelay)}" hide="mix"></audio-delay>
 </audio-split>
 
+<audio-stereo-processor label="rotate side" rotation="default{0.0} automate{c(timeFactor*leftTime*t, -delayFactor*80, delayFactor*80)}" hide="mix width center balance"></audio-stereo-processor>
 <audio-swap  mix="-0.5" hide="mix bypass"></audio-swap>
 <audio-gain label="side boost" gain="2.0" hide="mix bypass"></audio-gain>
 </audio-series>
@@ -57,7 +60,7 @@ orientationX="0" refDistance="10"></audio-panner>
 </audio-parallel>
 
 
-<audio-series label="funk" id="funk" mix="-0.5">
+<audio-series bypass label="funk" id="funk" mix="-0.5">
 <audio-delay label="delay" delay="default{0.00003} automate{c(t/2, 0, 0.00007)}"></audio-delay>
 
 <audio-parallel label="parallel" hide="mix">
@@ -76,13 +79,14 @@ orientationX="0" refDistance="10"></audio-panner>
 <audio-stereo-processor label="rotate high" rotation="default{57} automate{s(t/2, -45,45)}" hide="bypass mix  width center balance"></audio-stereo-processor>
 </audio-series>
 </audio-parallel>
-</audio-series><!-- funk -->
 
 <audio-filter label="bass" type="lowshelf" frequency="150" q="1" gain="8.0" hide="mix type q detune"></audio-filter>
-<audio-gain label="boost" gain="2.0" hide="mix bypass"></audio-gain>
+<audio-gain label="boost" gain="3.0" hide="mix bypass"></audio-gain>
+</audio-series><!-- funk -->
+
 </audio-series><!-- master -->
 
-<audio-gain label="volume" gain="1.0" hide="mix bypass"></audio-gain>
+<audio-gain label="volume" gain="default{1.0} shortcut{control shift v}" hide="mix bypass"></audio-gain>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>
@@ -99,17 +103,35 @@ window.centerTime = _valueOf("centerTime");
 
 window.delayFactor = _valueOf("delayFactor");
 window.timeFactor = _valueOf("timeFactor");
+window.phase = _valueOf("phase");
 
-$("#delayFactor").addEventListener("change", e => window.delayFactor = Number(e.target.value));
-$("#timeFactor").addEventListener("change", e => window.timeFactor = Number(e.target.value));
-
-document.querySelector("audio-app").addEventListener("complete", e => {
-e.target.message = "Ready.";
 const frequency = document.querySelector("#frequency");
 const overlap = document.querySelector("#overlap");
+
+document.querySelector("audio-app").addEventListener("complete", e => {
+const app = e.target;
+app.statusMessage("Ready.");
+
+$("#delayFactor").addEventListener("change", e => {
+window.delayFactor = Number(e.target.value);
+});
+
+$("#timeFactor").addEventListener("change", e => {
+window.timeFactor = Number(e.target.value);
+});
+
 frequency.addEventListener("change", setFilterFrequencies);
 overlap.addEventListener("change", setFilterFrequencies);
 setFilterFrequencies();
+
+
+function setDelayTimes () {
+const leftDelay = $("#leftDelay").shadowRoot.querySelector("[data-name='delay']");
+const rightDelay = $("#rightDelay").shadowRoot.querySelector("[data-name='delay']");
+leftDelay.min.value = rightDelay.min.value = 0;
+leftDelay.max.value = leftDelay.value = window.leftDelay;
+rightDelay.max.value = rightDelay.value = window.rightDelay;
+} // setDelayTimes
 
 function setFilterFrequencies () {
 setFrequenciesWithOverlap (

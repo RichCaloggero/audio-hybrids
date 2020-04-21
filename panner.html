@@ -3,24 +3,20 @@
 <head>
 <meta charset="utf-8">
 <title>panner test</title>
-<script src="context.js" type="module"></script>
-<script src="player.js" type="module"></script>
-<script src="destination.js" type="module"></script>
-<script src="panner.js" type="module"></script>
-<script src="series.js" type="module"></script>
+<script type="module" src="load.js"></script>
 </head>
 <body>
 <h1>Test</h1>
 
-<audio-context label="Panner Test">
+<audio-app label="Panner Test">
 <audio-series>
-<audio-player src="t.mp3"></audio-player>
+<audio-player label="player" src="media/clapton-17-Feb-2020-london-hammersmith.mp4"></audio-player>
 
 <audio-panner label="panner" panningModel="equalpower"></audio-panner>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>
-</audio-context>
+</audio-app>
 
 </body>
 </html>
