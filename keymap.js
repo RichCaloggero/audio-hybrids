@@ -63,11 +63,11 @@ if (!target) return true;
 if (!isDefined(keymap, text)) return true;
 
 const entry = getDefinition(keymap, text);
-console.debug("execute: ", text, " target = ", target, " entry = ", entry);
+//console.debug("execute: ", text, " target = ", target, " entry = ", entry);
 
 //two types of entries: if entry is an html element then activate it, else it's an object, so call it's function property
 if (entry instanceof HTMLElement) {
-console.debug(`activate UI 	element`);
+//console.debug(`activate UI 	element`);
 preventDefaultAction(e);
 if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry.click();
 else entry.focus();
@@ -105,7 +105,7 @@ return entry? entry[1] : null;
 
 export function defineKey (input, text) {
 text = normalizeKeyText(text);
-console.debug("defineKey: ", text, input);
+//console.debug("defineKey: ", text, input);
 
 const oldKey = findKey(keymap, input);
 if (oldKey) keymap.delete(oldKey);
@@ -211,7 +211,7 @@ savedValues.set(input, input.value);
 input.value = old;
 app.statusMessage(old);
 } else {
-app.statusMessage(`No saved value; press enter to save.`);
+app.statusMessage("No saved value");
 } // if
 } // swapValues
 
@@ -245,7 +245,7 @@ return item instanceof HTMLElement?
 
 
 function clamp (value, min=0, max=1) {
-console.debug(`clamp: ${value}, ${min}, ${max}`);
+//console.debug(`clamp: ${value}, ${min}, ${max}`);
 if (value > max) return max;
 else if (value < min) return min;
 else return value;

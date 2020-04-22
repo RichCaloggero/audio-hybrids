@@ -44,7 +44,7 @@ observe: (host, value) => ui.setAutomationInterval(Number(value))
 
 
 render: ({ label, message,  _focusPrompt, _focusDialog, hideOnBypass, enableAutomation, automationInterval }) => {
-console.debug(`${label}: rendering...`);
+//console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="app">
 ${ui.legend({ label })}
@@ -119,7 +119,8 @@ root = host;
 element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
-ui.initialize()
+setTimeout(() => ui.initialize(), 0);
+
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 console.log(`${host._id} is complete`);

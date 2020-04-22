@@ -19,7 +19,11 @@ commonProperties(name),
 const _defaults = Object.assign({}, commonDefaults(), defaults);
 if (typeof(creator) === "string" && creator in audio.context) {
 const info = getPropertyInfo(audio.context[creator].call(audio.context), descriptors.aliases());
-Object.keys(info).forEach(key => _defaults[key] = Object.assign({}, info[key], _defaults[key]));
+Object.keys(info).forEach(key => {
+if (!Object.keys(_defaults).includes(key)) {
+_defaults[key] = Object.assign({}, info[key], _defaults[key])
+} // if
+});
 } // if
 Object.assign(defaults, _defaults);
 
@@ -38,20 +42,44 @@ result.aliases = () => aliases;
 return result;
 
 function createDescriptor (p) {
-if (p instanceof Array) createAlias(p);
-const webaudioProp = p instanceof Array? p[1] : p;
-const prop = p instanceof Array? p[0] : p;
-const key = prop;
+let webaudioProp;
+let key;
+if (p instanceof Array) {
+createAlias(p);
+key = p[0];
+webaudioProp = p[1];
+} else {
+key = webaudioProp = p;
+} // if
 
-//console.debug(`creating descriptor ${p}, ${prop}, ${webaudioProp}`);
-return {[prop]: {
-get: (host,value) => host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value : host.node[webaudioProp],
-set: (host, value) => {
-//console.debug(`${host._id}.set (${webaudioProp}) = ${value}`);
-return host.node[webaudioProp] instanceof AudioParam? host.node[webaudioProp].value = Number(value) : host.node[webaudioProp] = value
-},
-connect: connect
-}};
+return {[key]: {
+get: (host, value) => getWebaudioProp(host.node, webaudioProp),
+set: (host, value) => setWebaudioProp(host.node, webaudioProp, value),
+connect: connect,
+} // descriptor
+};
+
+function getWebaudioProp (node, prop) {
+return node[prop] instanceof AudioParam? node[prop].value : node[prop];
+} // getWebaudioProp
+
+function setWebaudioProp (node, prop, value) {
+const parameter = node[prop];
+
+if (parameter instanceof AudioParam) return setAudioParam(parameter, value);
+else return setParam(node, prop, value);
+
+function setAudioParam (prop, value) {
+return (prop.value = Number(value));
+} // setAudioParam
+
+function setParam (node, prop, value) {
+//console.debug(`setParam: ${node}, ${prop}, ${value}`);
+if (Number(node[prop]) || node[prop] === 0)
+return (node[prop] = Number(value));
+else return (node[prop] = value);
+} // setParam
+} // setWebaudioProp
 } // createDescriptor
 
 function createAlias(p) {
@@ -85,7 +113,7 @@ throw new Error(`bad creator; aborting`);
 
 // we're initialized, so set defaults for key
 if (creator instanceof Function && key !== "mix") {
-//creator(host, key);
+// all elements have mix control, so handle it here
 return;
 } // if
 
@@ -93,7 +121,8 @@ const _defaults = getHostInfo(host)?.defaults;
 //console.debug(`defaults for ${host._id}: `, _defaults);
 
 let value = getDefault(host, key, _defaults);
-value = Number(value)? Number(value) : value;
+// NaN (not-a-number) tests falsey
+value = Number(value) || value === 0? Number(value) : value;
 host[key] = value;
 //console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // connect
@@ -242,7 +271,7 @@ console.log(`abort: ${e}\n${e.stack}\n`);
 export function signalReady (element) {
 element.dispatchEvent(new CustomEvent("elementReady", {bubbles: true}));
 element._isReady = true;
-console.debug (`${element._id} signaling ready`);
+//console.debug (`${element._id} signaling ready`);
 } // signalReady
 
 function getPropertyInfo (node, _alias = []) {
@@ -297,11 +326,12 @@ if (!attribute) attribute = key;
 if (!host.hasAttribute(attribute)) return undefined;
 const value = host.getAttribute(attribute);
 
-// case boolean attribute, presence with no value means true
+// case boolean attribute, presence with empty string value means true
 if (value === "") return true;
 
 
 const data = getData(host, key, ui.parse(value));
+//console.debug(`processAttribute: ${JSON.stringify(data)}`);
 
 if (data.automate) ui.requestAutomation(data.automate);
 if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
@@ -311,10 +341,9 @@ else if (data.default === "false") return false;
 else return data.default;
 } // if
 
-return true;
+return value;
 
 function getData (host, property, data) {
-//console.debug("getData: ", data);
 return Object.assign({}, ...data.map(item => {
 if (item.length === 1) {
 return {default: item[0]};

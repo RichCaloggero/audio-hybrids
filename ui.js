@@ -195,9 +195,8 @@ automationRequests.push (data);
 
 function processAutomationRequests () {
 console.log(`processing ${automationRequests.length} automation requests`);
+processRequest(automationRequests, request => {
 try {
-let request;
-while (request = automationRequests.shift()) {
 //console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
 
@@ -209,26 +208,26 @@ Object.assign({}, request, {input: input}, {labelText: getLabelText(input), enab
 else throw new Error(`${request.text}: cannot compile; aborting`);
 
 } else {
-throw new Error(`$bad automation specified for ${request.host._id}.${request.property}; skipped`);
+throw new Error(`bad automation specified for ${request.host._id}. ${request.property}; skipped`);
 } // if
-} // while
 
 } catch (e) {
-console.error(e);
-app.statusMessage(e);
+console.error(`${e.message} at ${e.lineNumber}`);
+app.statusMessage(`e.message);
 } // catch
+}); // processRequest
 } // processAutomationRequests
 
 
 export function requestKeyDefinition (definition) {
+//console.debug(`requestDefinition: ${definition.host._id}, ${definition.property}, ${definition.text}`);
 definitionRequests.push(definition);
 } // requestKeyDefinition
 
 function processKeyDefinitionRequests () {
-console.log(`processing ${definitionRequests.length} definition requests`);
+console.log(`processDefinitionRequests: processing ${definitionRequests.length} definition requests`);
+processRequests (definitionRequests, request => {
 try {
-let request;
-while (request = definitionRequests.shift()) {
 //console.debug("definition request: ", request);
 const input = findUiControl(request.host, request.property);
 
@@ -236,20 +235,27 @@ if (input) {
 keymap.defineKey(input, request.text);
 
 } else {
-throw new Error(`$bad shortcut definition specified for ${request.host._id}.${request.property}; skipped`);
+throw new Error(`bad shortcut definition specified for ${request.host._id}. ${request.property}; skipped`);
 } // if
-} // while
 
 } catch (e) {
-console.error(e);
-app.statusMessage(e);
+console.error(`${e.message} at ${e.lineNumber}`);
+app.statusMessage(e.message);
 } // catch
+}); // processRequest
 } // processKeyDefinitionRequests
 
 
+function processRequests (queue, callback) {
+let request;
+while (request = queue.shift()) {
+callback(request);
+} // while
+} // processRequest
+
 export function findUiControl (host, property) {
 const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);
-//console.debug(`uiControl: ${host._id}.${property}: ${element}`);
+//console.debug(`findUiControl: ${host._id}.${property}: ${element}`);
 return element;
 } // findUiControl
 

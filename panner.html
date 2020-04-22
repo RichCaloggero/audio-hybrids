@@ -2,17 +2,15 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>panner test</title>
+<title>Panner Test</title>
 <script type="module" src="load.js"></script>
 </head>
 <body>
-<h1>Test</h1>
-
-<audio-app label="Panner Test">
+<audio-app label="panner test" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="media/clapton-17-Feb-2020-london-hammersmith.mp4"></audio-player>
+<audio-player label="player" src="default{/media/shack-man/Henduck.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-<audio-panner label="panner" panningModel="equalpower"></audio-panner>
+<audio-panner label="panner"></audio-panner>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>

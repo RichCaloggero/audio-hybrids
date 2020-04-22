@@ -5,6 +5,8 @@ import * as ui from "./ui.js";
 
 const defaults = {
 panningModel: {default: "HRTF"},
+refDistance: {default: 10},
+coneOuterAngle: {default: 0},
 a: {default: 0, step: 0.05},
 r: {default: 0, min: 0, step: 1}
 };
