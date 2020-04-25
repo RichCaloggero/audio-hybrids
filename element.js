@@ -69,8 +69,14 @@ const parameter = node[prop];
 if (parameter instanceof AudioParam) return setAudioParam(parameter, value);
 else return setParam(node, prop, value);
 
-function setAudioParam (prop, value) {
-return (prop.value = Number(value));
+function setAudioParam (audioParam, value) {
+try {
+return (audioParam.value = Number(value));
+} catch (e) {
+console.error("setAudioParam: ", prop, audioParam, value, `: ${e}`);
+//debugger;
+return audioParam.default;
+} // try
 } // setAudioParam
 
 function setParam (node, prop, value) {
@@ -122,9 +128,8 @@ const _defaults = getHostInfo(host)?.defaults;
 
 let value = getDefault(host, key, _defaults);
 // NaN (not-a-number) tests falsey
-value = Number(value) || value === 0? Number(value) : value;
+console.debug(`element.connect: ${host._id}(${key}): setting value to ${value}`);
 host[key] = value;
-//console.debug(`${host._id}(${key}): defaulted to ${value}`);
 } // connect
 
 export function getDefault (host, key, defaults = {}) {

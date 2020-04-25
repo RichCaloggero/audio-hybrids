@@ -111,7 +111,6 @@ setTimeout(() => host._focusPrompt = false, 0);
 export function displayDialog (dialog) {
 _dialog = dialog;
 root._focusDialog = true;
-debugger;
 } // displayDialog
 
 function initialize(host, key) {
@@ -119,8 +118,8 @@ root = host;
 element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
-setTimeout(() => ui.initialize(), 0);
 
+setTimeout(() => ui.initialize(), 0);
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 console.log(`${host._id} is complete`);

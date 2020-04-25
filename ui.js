@@ -195,7 +195,7 @@ automationRequests.push (data);
 
 function processAutomationRequests () {
 console.log(`processing ${automationRequests.length} automation requests`);
-processRequest(automationRequests, request => {
+processRequests(automationRequests, request => {
 try {
 //console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
@@ -213,7 +213,7 @@ throw new Error(`bad automation specified for ${request.host._id}. ${request.pro
 
 } catch (e) {
 console.error(`${e.message} at ${e.lineNumber}`);
-app.statusMessage(`e.message);
+app.statusMessage(e.message);
 } // catch
 }); // processRequest
 } // processAutomationRequests

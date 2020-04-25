@@ -7,7 +7,8 @@ const defaults = {
 panningModel: {default: "HRTF"},
 refDistance: {default: 10},
 coneOuterAngle: {default: 0},
-a: {default: 0, step: 0.05},
+a_xz: {default: 0, step: 0.05},
+a_xy: {default: 0, step: 0.05},
 r: {default: 0, min: 0, step: 1}
 };
 
@@ -26,18 +27,23 @@ const Panner = element.create("panner", defaults, "createPanner", [
 r: {
 connect: element.connect,
 observe: (host, value) => {
-host.x = value * Math.cos(host.a);
-host.z = value * Math.sin(host.a);
+[host.x, host.y, host.z] = toPolar(host.r, host.a_xy, host.a_xz);
 } // observe
 }, // r
 
-a: {
+a_xz: {
 connect: element.connect,
 observe: (host, value) => {
-host.x = host.r * Math.cos(value);
-host.z = host.r * Math.sin(value);
+[host.x, host.y, host.z] = toPolar(host.r, host.a_xy, host.a_xz);
 } // observe
-}, // r
+}, // a_xz
+
+a_xy: {
+connect: element.connect,
+observe: (host, value) => {
+[host.x, host.y, host.z] = toPolar(host.r, host.a_xy, host.a_xz);
+} // observe
+}, // a_xy
 
 
 render: ({ bypass, mix, label, _depth,
@@ -45,7 +51,7 @@ x,y,z,
 orientationX, orientationY, orientationZ,
 distanceModel, maxDistance, refDistance, rolloffFactor,
 panningModel, innerAngle, outerAngle, outerGain,
-r, a
+r, a_xz, a_xy
 }) => {
 	return html`
 <fieldset class="panner">
@@ -57,7 +63,8 @@ ${ui.number("y", "y", y, defaults)}
 ${ui.number("z", "z", z, defaults)}
 
 <br>${ui.number("r", "r", r, defaults)}
-${ui.number("a", "a", a, defaults)}
+${ui.number("a (X Z)", "a_xz", a_xz, defaults)}
+${ui.number("a (X Y)", "a_xy", a_xy, defaults)}
 
 <br>${ui.number("orientationX", "orientationX", orientationX, defaults)}
 ${ui.number("orientationY", "orientationY", orientationY, defaults)}
@@ -78,3 +85,14 @@ ${ui.number("outerGain", "outerGain", outerGain, defaults)}
 });
 
 define ("audio-panner", Panner);
+
+function toPolar (r, theta, phi) {
+const cos = Math.cos;
+const sin = Math.sin;
+
+return [ // x,y,z
+r * cos(theta) * sin(phi),
+r * sin(theta) * sin(phi),
+r * cos(phi)
+];
+} // toPolar
