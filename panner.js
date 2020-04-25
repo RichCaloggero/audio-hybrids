@@ -6,10 +6,10 @@ import * as ui from "./ui.js";
 const defaults = {
 panningModel: {default: "HRTF"},
 refDistance: {default: 10},
-coneOuterAngle: {default: 0},
-a_xz: {default: 0, step: 0.05},
-a_xy: {default: 0, step: 0.05},
-r: {default: 0, min: 0, step: 1}
+orientationX: {default: 0},
+a_xz: {default: 0, step: 0.1},
+a_xy: {default: 0, step: 0.1},
+r: {default: 0, min: 0, step: 0.1}
 };
 
 const Panner = element.create("panner", defaults, "createPanner", [

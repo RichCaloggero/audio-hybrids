@@ -10,7 +10,13 @@
 <audio-series>
 <audio-player label="player" src="default{/media/shack-man/Henduck.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-<audio-panner label="panner"></audio-panner>
+<audio-panner label="panner"
+x="-automate{10*cos(t/2)}"
+z="-automate{10*sin(t/2)}"
+r="automate{s(t/12, 0, 20)}"
+a_xz="automate{0.5 * t}"
+a_xy="automate{0.3 * t}"
+></audio-panner>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>

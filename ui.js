@@ -175,7 +175,7 @@ const _function = compileFunction(text);
 if (_function) {
 //console.debug(`response: compiled to ${_function}`);
 automationQueue.set(input,
-Object.assign(automationData, {text, function: _function, enabled: true })
+Object.assign(automationData, {text, function: _function})
 );
 
 } else {
@@ -203,7 +203,7 @@ const input = findUiControl(request.host, request.property);
 if (input) {
 request.function = compileFunction(request.text);
 if (request.function) automationQueue.set (input,
-Object.assign({}, request, {input: input}, {labelText: getLabelText(input), enabled: true})
+Object.assign({}, request, {input: input}, {labelText: getLabelText(input), enabled: request.enabled || false})
 ); // set
 else throw new Error(`${request.text}: cannot compile; aborting`);
 
@@ -285,7 +285,7 @@ export function parse (expression) {
 if (!expression) return [];
 
 let parser =
-/^([\d.+\-]+)$|^(\w+)$|(\w+?)\{(.+?)\}/gi;
+/^([\d.+\-]+)$|^(\w+)$|([\w\-]+?)\{(.+?)\}/gi;
 //console.debug("intermediate: ", [...expression.matchAll(parser)]);
 
 const result = [...expression.matchAll(parser)]

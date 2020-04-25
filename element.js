@@ -346,7 +346,7 @@ else if (data.default === "false") return false;
 else return data.default;
 } // if
 
-return value;
+return undefined;
 
 function getData (host, property, data) {
 return Object.assign({}, ...data.map(item => {
@@ -354,9 +354,17 @@ if (item.length === 1) {
 return {default: item[0]};
 } else {
 const [operator, operand] = item;
-if (operator === "automate") return {automate: {host, property, text: operand}};
-if (operator === "shortcut") return {shortcut: {host, property, text: operand}};
-if (operator === "default") return {default: operand};
+if (operator === "automate" || operator === "-automate") {
+return {automate: {host, property, text: operand, enabled: operator[0] !== "-"}};
+} // if automate
+
+if (operator === "shortcut"){
+return {shortcut: {host, property, text: operand}};
+} // if shortcut
+
+if (operator === "default") {
+return {default: operand};
+} // if default
 } // if
 }) // map
 ); // assign
