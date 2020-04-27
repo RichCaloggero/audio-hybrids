@@ -34,10 +34,13 @@
 <audio-gain gain="0.5"></audio-gain>
 </audio-series>
 
-<audio-panner label="panner" panningModel="HRTF"
-x="automate{c(t, -10,10)}" z="automate{s(t, -10,10)}"
-orientationX="0" refDistance="10"></audio-panner>
--->
+<audio-panner label="panner"
+x="automate{10*cos(t/2+2)}"
+y="automate{6*cos(t/3)}"
+z="automate{10*cos(t/2+2)}"
+a_xz="-automate{0.5 * t}"
+a_xy="-automate{0.3 * t}"
+></audio-panner>
 
 <audio-series id="master" label="master" mix="1">
 <audio-parallel label="mid side" hide="mix">

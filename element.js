@@ -1,11 +1,10 @@
-const registry = Object.create(null);
-
-import {define, property} from "./hybrids/index.js";
+import {define, property, render} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
 
+const registry = Object.create(null);
 const prefix = "audio";
 
 export function create (name, defaults, creator, ...definitions) {
@@ -66,15 +65,16 @@ return node[prop] instanceof AudioParam? node[prop].value : node[prop];
 function setWebaudioProp (node, prop, value) {
 const parameter = node[prop];
 
+//if (isNaN(value)) return 0;
 if (parameter instanceof AudioParam) return setAudioParam(parameter, value);
 else return setParam(node, prop, value);
 
 function setAudioParam (audioParam, value) {
+if (Number.isNaN(value)) return 0;
 try {
 return (audioParam.value = Number(value));
 } catch (e) {
 console.error("setAudioParam: ", prop, audioParam, value, `: ${e}`);
-//debugger;
 return audioParam.default;
 } // try
 } // setAudioParam
@@ -128,8 +128,9 @@ const _defaults = getHostInfo(host)?.defaults;
 
 let value = getDefault(host, key, _defaults);
 // NaN (not-a-number) tests falsey
-console.debug(`element.connect: ${host._id}(${key}): setting value to ${value}`);
+//console.debug(`element.connect: ${host._id}(${key}): setting value to ${value}`);
 host[key] = value;
+if (key === "_connected") console.debug(`_connected: ${host._id}`);
 } // connect
 
 export function getDefault (host, key, defaults = {}) {
@@ -169,6 +170,12 @@ return {
 _depth: 0,
 _name: () => name,
 _connected: property(true, connect),
+
+_rendered: render(host => {
+host.dispatchEvent(new CustomEvent("renderComplete", {bubbles: true}));
+console.debug(`${host._id}: render complete`);
+return () => {};
+}), // render
 
 label: {
 connect: (host, key) => host[key] = host.getAttribute(key) || "",

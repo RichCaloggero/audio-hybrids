@@ -45,6 +45,7 @@ observe: (host, value) => ui.setAutomationInterval(Number(value))
 
 render: ({ label, message,  _focusPrompt, _focusDialog, hideOnBypass, enableAutomation, automationInterval }) => {
 //console.debug(`${label}: rendering...`);
+
 return html`
 <fieldset class="app">
 ${ui.legend({ label })}
@@ -115,11 +116,13 @@ root._focusDialog = true;
 
 function initialize(host, key) {
 root = host;
+waitForUi(() => ui.initialize());
+
 element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 
-setTimeout(() => ui.initialize(), 0);
+//setTimeout(() => ui.initialize(), 20);
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 console.log(`${host._id} is complete`);
@@ -144,3 +147,36 @@ export function statusMessage (text) {
 setTimeout(() => (root || App).message = "", 3000);
 } // statusMessage
 
+function waitForUi (callback) {
+const app = document.querySelector("audio-app");
+if (app !== root) {
+throw new Error("renderReport: app not equal to root");
+} // if
+
+const startTime = audio.context.currentTime;
+let children = Array.from((app || root).querySelectorAll("*"))
+.filter(child => !child.shadowRoot);
+
+app.addEventListener("renderComplete", renderHandler);
+
+function renderHandler (e) {
+const rendered = e.target;
+children = children.filter(child => child !== rendered);
+if (children.length === 0) {
+root.dispatchEvent(new CustomEvent("uiReady"));
+if (callback && callback instanceof Function) callback();
+
+const all = Array.from(root.querySelectorAll("*"))
+.map(element => [element._id, element.shadowRoot]);
+const rendered = all.filter(e => e[1]);
+const notRendered = all.filter(e => !e[1]);
+
+console.log(`renderReport:\n
+${all.length} elements found;\n
+${rendered.length} rendered: ${rendered.map(e => e[0]).join(", ")};\n
+${notRendered.length} not rendered: ${notRendered.map(e => e[0]).join(", ")};\n
+time: ${(audio.context.currentTime - startTime).toFixed(2)} seconds;\n
+End Report.`);
+} // if
+} // renderHandler
+} // waitForUi

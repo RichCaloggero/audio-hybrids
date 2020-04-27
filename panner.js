@@ -25,24 +25,25 @@ const Panner = element.create("panner", defaults, "createPanner", [
 ], {
 
 r: {
-connect: element.connect,
 observe: (host, value) => {
 [host.x, host.y, host.z] = toPolar(host.r, host.a_xy, host.a_xz);
-} // observe
+}, // set
+
+connect: element.connect,
 }, // r
 
 a_xz: {
 connect: element.connect,
 observe: (host, value) => {
 [host.x, host.y, host.z] = toPolar(host.r, host.a_xy, host.a_xz);
-} // observe
+}, // observe
 }, // a_xz
 
 a_xy: {
 connect: element.connect,
 observe: (host, value) => {
 [host.x, host.y, host.z] = toPolar(host.r, host.a_xy, host.a_xz);
-} // observe
+}, // observe
 }, // a_xy
 
 

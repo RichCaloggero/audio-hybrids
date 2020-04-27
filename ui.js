@@ -197,15 +197,18 @@ function processAutomationRequests () {
 console.log(`processing ${automationRequests.length} automation requests`);
 processRequests(automationRequests, request => {
 try {
-//console.debug("automation request: ", request);
+console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
 
 if (input) {
 request.function = compileFunction(request.text);
-if (request.function) automationQueue.set (input,
+if (request.function) {
+automationQueue.set (input,
 Object.assign({}, request, {input: input}, {labelText: getLabelText(input), enabled: request.enabled || false})
 ); // set
-else throw new Error(`${request.text}: cannot compile; aborting`);
+} else {
+throw new Error(`${request.text}: cannot compile; aborting`);
+} // if
 
 } else {
 throw new Error(`bad automation specified for ${request.host._id}. ${request.property}; skipped`);
