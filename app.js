@@ -142,6 +142,7 @@ e = e.parentElement;
 //console.debug(`${start._id}: depth = ${_depth}\ndone.\n`);
 return _depth;
 } // depth
+
 export function statusMessage (text) {
 (root || App).message = text;
 setTimeout(() => (root || App).message = "", 3000);
@@ -183,3 +184,4 @@ End Report.`);
 } // if
 } // renderHandler
 } // waitForUi
+

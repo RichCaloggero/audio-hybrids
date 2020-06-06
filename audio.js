@@ -1,5 +1,20 @@
-export const context = new AudioContext();
+export let context = new AudioContext();
+const contextStack = [];
 
+// set context for render
+
+export function pushContext (_context) {
+if (! _context) return null;
+contextStack.push(context);
+context = _context;
+return _context;
+} // pushContext
+
+export function popContext () {
+return (context = contextStack.pop());
+} // popContext
+
+// initialize webaudio elements (conntextion elements such as series and parallel are initialized within their own modules)
 
 export function initialize (element) {
 element.input = context.createGain();
