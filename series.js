@@ -18,13 +18,13 @@ _gain: null,
 delay: {
 //get: (host, value) => host._delay.delayTime.value,
 //set: (host, value) => host._delay.delayTime.value = Number(value),
-connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
-//observe: (host, value) => host._delay.delayTime.value = Number(value)
+connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+observe: (host, value) => host._delay.delayTime.value = Number(value)
 }, // delay
 
 gain: {
-connect: (host, key) => element.processAttribute(host, key) || defaults[key].default,
-//observe: (host, value) => host._gain.gain.value = Number(value)
+connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+observe: (host, value) => host._gain.gain.value = Number(value)
 }, // gain
 
 feedback: {
@@ -48,10 +48,12 @@ return html`
 <fieldset class="series">
 ${ui.legend({ label, _depth })}
 ${ui.commonControls({ bypass, mix, defaults })}
+${feedback && html`
 <div id="feedback-panel">
-${feedback && ui.number("delay", "delay", delay, defaults)}
-${feedback && ui.number("gain", "gain", gain, defaults)}
+${ui.number("feedback delay", "delay", delay, defaults)}
+${ui.number("feedback gain", "gain", gain, defaults)}
 </div>
+`}
 </fieldset>
 <slot></slot>
 `;

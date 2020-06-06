@@ -132,8 +132,11 @@ app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
 } // enableAutomation
 
 export function disableAutomation () {
+if (automator) {
 clearTimeout(automator);
 automator = null;
+} // if
+
 app.statusMessage("Automation disabled.");
 } // disableAutomation
 

@@ -153,7 +153,10 @@ if (app !== root) {
 throw new Error("renderReport: app not equal to root");
 } // if
 
+// measure duration of process
 const startTime = audio.context.currentTime;
+
+// find all elements without a shadowRoot
 let children = Array.from((app || root).querySelectorAll("*"))
 .filter(child => !child.shadowRoot);
 

@@ -9,90 +9,54 @@
 
 <fieldset id="parameters">
 <legend><h2>Parameters</h2></legend>
-<label>delay factor: <input type="range" id="delayFactor" value="1" min="0" max="10" step="0.05"></label>
-<label>left delay: <input type="number" id="leftDelay" value="0.004" min="0" max="0.05" step="0.00002"></label>
-<label>right delay: <input type="number" id="rightDelay" value="0.002" min="0" max="0.05" step="0.00002"></label>
-<label>center delay: <input type="number" id="centerDelay" value="0.0007" min="0" max="0.05" step="0.00002"></label>
-<label>Phase: <input type="range" id="phase" value="0.0" min="-7.0" max="7.0" step="0.02"></label>
-
-<!--<label>time factor: <input type="range" id="timeFactor" value="1" min="0" max="2" step="0.005"></label>
-<label>left time: <input type="number" id="leftTime" value="0.5" min="0" max="2" step="0.05"></label>
-<label>right time: <input type="number" id="rightTime" value="0.33" min="0" max="2" step="0.05"></label>
-<label>center time: <input type="number" id="centerTime" value="1.0" min="0" max="2" step="0.05"></label>
--->
 </fieldset>
 
 
 
 <audio-app label="panner test" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="default{/media/shack-man/Kenny.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
+<audio-player label="player" src="default{/media/media/fandemic.mp4} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-
-<audio-parallel label="mid side" hide="mix">
-<audio-series bypass label="side" silent-bypass hide="mix">
-<audio-split>
-<audio-delay label="left delay" delay="default{0.0025} automate{c(t, 0, delayFactor*leftDelay)}" hide="mix"></audio-delay>
-<audio-delay label="right delay" delay="default{0.0019} automate{s(t+phase, 0, delayFactor*rightDelay)}" hide="mix"></audio-delay>
+<audio-split label="channel delay" hide="mix">
+<audio-delay label="left delay"
+delay="default{0} automate{c(t/1.5+.8, 0.0015,0.004)}"
+step="0.0001" hide="mix bypass"></audio-delay>
+<audio-gain></audio-gain>
 </audio-split>
-
+ 
+<audio-parallel label="mid side" hide="mix">
+<audio-series id="side" label="side" silent-bypass hide="mix">
 <audio-swap  mix="-0.5" hide="mix bypass"></audio-swap>
-<audio-gain label="side boost" gain="2.0" hide="mix bypass"></audio-gain>
+<audio-gain label="side gain" gain="1.0" min="-5.0" max="5.0" step="0.05" hide="mix bypass"></audio-gain>
+
+<audio-series label="3d" mix="-0.4">
+<audio-filter label="remove bass" type="lowshelf" frequency="150" gain="-30" hide="mix bypass type q detune"></audio-filter>
+<audio-filter label="upper limit" type="lowpass" frequency="700" q="0.5" hide="mix bypass type gain detune"></audio-filter>
+<audio-series label="delay" feedback
+delay="default{0.00016} automate{s(t/2, 0.0015, 0.00353)}"
+gain="-0.75">
+<audio-swap></audio-swap>
+</audio-series>
+
+<audio-stereo-processor label="rotate"
+rotate="default{0} automate{c(t, 0,90)}"
+hide="mix"></audio-stereo-processor>
+</audio-series>
 </audio-series><!-- side -->
 
-<audio-series bypass silent-bypass  label="mid" hide="mix">
-<audio-delay label="center delay" delay="default{0.00009} automate{s(t, 0, delayFactor*centerDelay)}" hide="mix"></audio-delay>
+<audio-series id="mid" silent-bypass  label="mid" hide="mix">
 <audio-swap  mix="0.5" hide="mix bypass"></audio-swap>
-<audio-gain label="mid gain" gain="1.0" hide="mix bypass"></audio-gain>
+<audio-delay id="mid-delay" label="mid delay"
+delay="default{0} automate{s(t, 0,0.0004)}"
+hide="mix"></audio-delay>
+<audio-gain label="mid gain" gain="0.8" min="-5.0" max="5.0" step="0.05" hide="mix bypass"></audio-gain>
 </audio-series><!-- mid -->
-
-<audio-panner label="panner"
-x="-automate{10*cos(t/2)}"
-z="-automate{10*sin(t/2)}"
-r="automate{s(t/12, 0, 20)}"
-a_xz="automate{0.5 * t}"
-a_xy="automate{0.3 * t}"
-></audio-panner>
 </audio-parallel>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>
 </audio-app>
 
-<script>
-window.leftDelay = _valueOf("leftDelay");
-window.rightDelay = _valueOf("rightDelay");
-window.centerDelay = _valueOf("centerDelay");
-window.delayFactor = _valueOf("delayFactor");
-window.phase = _valueOf("phase");
-
-/*window.leftTime = _valueOf("leftTime");
-window.rightTime = _valueOf("rightTime");
-window.centerTime = _valueOf("centerTime");
-window.timeFactor = _valueOf("timeFactor");
-*/
-
-$("#parameters").addEventListener("change", e => {
-const p = e.target;
-const value = p.value;
-const name = p.id;
-if (name in window) window[name] = p.type === "number" || p.type === "range"?
-Number(value) : value;
-});
-
-$("audio-app").addEventListener("complete", e => {
-const app = e.target;
-app.statusMessage("Ready.");
-});
-// ready
-
-
-function _valueOf (id) {return Number(document.querySelector(`#${id}`).value);}
-
-function $ (selector, context = document) {
-return context.querySelector(selector);
-} // $
-</script>
 
 </body>
 </html>
