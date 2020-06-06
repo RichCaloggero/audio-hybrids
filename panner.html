@@ -9,6 +9,7 @@
 
 <fieldset id="parameters">
 <legend><h2>Parameters</h2></legend>
+<label>rate: <input id="rate" type="range" value="1" min="0.1" max="2.0" step="0.1" accesskey="r"></label>
 </fieldset>
 
 
@@ -19,7 +20,7 @@
 
 <audio-split label="channel delay" hide="mix">
 <audio-delay label="left delay"
-delay="default{0} automate{c(t/1.5+.8, 0.0015,0.004)}"
+delay="default{0} automate{c(rate*t/1.5+.8, 0.0015,0.004)}"
 step="0.0001" hide="mix bypass"></audio-delay>
 <audio-gain></audio-gain>
 </audio-split>
@@ -33,13 +34,13 @@ step="0.0001" hide="mix bypass"></audio-delay>
 <audio-filter label="remove bass" type="lowshelf" frequency="150" gain="-30" hide="mix bypass type q detune"></audio-filter>
 <audio-filter label="upper limit" type="lowpass" frequency="700" q="0.5" hide="mix bypass type gain detune"></audio-filter>
 <audio-series label="delay" feedback
-delay="default{0.00016} automate{s(t/2, 0.0015, 0.00353)}"
-gain="-0.75">
+delay="default{0.00016} automate{s(rate*t/2, 0.0015, 0.00353)}"
+gain="-0.75" hide="mix">
 <audio-swap></audio-swap>
 </audio-series>
 
 <audio-stereo-processor label="rotate"
-rotate="default{0} automate{c(t, 0,90)}"
+rotate="default{0} automate{c(rate*t, 0,90)}"
 hide="mix"></audio-stereo-processor>
 </audio-series>
 </audio-series><!-- side -->
@@ -47,7 +48,7 @@ hide="mix"></audio-stereo-processor>
 <audio-series id="mid" silent-bypass  label="mid" hide="mix">
 <audio-swap  mix="0.5" hide="mix bypass"></audio-swap>
 <audio-delay id="mid-delay" label="mid delay"
-delay="default{0} automate{s(t, 0,0.0004)}"
+delay="default{0} automate{s(rate*t, 0,0.0004)}"
 hide="mix"></audio-delay>
 <audio-gain label="mid gain" gain="0.8" min="-5.0" max="5.0" step="0.05" hide="mix bypass"></audio-gain>
 </audio-series><!-- mid -->
@@ -57,6 +58,15 @@ hide="mix"></audio-delay>
 </audio-series>
 </audio-app>
 
+<script>
+rate = Number($("#rate").value);
+$("#rate").addEventListener("change", e => rate = Number(e.target.value));
+
+function $(selector, context = document) {
+return context.querySelector(selector);
+} // $
+
+</script>
 
 </body>
 </html>
