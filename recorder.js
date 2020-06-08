@@ -1,106 +1,125 @@
-Export function loadAudio (url) {
-statusMessage("Loading...");
-fetch(url)
-.then(response=> {
-if (response.ok) return response.arrayBuffer();
-else throw new Error(response.statusText);
- }).then(data => {
-const audioContext = new AudioContext();
-return audioContext.decodeAudioData(data)
-}).then(buffer => {
-render(buffer);
-statusMessage(`${round(buffer.duration/60)} minutes of audio loaded.`);
-}).catch(error => statusMessage(error));
-} // loadAudio
-
-function render (buffer) {
-audio.pushContext (new OfflineAudioContext(2, buffer.length, 44100));
-const _audioPlayer = audioPlayer;
-const recorder = this.shadowRoot.querySelector(".recorder");
-const audioElement = recorder.querySelector("audio");
-const automationEnabled = this.enableAutomation;
-
-const html = app.root.outerHTML;
-let container = document.createElement("div");
-container.setAttribute("hidden", "");
-container.innerHTML = html;
-app.root.parentElement.appendChild(container);
-const newContext = container.children[0];
-const statusMessage = (text) => this.shadowRoot.querySelector("#statusMessage").textContent = text;
+import * as app from "./app.js";
+import * as audio from "./audio.js";
 
 
-newContext.addEventListener("complete", () => {
-const audioSource = audio.context.createBufferSource();
-audioSource.buffer = buffer;
+export function start () {
+audio.context.audioWorklet.addModule("recorder.worklet.js")
+.then(() => {
+const player = app.root.querySelector("audio-player").audioElement;
+const results = app.root.shadowRoot.querySelector("#recorder-results");
+const destination = app.root.querySelector("audio-destination");
+const data = [];
+const recorder = new AudioWorkletNode(audio.context, "audio-recorder");
+destination.input.connect(recorder);
 
-// hack in the new source
-const player = app.root.querySelector("audio-player");
-audioSource.connect(player.output);
-
-copyAllValues(app.root, newContext);
-
-audioSource.start();
-statusMessage("Rendering audio, please wait...");
-
-audio.context.startRendering()
-.then(buffer => {
-recorder.removeAttribute("hidden");
-audioElement.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
-audioElement.focus();
-
-// restoring...
-audio.popContext();
-audioSource.disconnect(player.output);
-app.root.parentElement.removeChild(container);
-container.innerHTML = "";
-container = null;
-
-statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-}).catch(error => statusMessage(`render: ${error}\n${error.stack}\n`));
-}); // newContext ready
-} // render
-
-function copyAllValues (_from, _to) {
-//try {
-_from = findAllControls(_from);
-_to = findAllControls(_to);
-
-const values = _from.map(x => {
-return x.type && x.type === "checkbox"? x.checked : x.value
-});
-
-_to.forEach((x,i) => {
-if (x instanceof HTMLInputElement && x.type=== "checkbox") {
-x.checked = Boolean(values[i]);
-//console.debug("- checkbox: ", x);
-x.dispatchEvent(new Event("click"));
+recorder.port.onmessage = e => {
+const message = e.data;
+if (message instanceof Array) {
+	data.push(message);
+} else if (message === "done") {
+retrieveData(data);
 } else {
-x.value = values[i];
-x.dispatchEvent(new Event("change"));
+app.statusMessage(`unknown message: ${e.data[0]}`);
 } // if
+}; // onmessageHandler
+
+
+const _start = () => {
+recorder.port.postMessage(["started", true]);
+app.statusMessage("Recording started.");
+}; // _start
+
+const _stop = () => {
+recorder.port.postMessage(["done", true]);
+app.statusMessage("Recording stopped.");
+}; // _stop
+
+player.addEventListener("play", _start);
+player.addEventListener("pause", _stop);
+player.addEventListener("ended", _stop);
+
+app.statusMessage("Recording enabled; click play to begin...");
+
+function retrieveData (data) {
+const frameCount = sum(data.map(chunk => chunk[0].length));
+const buffer = new AudioBuffer({length: frameCount, numberOfChannels: 2, sampleRate: audio.context.sampleRate});
+app.statusMessage(`retrieving data: ${data.length}, chunks, ${data[0][0].length} frames per chunk, ${frameCount} frames`);
+
+let offset = 0;
+data.forEach(chunk => {
+buffer.copyToChannel(chunk[0], 0, offset);
+buffer.copyToChannel(chunk[1], 1, offset);
+offset += chunk[0].length;
 });
-} // copyAllValues
+app.statusMessage("data copied to buffer");
 
-function findAllControls(root) {
-const enableRecordMode = document.querySelector("audio-context")
-.shadowRoot.querySelector(".enable-record-mode")
-.shadowRoot.querySelector("input");
-return enumerateAll(root).filter(x => 
-x && x.matches && x.matches("input,select") && x !== enableRecordMode
-); // filter
-} // findAllControls
+results.src = URL.createObjectURL(bufferToWave(buffer, frameCount));
+app.statusMessage("wave data created");
 
+player.removeEventListener("play", _start);
+player.removeEventListener("paused", _stop);
+player.removeEventListener("ended", _stop);
 
-function enumerateAll (root) {
-return [
-root,
-Array.from(root.children).map(x => enumerateAll(x)),
-root.shadowRoot? enumerateAll(root.shadowRoot) : []
-].flat(Infinity);
-} // enumerateAll
+app.statusMessage("Recording complete.");
+} // retrieveData
+}).catch (error => app.statusMessage(`recorder: could not instantiate worker - ${error}`));
 
-function enumerateNonUi (root) {
-return enumerateAll(root)
-.filter(x => x instanceof module);
-} // enumerateNonUi
+} // start
 
+/* https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ */
+
+function bufferToWave (abuffer, len) {
+var numOfChan = abuffer.numberOfChannels,
+length = len * numOfChan * 2 + 44,
+buffer = new ArrayBuffer(length),
+view = new DataView(buffer),
+channels = [], i, sample,
+offset = 0,
+pos = 0;
+
+// write WAVE header
+setUint32(0x46464952);                         // "RIFF"
+setUint32(length - 8);                         // file length - 8
+setUint32(0x45564157);                         // "WAVE"
+
+setUint32(0x20746d66);                         // "fmt " chunk
+setUint32(16);                                 // length = 16
+setUint16(1);                                  // PCM (uncompressed)
+setUint16(numOfChan);
+setUint32(abuffer.sampleRate);
+setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+setUint16(numOfChan * 2);                      // block-align
+setUint16(16);                                 // 16-bit (hardcoded in this demo)
+
+setUint32(0x61746164);                         // "data" - chunk
+setUint32(length - pos - 4);                   // chunk length
+
+// write interleaved data
+for(i = 0; i < abuffer.numberOfChannels; i++)
+channels.push(abuffer.getChannelData(i));
+
+while(pos < length) {
+for(i = 0; i < numOfChan; i++) {             // interleave channels
+sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
+view.setInt16(pos, sample, true);          // write 16-bit sample
+pos += 2;
+}
+offset++                                     // next source sample
+}
+
+// create Blob
+return new Blob([buffer], {type: "audio/wav"});
+
+function setUint16(data) {
+view.setUint16(pos, data, true);
+pos += 2;
+}
+
+function setUint32(data) {
+view.setUint32(pos, data, true);
+pos += 4;
+}
+} // bufferToWave
+
+function sum (a) {return a.reduce((sum, x) => sum += x, 0);}

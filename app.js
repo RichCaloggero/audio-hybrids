@@ -3,6 +3,7 @@ import * as element from "./element.js";
 import * as audio from "./audio.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
+import * as recorder from "./recorder.js";
 
 export let root = null;
 let _prompt = "";
@@ -27,6 +28,15 @@ connect: (host, key) => host[key] = false,
 observe: (host, value) => value && setTimeout(() => host.shadowRoot.querySelector("#dialog .close").focus(), 0),
 }, // _focusDialog
 
+
+record: {
+connect: (host, key) => host.key = false,
+observe: (host, value) => {
+if (value) recorder.start();
+else statusMessage("Recording disabled.");
+} // observe
+}, // record
+
 hideOnBypass: {
 connect: (host, key) => host[key] = true,
 observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
@@ -43,7 +53,7 @@ observe: (host, value) => ui.setAutomationInterval(Number(value))
 }, // automationInterval
 
 
-render: ({ label, message,  _focusPrompt, _focusDialog, hideOnBypass, enableAutomation, automationInterval }) => {
+render: ({ label, message,  _focusPrompt, _focusDialog, record, hideOnBypass, enableAutomation, automationInterval }) => {
 //console.debug(`${label}: rendering...`);
 
 return html`
@@ -77,6 +87,13 @@ ${_focusDialog && html`<div id="dialog" role="dialog" aria-labelledby="dialog-ti
 </div><!-- .wrapper -->
 </div><!-- dialog -->
 `}
+
+${ui.boolean({label: "record", name: "record", defaultValue: record})}
+${record && html`<div role="region" aria-label="record">
+<audio id="recorder-results" controls></audio>
+</div>
+`} // record controls
+
 </fieldset>
 <slot></slot>
 `;
@@ -185,3 +202,16 @@ End Report.`);
 } // renderHandler
 } // waitForUi
 
+export function showRecordingControls () {
+root.querySelector("audio-player").play = false;
+displayDialog({
+title: "Record",
+description: "",
+content: html`
+<button class="start-recording" onclick="() => recorder.start();">Start Recording</button>
+<button class="stop-recording" onclick="() => recorder.stop();">Stop Recording</button>
+<audio class="recorder-results" controls></audio>
+`, // html
+returnFocus: root.shadowRoot.querySelector(".record")
+}); // displayDialog
+} // showRecordingControls 
