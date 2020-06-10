@@ -15,6 +15,29 @@ processAutomationRequests();
 processKeyDefinitionRequests();
 app.root.addEventListener("keydown", keymap.globalKeyboardHandler);
 
+audio.context.audioWorklet.addModule("automator.worklet.js")
+.then(() => {
+//alert ("starting parameter-automator");
+automator = new AudioWorkletNode(audio.context, "parameter-automator");
+//alert("automator node created");
+app.root.querySelector("audio-player").output.connect(automator);
+
+automator.port.onmessage = e => {
+//app.statusMessage(`message from automator: ${e.data}`);
+const message = e.data;
+// if we receive a message, process the queue
+if (message === "tick") {
+automationQueue.forEach(e => automate(e));
+} else if (message instanceof Array) {
+} // if
+
+}; // onMessage
+
+setAutomationInterval(automationInterval);
+app.root._automator = automator;
+app.statusMessage("automator initialized");
+}).catch(error => app.statusMessage(error));
+
 console.log("UI initialization complete.");
 } // initialize
 
@@ -120,9 +143,27 @@ return typeof(min) === "number" && typeof(max) === "number" && typeof(value) ===
 } // inRange
 
 
-
-
 export function enableAutomation () {
+if (!automator) {
+app.statusMessage(`enableAutomation: automator worklet not started; aborting`);
+return;
+} // if
+
+automator.port.postMessage(["enable", true]);
+app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
+} // enableAutomation
+
+export function disableAutomation () {
+if (!automator) {
+app.statusMessage(`disableAutomation: automator worklet not started; aborting`);
+return;
+} // if
+
+automator.port.postMessage(["enable", false]);
+app.statusMessage("Automation disabled.");
+} // disableAutomation
+
+/*export function enableAutomation () {
 automator = setTimeout(function _tick () {
 automationQueue.forEach(e => automate(e));
 if (automator) setTimeout(_tick, 1000*automationInterval);
@@ -130,8 +171,9 @@ if (automator) setTimeout(_tick, 1000*automationInterval);
 
 app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
 } // enableAutomation
+*/
 
-export function disableAutomation () {
+/*export function disableAutomation () {
 if (automator) {
 clearTimeout(automator);
 automator = null;
@@ -139,6 +181,7 @@ automator = null;
 
 app.statusMessage("Automation disabled.");
 } // disableAutomation
+*/
 
 function automate (e) {
 if (e.enabled) {
@@ -283,7 +326,10 @@ return null;
 } // try
 } // compileFunction
 
-export function setAutomationInterval (x) {automationInterval = x;}
+export function setAutomationInterval (x) {
+automationInterval = x;
+if (automator) automator.port.postMessage(["automationInterval", automationInterval]);
+} // setAutomationInterval
 
 
 

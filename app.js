@@ -133,13 +133,15 @@ root._focusDialog = true;
 
 function initialize(host, key) {
 root = host;
-waitForUi(() => ui.initialize());
+waitForUi(() => {
+ui.initialize()
+}); // waitForUi
+
 
 element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 
-//setTimeout(() => ui.initialize(), 20);
 
 host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
 console.log(`${host._id} is complete`);
