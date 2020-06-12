@@ -1,8 +1,15 @@
+import * as app from "./app.js";
+
 export let context = new AudioContext();
+/*if (app.isRenderMode()) {
+context = new OfflineAudioContext(2, app.renderLength(), context.sampleRate);
+console.debug(`audio: offline audio context defined: ${app.renderLength()}`);
+} // if
+*/
+
 const contextStack = [];
 
 // set context for render
-
 export function pushContext (_context) {
 if (! _context) return null;
 contextStack.push(context);
@@ -62,3 +69,4 @@ return element;
 } // initialize
 
 console.debug(`audio: ${context}`);
+

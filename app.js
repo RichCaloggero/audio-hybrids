@@ -4,6 +4,7 @@ import * as audio from "./audio.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
 import * as recorder from "./recorder.js";
+//import * as offlineRender from "./offlineRender.js";
 
 export let root = null;
 let _prompt = "";
@@ -37,6 +38,16 @@ else statusMessage("Recording disabled.");
 } // observe
 }, // record
 
+renderAudio: {
+connect: (host, key) => host.key = false,
+observe: (host, value) => {
+if (isRenderMode()) return;
+const url = root.querySelector("audio-player").audioElement.src;
+if (value) loadAudio(url);
+else statusMessage("Done.");
+} // observe
+}, // renderAudio
+
 hideOnBypass: {
 connect: (host, key) => host[key] = true,
 observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
@@ -53,7 +64,7 @@ observe: (host, value) => ui.setAutomationInterval(Number(value))
 }, // automationInterval
 
 
-render: ({ label, message,  _focusPrompt, _focusDialog, record, hideOnBypass, enableAutomation, automationInterval }) => {
+render: ({ label, message,  _focusPrompt, _focusDialog, record, renderAudio, hideOnBypass, enableAutomation, automationInterval }) => {
 //console.debug(`${label}: rendering...`);
 
 return html`
@@ -89,10 +100,16 @@ ${_focusDialog && html`<div id="dialog" role="dialog" aria-labelledby="dialog-ti
 `}
 
 ${ui.boolean({label: "record", name: "record", defaultValue: record})}
-${record && html`<div role="region" aria-label="record">
+${record && html`<div id="record-controls" role="region" aria-label="record">
 <audio id="recorder-results" controls></audio>
 </div>
 `} // record controls
+
+${ui.boolean({label: "Render audio", name: "renderAudio", defaultValue: renderAudio})}
+${renderAudio && html`<div id="renderAudio-controls" role="region" aria-label="Render audio">
+<audio id="render-results" controls></audio>
+</div>
+`} // renderAudio controls
 
 </fieldset>
 <slot></slot>
@@ -143,7 +160,7 @@ element.waitForChildren(host, children => {
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 
 
-host.dispatchEvent(new CustomEvent("complete", {bubbles: false}));
+host.dispatchEvent(new CustomEvent("load", {bubbles: true}));
 console.log(`${host._id} is complete`);
 }); // wait for children
 } // initialize
@@ -162,15 +179,21 @@ e = e.parentElement;
 return _depth;
 } // depth
 
-export function statusMessage (text) {
+export function statusMessage (text, append) {
+if (isRenderMode()) return;
+if (append) {
+root.message = `${root.message}<br>${text}`;
+} else {
 (root || App).message = text;
 setTimeout(() => (root || App).message = "", 3000);
+} // if
+
 } // statusMessage
 
 function waitForUi (callback) {
-const app = document.querySelector("audio-app");
-if (app !== root) {
-throw new Error("renderReport: app not equal to root");
+const app = root;
+if (!app) {
+throw new Error("renderReport: root is null or undefined");
 } // if
 
 // measure duration of process
@@ -217,3 +240,206 @@ content: html`
 returnFocus: root.shadowRoot.querySelector(".record")
 }); // displayDialog
 } // showRecordingControls 
+
+/// render audio
+
+
+function loadAudio (url) {
+statusMessage("Loading...");
+fetch(url)
+.then(response=> {
+if (response.ok) return response.arrayBuffer();
+else throw new Error(response.statusText);
+ }).then(data => {
+const audioContext = new AudioContext();
+return audioContext.decodeAudioData(data)
+}).then(buffer => {
+renderAudio(buffer);
+statusMessage(`${Number(buffer.duration/60).toFixed(2)} minutes of audio loaded.`);
+}).catch(error => statusMessage(error));
+} // loadAudio
+
+function renderAudio (buffer) {
+console.debug("render:...");
+const offlineContext = new OfflineAudioContext(2, buffer.length, audio.context.sampleRate);
+audio.pushContext(offlineContext);
+
+const html = root.outerHTML;
+const _root = root;
+let container = document.createElement("div");
+//container.setAttribute("hidden", "");
+document.body.appendChild(container);
+container.innerHTML = html;
+console.debug("render: html created; ", _root, root);
+
+/*let container = document.createElement("iframe");
+container.src = `${location.pathname}?render=${buffer.length}`;
+root.parentElement.appendChild(container);
+let offlineRoot = null;
+console.debug(`render: iframe.src: ${container.src}`);
+
+container.contentWindow.onload = () => {
+offlineRoot = container.contentWindow.document.querySelector("audio-app");
+console.debug("render: iFrame loaded");
+*/
+
+
+container.addEventListener("load", e => {
+setTimeout(() => {
+const statusMessage = (text) => _root.shadowRoot.querySelector("#status").textContent = text;
+console.debug("render: copying...");
+copyAllValues(_root, root);
+console.debug("render: ui values copied");
+
+
+
+const player = container.querySelector("audio-player");
+player.node.buffer = buffer;
+console.debug ("render: source created");
+
+
+player.node.start();
+statusMessage("Rendering audio, please wait...");
+
+// audio.context refers to the offline context now
+audio.context.startRendering()
+.then(buffer => {
+console.debug("render: got a buffer; ", buffer);
+
+const renderResults = _root.shadowRoot.querySelector("#render-results");
+renderResults.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
+renderResults.focus();
+console.debug("render: got results");
+
+// restoring...
+player.node.disconnect(player.output);
+audio.popContext();
+root = _root;
+root.parentElement.removeChild(container);
+container.innerHTML = "";
+container = null;
+console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
+
+statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
+}).catch(error => statusMessage(`render: ${error}\n${error.stack}\n`));
+}, 1); // timeout
+}); // html loaded
+//}; // newContext ready
+} // renderAudio
+
+function copyAllValues (__from, __to) {
+//try {
+const _from = findAllControls(__from);
+const _to = findAllControls(__to);
+console.debug("copy: _from and _to defined");
+
+const values = _from.map(x => {
+return x.hasAttribute("aria-pressed")? (x.getAttribute("aria-pressed") === "true") : x.value
+});
+console.debug("copy: values defined");
+
+_to.forEach((x,i) => {
+if (x instanceof HTMLButtonElement && x.hasAttribute("aria-pressed")) {
+x.setAttribute("aria-pressed", Boolean(values[i])? "true" : "false");
+//console.debug("- toggle button: ", x);
+x.dispatchEvent(new Event("click"));
+} else {
+x.value = values[i];
+x.dispatchEvent(new Event("change"));
+} // if
+});
+console.debug("copy: values copied");
+} // copyAllValues
+
+function findAllControls(root) {
+const renderAudioButton = root.shadowRoot.querySelector("#renderAudio-controls")
+//.querySelector("button");
+return enumerateAll(root).filter(x => 
+x && x.matches && x.matches("input,select, [aria-pressed]")
+&& x !== renderAudioButton
+); // filter
+} // findAllControls
+
+
+function enumerateAll (root) {
+return [
+root,
+Array.from(root.children).map(x => enumerateAll(x)),
+root.shadowRoot? enumerateAll(root.shadowRoot) : []
+].flat(Infinity);
+} // enumerateAll
+
+function enumerateNonUi (root) {
+return enumerateAll(root)
+.filter(x => x instanceof module);
+} // enumerateNonUi
+
+/* https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ */
+
+export function bufferToWave (abuffer, len) {
+var numOfChan = abuffer.numberOfChannels,
+length = len * numOfChan * 2 + 44,
+buffer = new ArrayBuffer(length),
+view = new DataView(buffer),
+channels = [], i, sample,
+offset = 0,
+pos = 0;
+
+// write WAVE header
+setUint32(0x46464952);                         // "RIFF"
+setUint32(length - 8);                         // file length - 8
+setUint32(0x45564157);                         // "WAVE"
+
+setUint32(0x20746d66);                         // "fmt " chunk
+setUint32(16);                                 // length = 16
+setUint16(1);                                  // PCM (uncompressed)
+setUint16(numOfChan);
+setUint32(abuffer.sampleRate);
+setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+setUint16(numOfChan * 2);                      // block-align
+setUint16(16);                                 // 16-bit (hardcoded in this demo)
+
+setUint32(0x61746164);                         // "data" - chunk
+setUint32(length - pos - 4);                   // chunk length
+
+// write interleaved data
+for(i = 0; i < abuffer.numberOfChannels; i++)
+channels.push(abuffer.getChannelData(i));
+
+while(pos < length) {
+for(i = 0; i < numOfChan; i++) {             // interleave channels
+sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
+view.setInt16(pos, sample, true);          // write 16-bit sample
+pos += 2;
+}
+offset++                                     // next source sample
+}
+
+// create Blob
+return new Blob([buffer], {type: "audio/wav"});
+
+function setUint16(data) {
+view.setUint16(pos, data, true);
+pos += 2;
+}
+
+function setUint32(data) {
+view.setUint32(pos, data, true);
+pos += 4;
+}
+} // bufferToWave
+
+
+export function isRenderMode () {
+return audio.context instanceof OfflineAudioContext;
+} // isRenderMode
+
+/*export function isRenderMode () {
+return !!new URL(location).searchParams.get("render");
+} // isRenderMode
+
+export function renderLength () {
+return Number(new URL(location).searchParams.get("render"));
+} // renderLength
+*/

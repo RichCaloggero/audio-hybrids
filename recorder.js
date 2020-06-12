@@ -59,6 +59,7 @@ app.statusMessage("wave data created");
 player.removeEventListener("play", _start);
 player.removeEventListener("paused", _stop);
 player.removeEventListener("ended", _stop);
+destination.input.disconnect(recorder);
 
 app.statusMessage("Recording complete.");
 } // retrieveData
