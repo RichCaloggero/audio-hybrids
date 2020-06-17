@@ -11,6 +11,10 @@ const definitionRequests = [];
 
 
 export function initialize (e) {
+if (app.isRenderMode()) {
+automator = null;
+
+} else {
 processAutomationRequests();
 processKeyDefinitionRequests();
 app.root.addEventListener("keydown", keymap.globalKeyboardHandler);
@@ -28,15 +32,17 @@ const message = e.data;
 // if we receive a message, process the queue
 if (message === "tick") {
 automationQueue.forEach(e => automate(e));
-} else if (message instanceof Array) {
-} // if
 
+} else if (message instanceof Array) {
+// envelope following code here -- make quantities available as variables which can be used by automation functions
+} // if
 }; // onMessage
 
 setAutomationInterval(automationInterval);
 app.root._automator = automator;
 app.statusMessage("automator initialized");
 }).catch(error => app.statusMessage(error));
+} // if not render mode
 
 console.log("UI initialization complete.");
 } // initialize
@@ -92,7 +98,7 @@ console.error(e);
 [min, max, step, type] = rest;
 } // if
 
-if (name === "mix") console.debug(`ui.number: ${name} default is ${defaultValue}, ${min}, ${max}, ${step}`);
+//if (name === "mix") console.debug(`ui.number: ${name} default is ${defaultValue}, ${min}, ${max}, ${step}`);
 return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}"
 min="${min}" max="${max}" step="${step}"
 accesskey="${name[0]}"
@@ -150,7 +156,7 @@ return;
 } // if
 
 automator.port.postMessage(["enable", true]);
-app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
+app.statusMessage(`Automation of ${countEnabledAutomationItems ()} items enabled; queue size is ${automationQueue.size} .`);
 } // enableAutomation
 
 export function disableAutomation () {
@@ -183,6 +189,12 @@ app.statusMessage("Automation disabled.");
 } // disableAutomation
 */
 
+function countEnabledAutomationItems () {
+return Array.from(automationQueue.values())
+.filter(x => x.enabled)
+.length;
+ } // countEnabledAutomationItems 
+
 function automate (e) {
 if (e.enabled) {
 //e.host[e.property] = e.function(audio.context.currentTime);
@@ -191,6 +203,77 @@ e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 //console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
 } // if
 } // automate
+
+export function scheduleAutomation (duration, elementMap) {
+if (app.isRenderMode()) {
+const timeStepCount = duration / automationInterval;
+const itemCount = automationQueue.size;
+const items = transformAutomationItems(automationQueue, elementMap);
+console.debug(`scheduleAutomation: duration = ${duration}, itemCount = ${itemCount}, interval = ${automationInterval}, timeStepCount = ${timeStepCount}`);
+//items.forEach(item => displayAutomationItem(item));
+
+try {
+let count = 0;
+for (let t = 0; t < duration; t += automationInterval) {
+items.forEach(item => {
+count += 1;
+let value = item.function(t);
+if (count <= 100) console.debug("scheduleAutomation: ", item.audioParam, t.toFixed(2), value.toFixed(5));
+
+item.audioParam.linearRampToValueAtTime(value, t+automationInterval);
+}); // forEach item
+} // for duration
+} catch (e) {
+console.error(e);
+} // try
+
+console.debug("scheduleAutomation: complete");
+
+function displayAutomationItem (item) {
+console.debug(`scheduleAutomation: automationItem: ${getHost(item.host)}.${item.property} = ${item.text} => ${item.function}`);
+
+function getHost (host) {
+return `${host.closest("audio-app")?._id}.${host?._id}`;
+} // getHost
+} // displayAutomationItem
+} // if
+
+
+function transformAutomationItems (automationQueue, oldHosts) {
+const newHosts = Array.from(app.root.querySelectorAll("*"));
+const items = [];
+
+automationQueue.forEach(e => {
+if (e.enabled) {
+const host = newHosts[oldHosts.indexOf(e.host)];
+let node = e.host.node;
+
+// special case audio-series
+if (host.matches("audio-series")) {
+if (e.property === "delay") {
+node = host._delay;
+e.nodeProperty = "delayTime";
+} else if (e.property === "gain") {
+node = host._gain;
+e.nodeProperty = "gain";
+} // if
+} // if
+
+const property = e.nodeProperty;
+const audioParam = node[property];
+if (node && audioParam) {
+items.push({
+property, node, audioParam, host,
+function: e.function,
+text: e.text
+}); // push
+} // if
+} // if enabled
+}); // forEach
+
+return items;
+} // transformAutomationItems
+} // scheduleAutomation
 
 export function toggleAutomation (input) {
 if (automationQueue.has(input)) {
@@ -328,7 +411,7 @@ return null;
 
 export function setAutomationInterval (x) {
 automationInterval = x;
-if (automator) automator.port.postMessage(["automationInterval", automationInterval]);
+if (automator && !app.isRenderMode()) automator.port.postMessage(["automationInterval", automationInterval]);
 } // setAutomationInterval
 
 

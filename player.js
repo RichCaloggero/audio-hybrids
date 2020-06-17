@@ -10,16 +10,18 @@ const Player = element.create("player", defaults, initialize, {
 
 src: {
 get: (host, value) => {
-if (app.isRenderMode()) return;
+//if (app.isRenderMode()) return;
 host.audioElement.src
 }, // get
 set: (host, value) => {
-if (app.isRenderMode()) return;
+//if (app.isRenderMode()) return;
 try {
 host.audioElement.src = value;
+console.debug(`src: ${value}`);
 return value;
 } catch (e) {
 app.statusMessage(e);
+return "";
 } // try
 }, // set
 connect: (host, key) => host[key] = element.processAttribute(host, key) || "",
@@ -74,25 +76,26 @@ define ("audio-player", Player);
 function initialize (host, key) {
 host.input = null;
 host.output = audio.context.createGain();
-
-if (audio.context instanceof OfflineAudioContext) {
-host.node = audio.context.createBufferSource();
-console.debug("player: offline context detected");
-
-} else {
 host.audioElement = document.createElement("audio");
-host.node = audio.context.createMediaElementSource(host.audioElement);
 
 host.audioElement.addEventListener ("error", e => app.statusMessage(e.target.error.message));
+
 host.audioElement.addEventListener("ended", () => {
 host.play = false;
 host.currentTime = 0;
-});
+}); // ended
 
 host.audioElement.addEventListener("durationchange", e => host.duration = e.target.duration);
 host.audioElement.addEventListener("timeupdate", e => {
 host.currentTime= Math.floor(e.target.currentTime / 2) * 2;
-});
+}); // durationChange
+
+if (app.isRenderMode()) {
+host.node = audio.context.createBufferSource();
+console.debug("player: offline context detected");
+
+} else {
+host.node = audio.context.createMediaElementSource(host.audioElement);
 } // if
 
 host.node.connect(host.output);

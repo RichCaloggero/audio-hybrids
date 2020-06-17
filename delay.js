@@ -10,7 +10,7 @@ delay: {default: 0.5, min: 0, max: 1, step: 0.001}
 const Delay = element.create("delay", defaults, "createDelay", [["delay", "delayTime"]], {
 
 render: ({ mix, bypass, label, _depth, delay }) => {
-console.debug(`${label}: rendering...`);
+//console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="delay">
 ${ui.legend({ label, _depth })}

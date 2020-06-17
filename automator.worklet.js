@@ -20,7 +20,7 @@ console.debug(`automator.worklet: parameter ${name} set to ${value}`);
 
 if (this.enable) {
 this.startTime = currentTime;
-console.debug(`automator.worklet: startTime reset to ${this.startTime}`);
+//console.debug(`automator.worklet: startTime reset to ${this.startTime}`);
 } // if
 
 }; // onMessage
@@ -51,7 +51,7 @@ const dt = currentTime - this.startTime;
 if (dt >= this.automationInterval) {
 this.startTime = currentTime;
 this.port.postMessage("tick");
-console.debug("automator.worklet: tick");
+//console.debug("automator.worklet: tick");
 /*this.port.postMessage([
 ["channelAverage", this.channelAverage],
 ["average", this.average],

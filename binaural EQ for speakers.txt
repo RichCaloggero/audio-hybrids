@@ -1,0 +1,11 @@
+https://www.dpamicrophones.com/mic-university/binaural-recording-techniques
+
+Most parametric equalizers can create a curve like this one – or close.
+
+Settings:      
+480 Hz Low shelf, Gain = +2 dB
+4 kHz Bell, Gain = -11 dB, Q = 1
+8 kHz Bell, Gain = +8 dB, Q = 2
+Master gain = 0 dB
+
+So, when a binaural recording is made, simply add the equalizing to both channels. Then the recording is better adapted for loudspeaker reproduction.

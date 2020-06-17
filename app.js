@@ -7,6 +7,7 @@ import * as recorder from "./recorder.js";
 //import * as offlineRender from "./offlineRender.js";
 
 export let root = null;
+export let root0 = null;
 let _prompt = "";
 let _response = "";
 let _responseCallback = null;
@@ -74,8 +75,8 @@ ${ui.boolean({ label: "hide on bypass", name: "hideOnBypass", defaultValue: hide
 ${ui.boolean({ label: "enable automation", name: "enableAutomation", defaultValue: enableAutomation })}
 ${ui.number("automation interval", "automationInterval", automationInterval, 0.01, 0.3, 0.01)}
 
-<div aria-live="polite" aria-atomic="true" id="status">
-${message}
+<div role="region" aria-label="status" aria-live="polite" id="status">
+<!--${message}-->
 </div>
 
 ${_focusPrompt && html`<div class="prompt" role="region" aria-label="prompt">
@@ -149,20 +150,38 @@ root._focusDialog = true;
 } // displayDialog
 
 function initialize(host, key) {
+host._load = {};
 root = host;
+if (!root0) root0 = host;
+
+function loadHandler () {
+if (host._load.audioGraphConnected && host._load.uiInitialized) {
+host.dispatchEvent(new CustomEvent("load", {bubbles: true}));
+console.debug(`${host._id}: load complete`);
+} // if
+} // loadHandler
+
+//if (!isRenderMode()) {
 waitForUi(() => {
 ui.initialize()
+host._load.uiInitialized = true;
+host.dispatchEvent(new CustomEvent("uiInitialized"));
+console.debug(`${host._id} ui initialized.`);
+loadHandler();
 }); // waitForUi
-
+//} // if
 
 element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 
-
-host.dispatchEvent(new CustomEvent("load", {bubbles: true}));
-console.log(`${host._id} is complete`);
+host.dispatchEvent(new CustomEvent("audioGraphConnected"));
+host._load.audioGraphConnected = true;
+console.debug(`${host._id} graph connected.`);
+loadHandler();
 }); // wait for children
+
+
 } // initialize
 
 export function depth (start, _depth = 2) {
@@ -180,17 +199,34 @@ return _depth;
 } // depth
 
 export function statusMessage (text, append) {
+const _status = root0.shadowRoot?.querySelector("#status");
+if (!_status) {
+alert(text);
+return;
+} // if
+
+const _message = document.createElement("p");
+_message.textContent = text;
+
+if (!append) _status.innerHTML = "";
+_status.appendChild(_message);
+} // statusMessage
+
+
+/*export function statusMessage (text, append) {
 if (isRenderMode()) return;
+
 if (append) {
 root.message = `${root.message}<br>${text}`;
 } else {
 (root || App).message = text;
 setTimeout(() => (root || App).message = "", 3000);
 } // if
-
 } // statusMessage
+*/
 
 function waitForUi (callback) {
+// wait for all elements to have a shadowRoot, which means they are completely rendered in the dom
 const app = root;
 if (!app) {
 throw new Error("renderReport: root is null or undefined");
@@ -203,14 +239,18 @@ const startTime = audio.context.currentTime;
 let children = Array.from((app || root).querySelectorAll("*"))
 .filter(child => !child.shadowRoot);
 
-app.addEventListener("renderComplete", renderHandler);
+if (children.length === 0) {
+runCallback(callback);
+} else {
+app.addEventListener("uiReady", uiReadyHandler);
+} // if
 
-function renderHandler (e) {
+function uiReadyHandler (e) {
 const rendered = e.target;
 children = children.filter(child => child !== rendered);
+//console.debug(`uiReadyHandler: ${children.length} children`);
 if (children.length === 0) {
-root.dispatchEvent(new CustomEvent("uiReady"));
-if (callback && callback instanceof Function) callback();
+runCallback(callback);
 
 const all = Array.from(root.querySelectorAll("*"))
 .map(element => [element._id, element.shadowRoot]);
@@ -225,6 +265,11 @@ time: ${(audio.context.currentTime - startTime).toFixed(2)} seconds;\n
 End Report.`);
 } // if
 } // renderHandler
+
+
+function runCallback (callback) {
+if (callback && callback instanceof Function) callback();
+} // runCallback
 } // waitForUi
 
 export function showRecordingControls () {
@@ -286,22 +331,23 @@ console.debug("render: iFrame loaded");
 
 container.addEventListener("load", e => {
 setTimeout(() => {
-const statusMessage = (text) => _root.shadowRoot.querySelector("#status").textContent = text;
-console.debug("render: copying...");
+//const statusMessage = (text) => _root.shadowRoot.querySelector("#status").textContent = text;
+
 copyAllValues(_root, root);
 console.debug("render: ui values copied");
 
-
+ui.scheduleAutomation(buffer.duration, Array.from(_root.querySelectorAll("*")));
+console.debug("renderAudio: automation items added");
 
 const player = container.querySelector("audio-player");
 player.node.buffer = buffer;
 console.debug ("render: source created");
 
 
-player.node.start();
 statusMessage("Rendering audio, please wait...");
 
 // audio.context refers to the offline context now
+player.node.start();
 audio.context.startRendering()
 .then(buffer => {
 console.debug("render: got a buffer; ", buffer);
@@ -315,8 +361,7 @@ console.debug("render: got results");
 player.node.disconnect(player.output);
 audio.popContext();
 root = _root;
-root.parentElement.removeChild(container);
-container.innerHTML = "";
+container.remove();
 container = null;
 console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
 
@@ -373,6 +418,8 @@ function enumerateNonUi (root) {
 return enumerateAll(root)
 .filter(x => x instanceof module);
 } // enumerateNonUi
+
+
 
 /* https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ */
 

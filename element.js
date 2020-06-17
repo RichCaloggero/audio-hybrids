@@ -171,9 +171,10 @@ _depth: 0,
 _name: () => name,
 _connected: property(true, connect),
 
+// when this is called, then the shadowRoot is rendered, so dispatch our uiReady event for waitForUi to catch
 _rendered: render(host => {
-host.dispatchEvent(new CustomEvent("renderComplete", {bubbles: true}));
-console.debug(`${host._id}: render complete`);
+host.dispatchEvent(new CustomEvent("uiReady", {bubbles: true}));
+console.debug(`commonProperties: ${host._id}: render complete`);
 return () => {};
 }), // render
 
@@ -356,13 +357,14 @@ else return data.default;
 return undefined;
 
 function getData (host, property, data) {
+const nodeProperty = host.node && host.aliases? host.aliases[property] : "";
 return Object.assign({}, ...data.map(item => {
 if (item.length === 1) {
 return {default: item[0]};
 } else {
 const [operator, operand] = item;
 if (operator === "automate" || operator === "-automate") {
-return {automate: {host, property, text: operand, enabled: operator[0] !== "-"}};
+return {automate: {host, property, nodeProperty, text: operand, enabled: operator[0] !== "-"}};
 } // if automate
 
 if (operator === "shortcut"){
