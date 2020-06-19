@@ -3,7 +3,7 @@ class Automator extends AudioWorkletProcessor {
 constructor () {
 super ();
 this.channelAverage = [];
-this.runningAverage = 0
+this.average = this.frameAverage = this.lastFrameAverage = 0;
 this.frameCount = 0;
 this.frameDuration = 0;
 this.enable = false;
@@ -39,10 +39,11 @@ this.frameDuration = sampleCount / sampleRate;
 
 this.frameCount += 1;
 for (let channel = 0; channel < channelCount; channel++) {
-this.channelAverage[channel] = sum(inputBuffer[channel]) / sampleCount;
+this.channelAverage[channel] = absoluteSum(inputBuffer[channel]) / sampleCount;
 } // loop over channels
-this.average = sum(this.channelAverage)/channelCount;
-this.runningAverage = (this.runningAverage + this.average)/ 2;
+this.frameAverage = absoluteSum(this.channelAverage)/channelCount;
+this.average = (this.lastFrameAverage + this.frameAverage) / 2;
+this.lastFrameAverage = this.frameAverage;
 } // if channelCount
 
 if (this.enable) {
@@ -52,12 +53,11 @@ if (dt >= this.automationInterval) {
 this.startTime = currentTime;
 this.port.postMessage("tick");
 //console.debug("automator.worklet: tick");
-/*this.port.postMessage([
+this.port.postMessage([
 ["channelAverage", this.channelAverage],
-["average", this.average],
-["runningAverage", this.runningAverage]
+["frameAverage", this.frameAverage],
+["average", this.runningAverage]
 ]); // message
-*/
 } // if elapsedTime
 } // if enabled
 
@@ -67,5 +67,5 @@ return true;
 
 registerProcessor("parameter-automator", Automator);
 
-function sum (a) {return a.reduce((sum, x) => sum += x, 0);}
+function absoluteSum (a) {return a.reduce((sum, x) => sum += Math.abs(x), 0);}
 

@@ -43,6 +43,8 @@ gain="-0.75" hide="mix">
 rotate="default{0} automate{c(rate*t, 0,90)}"
 hide="mix"></audio-stereo-processor>
 </audio-series>
+
+<audio-panner label="side panner"></audio-panner>
 </audio-series><!-- side -->
 
 <audio-series id="mid" silent-bypass  label="mid" hide="mix">
@@ -51,10 +53,18 @@ hide="mix"></audio-stereo-processor>
 delay="default{0} automate{s(rate*t, 0,0.0004)}"
 hide="mix"></audio-delay>
 <audio-gain label="mid gain" gain="0.8" min="-5.0" max="5.0" step="0.05" hide="mix bypass"></audio-gain>
+
+<audio-panner label="mid panner"></audio-panner>
 </audio-series><!-- mid -->
 </audio-parallel>
 
-<audio-gain label="output volume" gain="default{1} automate{c(t,0,1)}" hide="bypass mix"></audio-gain>
+<audio-parallel label="binaural eQ for speakers" hide="mix">
+<audio-filter label="low" hide="type mix detune q" type="lowshelf" frequency="480" gain="2.0"></audio-filter>
+<audio-filter label="mid" hide="type mix detune" type="peaking" frequency="4000" gain="-11" q="1"></audio-filter>
+<audio-filter label="high mid" hide="type mix detune" type="peaking" frequency="8000" gain="8" q="2"></audio-filter>
+</audio-parallel>
+
+<audio-gain label="output volume" gain="1" hide="bypass mix"></audio-gain>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>

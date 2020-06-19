@@ -9,10 +9,6 @@ const defaults = {};
 const Player = element.create("player", defaults, initialize, {
 
 src: {
-get: (host, value) => {
-//if (app.isRenderMode()) return;
-host.audioElement.src
-}, // get
 set: (host, value) => {
 //if (app.isRenderMode()) return;
 try {
@@ -46,25 +42,20 @@ host.audioElement.currentTime = Number(value);
 }, // seek
 
 duration: {
-get: (host, value) => {
-if (app.isRenderMode()) return;
-host.audioElement.duration
-}, // get
 set: (host, value) => value,
 }, // duration
 
 currentTime: 0,
 
-render: ({ label, _depth, src, play, seek, currentTime, duration }) => {
+render: ({ isRenderMode, label, _depth, src, play, seek, currentTime, duration }) => {
 //console.debug(`${label}: rendering...`);
+if (app.isRenderMode()) return "";
 return html`
 <fieldset class="player">
-${!app.isRenderMode() && html`<div>
 ${ui.legend({ label, _depth })}
 ${ui.text({ label: "source file", name: "src", defaultValue: src })}
 ${ui.boolean({ name: "play", defaultValue: play })}
 <label>seek: <input type="range" value="${currentTime}" onchange="${html.set(`seek`)}" min="0" max="${duration}" step="2" data-name="seek"></label>
-`} // render mode test
 </fieldset>
 `;
 } // render
@@ -88,7 +79,7 @@ host.currentTime = 0;
 host.audioElement.addEventListener("durationchange", e => host.duration = e.target.duration);
 host.audioElement.addEventListener("timeupdate", e => {
 host.currentTime= Math.floor(e.target.currentTime / 2) * 2;
-}); // durationChange
+}); // timeUpdate
 
 if (app.isRenderMode()) {
 host.node = audio.context.createBufferSource();

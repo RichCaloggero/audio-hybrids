@@ -9,6 +9,9 @@ const automationQueue = new Map();
 const automationRequests = [];
 const definitionRequests = [];
 
+// to make with() work from function created via "new Function" , this needs to be global
+window.automationData = Object.create(Math);
+
 
 export function initialize (e) {
 if (app.isRenderMode()) {
@@ -27,15 +30,17 @@ automator = new AudioWorkletNode(audio.context, "parameter-automator");
 app.root.querySelector("audio-player").output.connect(automator);
 
 automator.port.onmessage = e => {
-//app.statusMessage(`message from automator: ${e.data}`);
+if (app.root.enableAutomation) {
 const message = e.data;
-// if we receive a message, process the queue
-if (message === "tick") {
-automationQueue.forEach(e => automate(e));
-
-} else if (message instanceof Array) {
+if (message instanceof Array) {
 // envelope following code here -- make quantities available as variables which can be used by automation functions
+Object.assign(automationData, Object.fromEntries(message));
+
+} else if (message === "tick") {
+// if we receive a tick message, process the queue
+automationQueue.forEach(e => automate(e));
 } // if
+} // if enabled
 }; // onMessage
 
 setAutomationInterval(automationInterval);
@@ -394,7 +399,7 @@ return element;
 export function compileFunction (text, parameter = "t") {
 try {
 return new Function (parameter,
-`with (Math) {
+`with (automationData) {
 function  toRange (x, a,b) {return (Math.abs(a-b) * (x+1)/2) + a;}
 function s (x, l=-1.0, u=1.0) {return toRange(Math.sin(x), l,u);}
 function c (x, l=-1.0, u=1.0) {return toRange(Math.cos(x), l,u);}
