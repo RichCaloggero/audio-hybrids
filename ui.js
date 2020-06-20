@@ -209,6 +209,12 @@ e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 } // if
 } // automate
 
+export function isAutomationEnabled (input) {
+if (automationQueue.has(input)) {
+return automationQueue.get(input).enabled;
+} // if
+} // isAutomationEnabled
+
 export function scheduleAutomation (duration, elementMap) {
 if (app.isRenderMode()) {
 const timeStepCount = duration / automationInterval;

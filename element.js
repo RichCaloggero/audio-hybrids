@@ -65,14 +65,19 @@ return node[prop] instanceof AudioParam? node[prop].value : node[prop];
 function setWebaudioProp (node, prop, value) {
 const parameter = node[prop];
 
-//if (isNaN(value)) return 0;
 if (parameter instanceof AudioParam) return setAudioParam(parameter, value);
 else return setParam(node, prop, value);
 
 function setAudioParam (audioParam, value) {
+const dt = app.root.enableAutomation? ui.automationInterval / 3 : 0;
+
 if (Number.isNaN(value)) return 0;
 try {
-return (audioParam.value = Number(value));
+const val = Number(value);
+if (dt === 0) return (audioParam.value = val);
+audioParam.setTargetAtTime(val, 0, dt);
+return val;
+
 } catch (e) {
 console.error("setAudioParam: ", prop, audioParam, value, `: ${e}`);
 return audioParam.default;
