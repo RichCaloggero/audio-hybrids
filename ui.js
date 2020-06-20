@@ -34,7 +34,7 @@ if (app.root.enableAutomation) {
 const message = e.data;
 if (message instanceof Array) {
 // envelope following code here -- make quantities available as variables which can be used by automation functions
-Object.assign(automationData, Object.fromEntries(message));
+Object.assign(window.automationData, Object.fromEntries(message));
 
 } else if (message === "tick") {
 // if we receive a tick message, process the queue

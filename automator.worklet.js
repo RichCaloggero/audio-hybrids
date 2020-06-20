@@ -56,7 +56,7 @@ this.port.postMessage("tick");
 this.port.postMessage([
 ["channelAverage", this.channelAverage],
 ["frameAverage", this.frameAverage],
-["average", this.runningAverage]
+["average", this.average]
 ]); // message
 } // if elapsedTime
 } // if enabled
