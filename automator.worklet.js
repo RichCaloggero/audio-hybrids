@@ -3,7 +3,9 @@ class Automator extends AudioWorkletProcessor {
 constructor () {
 super ();
 this.channelAverage = [];
-this.average = this.frameAverage = this.lastFrameAverage = 0;
+this.average = this.frameAverage = 0;
+this.lastFrameAverages = [];
+this.queueLength = 4;
 this.frameCount = 0;
 this.frameDuration = 0;
 this.enable = false;
@@ -42,8 +44,10 @@ for (let channel = 0; channel < channelCount; channel++) {
 this.channelAverage[channel] = absoluteSum(inputBuffer[channel]) / sampleCount;
 } // loop over channels
 this.frameAverage = absoluteSum(this.channelAverage)/channelCount;
-this.average = (this.lastFrameAverage + this.frameAverage) / 2;
-this.lastFrameAverage = this.frameAverage;
+this.average = (absoluteSum(this.lastFrameAverages) + this.frameAverage) / this.lastFrameAverages.length+1;
+this.lastFrameAverages.push(this.frameAverage);
+if (this.lastFrameAverages.length > this.queueLength) this.lastFrameAverages.shift();
+
 } // if channelCount
 
 if (this.enable) {
