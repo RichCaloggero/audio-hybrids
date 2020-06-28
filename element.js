@@ -135,7 +135,7 @@ let value = getDefault(host, key, _defaults);
 // NaN (not-a-number) tests falsey
 //console.debug(`element.connect: ${host._id}(${key}): setting value to ${value}`);
 host[key] = value;
-if (key === "_connected") console.debug(`_connected: ${host._id}`);
+//if (key === "_connected") console.debug(`_connected: ${host._id}`);
 } // connect
 
 export function getDefault (host, key, defaults = {}) {
@@ -186,7 +186,7 @@ return () => {};
 label: {
 connect: (host, key) => host[key] = host.getAttribute(key) || "",
 observe: (host, value) => {
-if (host.shadowRoot) host.shadowRoot.querySelector("fieldset").hidden = !value
+if (host.shadowRoot?.querySelector("fieldset")) host.shadowRoot.querySelector("fieldset").hidden = !value
 }
 },
 
@@ -258,7 +258,7 @@ if (!children.includes(e.target)) return;
 
 // remove this child and we're done if no more children left to process
 children = children.filter(x => x !== e.target);
-console.log(`${element._id}: child ${e.target._id} is ready; ${children.length} remaining`);
+console.debug(`${element._id}: child ${e.target._id} is ready; ${children.length} remaining`);
 if (children.length > 0) return;
 
 // no more children left, so remove this handler and signal ready on this element
@@ -270,7 +270,7 @@ runCallback(element, callback);
 } // handleChildReady
 
 function runCallback (element, callback) {
-console.log(`${element._id}: all children ready; executing callback`);
+console.debug(`${element._id}: all children ready; executing callback`);
 
 try {
 //callback(Array.from(element.children));
@@ -279,7 +279,7 @@ callback.call(element, Array.from(element.children));
 //}, 0);
 signalReady(element);
 } catch (e) {
-console.log(`abort: ${e}\n${e.stack}\n`);
+console.error(`abort: ${e}\n${e.stack}\n`);
 } // catch
 } // runCallback
 

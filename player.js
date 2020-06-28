@@ -49,7 +49,7 @@ currentTime: 0,
 
 render: ({ isRenderMode, label, _depth, src, play, seek, currentTime, duration }) => {
 //console.debug(`${label}: rendering...`);
-if (app.isRenderMode()) return "";
+if (app.isRenderMode()) return html``;
 return html`
 <fieldset class="player">
 ${ui.legend({ label, _depth })}

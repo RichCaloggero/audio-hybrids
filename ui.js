@@ -3,7 +3,7 @@ import * as app from "./app.js";
 import * as audio from "./audio.js";
 import * as keymap from "./keymap.js";
 
-let automator = null;
+export let automator = null;
 export let automationInterval = 0.03; // seconds
 const automationQueue = new Map();
 const automationRequests = [];
@@ -16,6 +16,7 @@ window.automationData = Object.create(Math);
 export function initialize (e) {
 if (app.isRenderMode()) {
 automator = null;
+app.statusMessage("ui: render mode...");
 
 } else {
 processAutomationRequests();
@@ -45,7 +46,7 @@ automationQueue.forEach(e => automate(e));
 
 setAutomationInterval(automationInterval);
 app.root._automator = automator;
-app.statusMessage("automator initialized");
+app.statusMessage("ui: automator initialized");
 }).catch(error => app.statusMessage(error));
 } // if not render mode
 
@@ -156,7 +157,7 @@ return typeof(min) === "number" && typeof(max) === "number" && typeof(value) ===
 
 export function enableAutomation () {
 if (!automator) {
-app.statusMessage(`enableAutomation: automator worklet not started; aborting`);
+if (!app.isRenderMode()) app.statusMessage(`enableAutomation: automator worklet not started; aborting`);
 return;
 } // if
 
@@ -166,7 +167,7 @@ app.statusMessage(`Automation of ${countEnabledAutomationItems ()} items enabled
 
 export function disableAutomation () {
 if (!automator) {
-app.statusMessage(`disableAutomation: automator worklet not started; aborting`);
+if (!app.isRenderMode()) app.statusMessage(`disableAutomation: automator worklet not started; aborting`);
 return;
 } // if
 
@@ -225,39 +226,47 @@ console.debug(`scheduleAutomation: duration = ${duration}, itemCount = ${itemCou
 
 try {
 let count = 0;
-for (let t = 0; t < duration; t += automationInterval) {
+
 items.forEach(item => {
 count += 1;
-let value = item.function(t);
-if (count <= 100) console.debug("scheduleAutomation: ", item.audioParam, t.toFixed(2), value.toFixed(5));
+const value = item.function(0);
+showAutomationItem(item, 0);
 
-item.audioParam.linearRampToValueAtTime(value, t+automationInterval);
+item.audioParam.setValueAtTime(value, 0);
+}); // forEach item
+
+for (let t = automationInterval; t < duration; t += automationInterval) {
+items.forEach(item => {
+count += 1;
+const value = item.function(t);
+
+// display first 100 items for debugging
+if (count <= 20) showAutomationItem(item, t);
+
+item.audioParam.exponentialRampToValueAtTime(value, t);
 }); // forEach item
 } // for duration
 } catch (e) {
 console.error(e);
+app.statusMessage(e);
 } // try
 
 console.debug("scheduleAutomation: complete");
 
-function displayAutomationItem (item) {
-console.debug(`scheduleAutomation: automationItem: ${getHost(item.host)}.${item.property} = ${item.text} => ${item.function}`);
-
-function getHost (host) {
-return `${host.closest("audio-app")?._id}.${host?._id}`;
-} // getHost
+function showAutomationItem (item, t) {
+console.debug(`scheduleAutomation: automationItem: ${item.host._id}.${item.property} = ${item.function(t).toFixed(4)} {${item.text}}`);
 } // displayAutomationItem
 } // if
 
 
-function transformAutomationItems (automationQueue, oldHosts) {
-const newHosts = Array.from(app.root.querySelectorAll("*"));
+function transformAutomationItems (automationQueue, elementMap) {
 const items = [];
 
 automationQueue.forEach(e => {
 if (e.enabled) {
-const host = newHosts[oldHosts.indexOf(e.host)];
-let node = e.host.node;
+const host = elementMap.get(e.host);
+if (!host) throw new Error(`transformAutomationItems: cannot find new host corresponding to ${e.host._id}`);
+let node = host.node;
 
 // special case audio-series
 if (host.matches("audio-series")) {
@@ -431,7 +440,7 @@ export function parse (expression) {
 if (!expression) return [];
 
 let parser =
-/^([\d.+\-]+)$|^(\w+)$|([\w\-]+?)\{(.+?)\}/gi;
+/^([\-+]+[\d.]+)$|^(\w+)$|([\w\-]+?)\{(.+?)\}/gi;
 //console.debug("intermediate: ", [...expression.matchAll(parser)]);
 
 const result = [...expression.matchAll(parser)]

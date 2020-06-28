@@ -34,6 +34,7 @@ observe: (host, value) => value && setTimeout(() => host.shadowRoot.querySelecto
 record: {
 connect: (host, key) => host.key = false,
 observe: (host, value) => {
+if (isRenderMode()) return;
 if (value) recorder.start();
 else statusMessage("Recording disabled.");
 } // observe
@@ -56,7 +57,10 @@ observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypa
 
 enableAutomation: {
 connect: (host, key) => host[key] = element.processAttribute(host, key, "enable-automation") || false,
-observe: (host, value) => value? ui.enableAutomation() : ui.disableAutomation()
+observe: (host, value) => {
+if (isRenderMode()) return;
+value? ui.enableAutomation() : ui.disableAutomation();
+} // observe
 }, // enableAutomation
 
 automationInterval: {
@@ -198,7 +202,7 @@ e = e.parentElement;
 return _depth;
 } // depth
 
-export function statusMessage (text, append) {
+export function statusMessage (text, append = true) {
 const _status = root0.shadowRoot?.querySelector("#status");
 if (!_status) {
 alert(text);
@@ -305,12 +309,13 @@ statusMessage(`${Number(buffer.duration/60).toFixed(2)} minutes of audio loaded.
 } // loadAudio
 
 function renderAudio (buffer) {
-console.debug("render:...");
+console.debug("renderAudio:...");
 const offlineContext = new OfflineAudioContext(2, buffer.length, audio.context.sampleRate);
 audio.pushContext(offlineContext);
+const _automator = ui.automator;
+const _root = root;
 
 const html = root.outerHTML;
-const _root = root;
 let container = document.createElement("div");
 //container.setAttribute("hidden", "");
 document.body.appendChild(container);
@@ -331,17 +336,19 @@ console.debug("render: iFrame loaded");
 
 container.addEventListener("load", e => {
 setTimeout(() => {
-//const statusMessage = (text) => _root.shadowRoot.querySelector("#status").textContent = text;
-
-copyAllValues(_root, root);
+const elementMap = copyAllValues(_root, root);
 console.debug("render: ui values copied");
-
-ui.scheduleAutomation(buffer.duration, Array.from(_root.querySelectorAll("*")));
-console.debug("renderAudio: automation items added");
+_root.renderAudioData = {buffer, elementMap};
 
 const player = container.querySelector("audio-player");
 player.node.buffer = buffer;
 console.debug ("render: source created");
+
+if (root.enableAutomation) {
+// need to pass _root so we can map original automation queue items to the new elements created by renderAudio
+ui.scheduleAutomation(buffer.duration, elementMap);
+console.debug("renderAudio: automation items added");
+} // if
 
 
 statusMessage("Rendering audio, please wait...");
@@ -357,14 +364,14 @@ renderResults.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
 renderResults.focus();
 console.debug("render: got results");
 
-// restoring...
+/*// restoring...
 player.node.disconnect(player.output);
 audio.popContext();
 root = _root;
 container.remove();
 container = null;
 console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-
+*/
 statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
 }).catch(error => statusMessage(`render: ${error}\n${error.stack}\n`));
 }, 1); // timeout
@@ -372,29 +379,43 @@ statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes 
 //}; // newContext ready
 } // renderAudio
 
-function copyAllValues (__from, __to) {
+function copyAllValues (oldRoot, newRoot) {
+const elementMap = new Map();
 //try {
-const _from = findAllControls(__from);
-const _to = findAllControls(__to);
-console.debug("copy: _from and _to defined");
-
-const values = _from.map(x => {
-return x.hasAttribute("aria-pressed")? (x.getAttribute("aria-pressed") === "true") : x.value
-});
-console.debug("copy: values defined");
-
-_to.forEach((x,i) => {
-if (x instanceof HTMLButtonElement && x.hasAttribute("aria-pressed")) {
-x.setAttribute("aria-pressed", Boolean(values[i])? "true" : "false");
-//console.debug("- toggle button: ", x);
-x.dispatchEvent(new Event("click"));
-} else {
-x.value = values[i];
-x.dispatchEvent(new Event("change"));
-} // if
-});
+findAllControls(oldRoot)
+.filter(x => x.dataset.name)
+//.filter(x => x.dataset.name !== "record")
+.filter(x => x.dataset.name !== "renderAudio")
+.filter(x => !findHost(x, oldRoot)?.matches("audio-player"))
+.forEach(x => setValue(x));
 console.debug("copy: values copied");
+return elementMap;
+
+function setValue (x) {
+const name = x.dataset.name;
+const oldHost = findHost(x, oldRoot);
+const newHost = newRoot.parentElement.querySelector(oldHost.tagName.toLowerCase());
+if (!newHost) {
+throw new Error(`setValue: ${oldHost._id} has no corresponding element in ${newRoot._id}`);
+} // if
+
+newHost[name] = oldHost[name];
+if (!elementMap.has(oldHost)) elementMap.set(oldHost, newHost);
+console.debug(`setValue: ${oldHost._id}.${name} => ${newHost._id}.${name} = ${oldHost[name]}`);
+} // setValue
+
+function getValue (x) {
+return x.hasAttribute("aria-pressed")? (x.getAttribute("aria-pressed") === "true") : x.value
+} // getValue
 } // copyAllValues
+
+function findHost (element, root) {
+return Array.from(root.querySelectorAll("*"))
+.concat(root)
+.filter(x => x.shadowRoot.contains(element))
+[0];
+} // findHost
+
 
 function findAllControls(root) {
 const renderAudioButton = root.shadowRoot.querySelector("#renderAudio-controls")
