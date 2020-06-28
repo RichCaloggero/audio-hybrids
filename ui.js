@@ -221,8 +221,7 @@ if (app.isRenderMode()) {
 const timeStepCount = duration / automationInterval;
 const itemCount = automationQueue.size;
 const items = transformAutomationItems(automationQueue, elementMap);
-console.debug(`scheduleAutomation: duration = ${duration}, itemCount = ${itemCount}, interval = ${automationInterval}, timeStepCount = ${timeStepCount}`);
-//items.forEach(item => displayAutomationItem(item));
+console.debug(`scheduleAutomation: duration = ${duration.toFixed(2)}, itemCount = ${itemCount}, interval = ${automationInterval.toFixed(3)}, timeStepCount = ${Math.floor(timeStepCount)}`);
 
 try {
 let count = 0;
@@ -230,7 +229,7 @@ let count = 0;
 items.forEach(item => {
 count += 1;
 const value = item.function(0);
-showAutomationItem(item, 0);
+//showAutomationItem(item, 0);
 
 item.audioParam.setValueAtTime(value, 0);
 }); // forEach item
@@ -240,8 +239,7 @@ items.forEach(item => {
 count += 1;
 const value = item.function(t);
 
-// display first 100 items for debugging
-if (count <= 20) showAutomationItem(item, t);
+//if (count <= 20) showAutomationItem(item, t);
 
 item.audioParam.exponentialRampToValueAtTime(value, t);
 }); // forEach item

@@ -364,14 +364,13 @@ renderResults.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
 renderResults.focus();
 console.debug("render: got results");
 
-/*// restoring...
+// restoring...
 player.node.disconnect(player.output);
 audio.popContext();
 root = _root;
 container.remove();
 container = null;
 console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-*/
 statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
 }).catch(error => statusMessage(`render: ${error}\n${error.stack}\n`));
 }, 1); // timeout
