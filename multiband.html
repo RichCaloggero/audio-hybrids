@@ -13,23 +13,23 @@
 
 <audio-series label="master">
 <audio-parallel>
-<audio-band silent-bypass label="bass" type="lowshelf" low="200"></audio-band>
+<audio-band silent-bypass label="bass"  type="lowshelf" low="200"></audio-band>
 
 <audio-series>
-<audio-band silent-bypass label="mid" type="peaking" low="200" high="3000"></audio-band>
+<audio-band  type="peaking" low="200" high="1500"></audio-band>
 
 <audio-split label="split" hide="mix">
 <audio-delay label="left delay" mix="default{-1}"
-delay="default{0.0} automate{s(t/2, 0.0001, 0.002)}" step="0.0001"
+delay="default{0.0} automate{scale(average, 0,1, 0.0001,0.0008)}" step="0.0001"
 hide="bypass"></audio-delay>
 
-<audio-delay bypass label="right delay" mix="default{-1}"
-delay="default{0.0} automate{c(t/2, 0.0001, 0.002)}"
+<audio-delay bypass label="right delay" mix="default{1}"
+delay="default{0.0} automate{r(0.0003, 0.0006)}"
 step="0.0001"></audio-delay>
 </audio-split>
 </audio-series>
 
-<audio-band silent-bypass label="treble" type="highshelf" high="3000"></audio-band>
+<audio-band silent-bypass label="treble"  type="highshelf" high="3000"></audio-band>
 </audio-parallel>
 
  <audio-gain label="volume correction" gain="2" hide="bypass mix"></audio-gain>

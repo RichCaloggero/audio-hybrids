@@ -1,3 +1,12 @@
+/* this does two things:
+- sends tick messages every automationInterval
+- sends averages of sample values (all sample values are absolute values since webaudio samples range from -1 to 1, inclusive):
++ channelAverage[]: average absolute sample values of each channel over this frame
++ frameAverage: average sample value over this frame combining both channels
++ lastFrameAverage[]: queue containing frameAverage values for the last queueLength frames
++ average: average of the current queue
+*/
+
 class Automator extends AudioWorkletProcessor {
 
 constructor () {

@@ -4,7 +4,7 @@ import * as ui from "./ui.js";
 
 
 const defaults = {
-delay: {default: 0.5, min: 0, max: 1, step: 0.001}
+delay: {default: 0.5, min: 0, max: 1, step: 0.0001}
 };
 
 const Delay = element.create("delay", defaults, "createDelay", [["delay", "delayTime"]], {
