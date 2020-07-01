@@ -16,3 +16,4 @@ import   "./filter.js";
 import   "./panner.js";
 import   "./stereoProcessor.js";
 import   "./swap.js";
+import "./band.js";

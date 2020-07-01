@@ -6,11 +6,6 @@
 <script type="module" src="load.js"></script>
 </head>
 <body>
-<fieldset id="parameters">
-<legend><h2>Global Parameters</h2></legend>
-<label>Low cutoff: <input type="number" id="low" value="200" min="20" max="1000" step="20"></label>
-<label>High cutoff: <input type="number" id="high" value="3000" min="1000" max="10000" step="20"></label>
-</fieldset>
 
 <audio-app label="test" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
@@ -18,34 +13,10 @@
 
 <audio-series label="master">
 <audio-parallel>
-<audio-series label="bass" silent-bypass hide="mix">
-<audio-filter  id="bass" type="lowpass"
-frequency="200" q="1"
-hide="gain q detune mix"></audio-filter>
-<audio-gain label="gain" gain="1.5" hide="bypass mix"></audio-gain>
-</audio-series>
-
-<audio-series label="treble" silent-bypass hide="mix">
-<audio-filter  id="treble" type="highpass"
-frequency="2500"  q="1"
-hide="gain q detune mix"></audio-filter>
-<audio-gain  label="gain" gain="1.5" hide="bypass mix"></audio-gain>
-</audio-series>
-
-<audio-series silent-bypass label="mid" hide="mix">
-<audio-series>
-<audio-filter id="lowcut" type="highpass"
-frequency="200" q="1"
-hide="gain q detune mix"></audio-filter>
-<audio-gain gain="1" hide="bypass mix"></audio-gain>
-</audio-series>
+<audio-band silent-bypass label="bass" type="lowshelf" low="200"></audio-band>
 
 <audio-series>
-<audio-filter id="highcut" type="lowpass"
-frequency="2500" q="1"
-hide="gain q detune mix"></audio-filter>
-<audio-gain  gain="1" hide="bypass mix"></audio-gain>
-</audio-series>
+<audio-band silent-bypass label="mid" type="peaking" low="200" high="3000"></audio-band>
 
 <audio-split label="split" hide="mix">
 <audio-delay label="left delay" mix="default{-1}"
@@ -53,9 +24,9 @@ delay="default{0.0} automate{s(t, 0, 0.002)}" step="0.0001"
 hide="bypass"></audio-delay>
 <audio-gain></audio-gain>
 </audio-split>
-
-<audio-gain label="gain" gain="1" hide="mix bypass"></audio-gain>
 </audio-series>
+
+<audio-band silent-bypass label="treble" type="highshelf" high="3000"></audio-band>
 </audio-parallel>
 
  <audio-gain label="output volume" gain="1" hide="bypass mix"></audio-gain>
@@ -65,28 +36,6 @@ hide="bypass"></audio-delay>
 </audio-series>
 </audio-app>
 
-<script>
-$("#low").addEventListener("change", e => setLowCutoff(e.target.value));
-$("#high").addEventListener("change", e => setHighCutoff(e.target.value));
-setLowCutoff($("#low").value);
-setHighCutoff($("#high").value);
-
-function setLowCutoff (value) {
-value = Number(value);
-$("#bass").frequency = value;
-$("#lowcut").frequency = value;
-} // setLowCutoff
-
-function setHighCutoff (value) {
-value = Number(value);
-$("#treble").frequency = value;
-$("#highcut").frequency = value;
-} // setHighCutoff
-
-function $(selector, context = document) {
-return context.querySelector(selector);
-} // $
-</script>
 
 </body>
 </html>
