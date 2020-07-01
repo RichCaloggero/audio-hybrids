@@ -7,7 +7,8 @@ const defaults = {
 gain: {type: "range", default: 1, min: -10, max: 10, step: 0.1}
 };
 
-const Gain = element.create("gain", defaults, "createGain", ["gain"], {
+const Gain = element.create("gain", defaults, "createGain",
+["gain"], {
 
 render: ({ mix, bypass, label, _depth, gain }) => {
 //console.debug(`${label}: rendering...`);
