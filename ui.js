@@ -5,12 +5,16 @@ import * as keymap from "./keymap.js";
 
 export let automator = null;
 export let automationInterval = 0.03; // seconds
+export let automationType = "linear";
 const automationQueue = new Map();
 const automationRequests = [];
 const definitionRequests = [];
 
 // to make with() work from function created via "new Function" , this needs to be global
 window.automationData = Object.create(Math);
+window.automationData.average = 0;
+window.automationData.frameAverage = 0;
+window.automationData.channelAverage = [0,0];
 
 
 export function initialize (e) {
@@ -203,12 +207,57 @@ return Array.from(automationQueue.values())
 
 function automate (e) {
 if (e.enabled) {
-//e.host[e.property] = e.function(audio.context.currentTime);
+//console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
+switch (automationType) {
+case "host": //e.host[e.property] = e.function(audio.context.currentTime);
+break;
+
+case "input":
 e.input.value = Number(e.function(audio.context.currentTime));
 e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
-//console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
+break;
+
+default: automateAudioParam(e.host, e.property, e.function(audio.context.currentTime), audio.context.currentTime);
+} // switch
 } // if
 } // automate
+
+function automateAudioParam (host, property, value, t) {
+let node = host.node;
+if (host._name === "series") {
+if (property === "delay") node = host._delay;
+else if (property === "gain") node = host._gain;
+} // if
+//console.debug(`automateProperty: node = ${node}`);
+ 
+if (node) {
+if (host.aliases && host.aliases[property]) property = host.aliases[property];
+if (node[property]) {
+if (node[property] instanceof AudioParam) setAudioParam(node[property], value, t);
+else node[property] = value;
+} else {
+throw new Error(`automateProperty: ${node} has no property ${property}; aborting`);
+} // if
+
+} else {
+console.error(`automateProperty: no AudioParam; falling back to host automation`);
+automationType = "host";
+} // if
+
+function setAudioParam (param, value, t) {
+//console.debug(`setAudioParam: ${automationType}, ${param}, ${value.toFixed(5)}, ${t.toFixed(3)}`);
+switch (automationType) {
+case "instantaneous": param.setValueAtTime(value, t); break;
+case "linear": param.linearRampToValueAtTime(value, t+automationInterval); break;
+case "exponential": param.exponentialRampToValueAtTime(value, t+automationInterval); break;
+case "target": param.setTargetAtTime(value, t, automationInterval); break;
+default: break;
+} // switch
+
+//console.debug(`setAudioParam: value = ${param.value}`);
+return;
+} // setAudioparam
+} // automateAudioParam
 
 export function isAutomationEnabled (input) {
 if (automationQueue.has(input)) {
@@ -442,6 +491,9 @@ automationInterval = x;
 if (automator && !app.isRenderMode()) automator.port.postMessage(["automationInterval", automationInterval]);
 } // setAutomationInterval
 
+export function setAutomationType (value) {
+automationType= value;
+} // setAutomationType 
 
 
 export function parse (expression) {

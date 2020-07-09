@@ -14,7 +14,21 @@ let _responseCallback = null;
 let _dialog = {open: false};
 
 
-const defaults = {};
+const suggestedAutomationIntervals = {
+target: 0.75,
+exponential: 0.75,
+linear: 0.5,
+instantaneous: 0.1,
+input: 0.1,
+host: 0.1
+};
+
+const defaults = {
+hideOnBypass: true,
+enableAutomation: false,
+automationType: "target",
+automationInterval: suggestedAutomationIntervals["target"],
+};
 
 const App = element.create("app", defaults, initialize, {
 message: "",
@@ -64,19 +78,30 @@ value? ui.enableAutomation() : ui.disableAutomation();
 }, // enableAutomation
 
 automationInterval: {
-connect: (host, key) => host[key] = Number(element.processAttribute(host, key, "automation-interval")) || ui.automationInterval,
+connect: (host, key) => host[key] = Number(element.processAttribute(host, key, "automation-interval")) || defaults.automationInterval,
 observe: (host, value) => ui.setAutomationInterval(Number(value))
 }, // automationInterval
 
+automationType: {
+connect: (host, key) => host[key] = element.processAttribute(host, key, "automation-type") || defaults.automationType,
+observe: (host, value) => {
+ui.setAutomationType(value);
+host.automationInterval = suggestedAutomationIntervals[value];
+} // observe
+}, // automationType
 
-render: ({ label, message,  _focusPrompt, _focusDialog, record, renderAudio, hideOnBypass, enableAutomation, automationInterval }) => {
+
+render: ({ label, message,  _focusPrompt, _focusDialog, record, renderAudio, hideOnBypass, enableAutomation, automationInterval, automationType }) => {
 //console.debug(`${label}: rendering...`);
 
 return html`
 <fieldset class="app">
 ${ui.legend({ label })}
 ${ui.boolean({ label: "hide on bypass", name: "hideOnBypass", defaultValue: hideOnBypass })}
+
 ${ui.boolean({ label: "enable automation", name: "enableAutomation", defaultValue: enableAutomation })}
+${ui.list("automation type", "automationType", automationType,
+["target", "exponential", "linear", "instantaneous", "host", "input"])}
 ${ui.number("automation interval", "automationInterval", automationInterval, 0.01, 0.3, 0.01)}
 
 <div role="region" aria-label="status" aria-live="polite" id="status">
