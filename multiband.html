@@ -9,7 +9,7 @@
 
 <audio-app label="Multiband Processing" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{true} shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="player" src="default{media/t.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
+<audio-player label="player" src="default{media/fandemic.mp4} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
 <audio-series label="master">
 <audio-parallel>
@@ -18,23 +18,27 @@
 <audio-series label="mid">
 <audio-band  label="frequency range" type="peaking" low="200" high="1500"></audio-band>
 
-<audio-split label="split" hide="mix">
-<audio-delay label="left delay" mix="default{-1}"
-delay="default{0.0} automate{s(t, 0, 0.002)}" step="0.0001"
-hide="bypass"></audio-delay>
 
-<audio-delay bypass label="right delay" mix="default{1}"
-delay="default{0.0} automate{r(0.0003, 0.0006)}"
+<audio-series label="swapper" feedback mix="-1" gain="0.8" delay="0">
+<audio-swap></audio-swap>
+
+<audio-split label="split" hide="mix">
+<audio-delay label="left delay" mix="default{1}"
+delay="default{0.00008} automate{s(t, 0, 0.002)}" step="0.0001"></audio-delay>
+
+<audio-delay label="right delay" mix="default{1}"
+delay="default{0.00008} automate{r(0.0003, 0.0006)}"
 step="0.0001"></audio-delay>
 </audio-split>
+</audio-series><!-- swapper -->
 
-</audio-series>
+</audio-series><!-- mid -->
 
 <audio-band silent-bypass label="treble"  type="highshelf" high="3000"></audio-band>
 </audio-parallel>
 
- <audio-gain label="volume correction" gain="2" hide="bypass mix"></audio-gain>
-</audio-series>
+ </audio-series>
+<audio-stereo-processor label="stereo processor" hide="rotation balance"></audio-stereo-processor>
 
 <audio-destination label="speakers"></audio-destination>
 </audio-series>

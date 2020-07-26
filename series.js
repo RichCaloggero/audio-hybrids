@@ -68,6 +68,7 @@ host._delay = audio.context.createDelay();
 host._gain = audio.context.createGain();
 host._gain.gain.value = 0;
 host._delay.delayTime.value = 0;
+host._delay.connect(host._gain).connect(host.input);
 
 element.waitForChildren(host, children => {
 const first = children[0];
@@ -84,6 +85,9 @@ if (last.output) last.output.connect(host.wet);
 
 
 if (host.feedback) {
+host.wet.connect(host._delay);
+} else {
+try {host.wet.disconnect(host._delay); } catch (e) {}
 } // if
 
 console.log(`${host._id}: ${children.length} children connected in series`);
