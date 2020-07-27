@@ -185,8 +185,8 @@ if (!root0) root0 = host;
 
 function loadHandler () {
 if (host._load.audioGraphConnected && host._load.uiInitialized) {
-host.dispatchEvent(new CustomEvent("load", {bubbles: true}));
-console.debug(`${host._id}: load complete`);
+host.dispatchEvent(new CustomEvent("loaded", {bubbles: true}));
+console.log(`${host._id}: load complete`);
 } // if
 } // loadHandler
 
@@ -204,9 +204,9 @@ element.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 
-host.dispatchEvent(new CustomEvent("audioGraphConnected"));
 host._load.audioGraphConnected = true;
-console.debug(`${host._id} graph connected.`);
+host.dispatchEvent(new CustomEvent("audioGraphConnected"));
+console.log(`${host._id} graph connected.`);
 loadHandler();
 }); // wait for children
 
@@ -359,7 +359,7 @@ console.debug("render: iFrame loaded");
 */
 
 
-container.addEventListener("load", e => {
+container.addEventListener("loaded", e => {
 setTimeout(() => {
 const elementMap = copyAllValues(_root, root);
 console.debug("render: ui values copied");

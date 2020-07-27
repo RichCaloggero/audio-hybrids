@@ -31,11 +31,20 @@ feedback: {
 connect: (host, key) => host[key] = host.hasAttribute(key) || false,
 observe: (host, value) => {
 if (value) {
-host.wet.connect(host._delay).connect(host._gain).connect(host.input);
-console.log(`${host._id}: connecting feedback`);
+try {
+host.wet.connect(host._delay);
+console.debug(`${host._id}: feedback connected`);
+} catch (e) {
+console.error(`${host._id}: failed to connect feedback`);
+} // try
 
 } else {
- host.wet.disconnect(host.delay);
+try {
+host.wet.disconnect(host._delay); 
+console.debug(`${host._id}: feedback disconnected`);
+} catch (e) {
+console.error(`${host._id}: failed to disconnect feedback`);
+} // try
 } // if
 } // observe
 }, // feedback
@@ -82,13 +91,6 @@ if (index < children.length-1) child.output.connect(children[index+1].input);
 
 if (first.input) host.input.connect(first.input);
 if (last.output) last.output.connect(host.wet);
-
-
-if (host.feedback) {
-host.wet.connect(host._delay);
-} else {
-try {host.wet.disconnect(host._delay); } catch (e) {}
-} // if
 
 console.log(`${host._id}: ${children.length} children connected in series`);
 }); // waitForChildren
