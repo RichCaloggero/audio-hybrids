@@ -523,7 +523,7 @@ return (`${groupLabel} / ${input.parentElement.textContent}`).trim();
 
 export function stringToList (s) {
 const r = /, *?| +?/i;
-return s.split(r);
+return s.split(r).filter(s => s.length > 0);
 } // stringToList
 
 

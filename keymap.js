@@ -53,6 +53,7 @@ const keymap = new Map([[
 
 export function globalKeyboardHandler (e) {
 const text = keyToText(eventToKey(e));
+console.debug(`globalKeyboardHandler: ${text}`);
 if (!text) return true;
 
 return execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e);
@@ -75,7 +76,7 @@ else entry.focus();
 } else if (entry instanceof Object && entry.function) {
 if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return true;
 preventDefaultAction(e);
-//console.debug(`execute function`);
+console.debug(`execute function ${entry.function}`);
 entry.function (target, text);
 target.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 target.focus();
@@ -149,16 +150,6 @@ else key.key = key.key.toLowerCase();
 return key;
 } // textToKey
 
-export function keyToText (key) {
-if (!key) return "";
-let text = "";
-if (key.ctrlKey) text += "control ";
-if (key.altKey) text += "alt ";
-if (key.shiftKey) text += "shift ";
-if (key.key) text += key.key;
-return text.toLowerCase();
-} keyToText
-
 export function normalizeKeyText (text) {
 return keyToText(textToKey(text));
 } // normalizeKeyText
@@ -176,6 +167,19 @@ k1.ctrlKey === k2.ctrlKey
 ); // return
 } // compareKeys
 
+export function keyToText (key) {
+if (!key) return "";
+let text = "";
+if (key.ctrlKey) text += "control ";
+if (key.altKey) text += "alt ";
+if (key.shiftKey) text += "shift ";
+if (key.key) {
+if (key.key === " ") text += "space";
+else text += key.key;
+} // if
+
+return text.toLowerCase();
+} keyToText
 
 export function eventToKey (e) {
 if (isModifierKey(e.key)) return null;
@@ -185,8 +189,10 @@ return {ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, key: e.key};
 
 
 export function isModifierKey (key) {
-return ["control", "ctrl", "shift", "alt", "meta"].includes(key.toLowerCase());
+return ["control", "ctrl", "shift", "alt", "meta"].includes(key.trim().toLowerCase());
 } // isModifierKey
+
+
 
 export function hasModifierKeys (e) {
 return e.ctrlKey || e.altKey || e.shiftKey;

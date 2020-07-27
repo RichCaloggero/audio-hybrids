@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Filter Bank</title>
+<script type="module" src="load.js"></script>
+</head>
+<body>
+
+<audio-app label="Filter Bank" hide-on-bypass> 
+<audio-series>
+<audio-player label="play" src="default{media/01 - 11 - Jerry Garcia - GarciaLive Volume 6_ 24 bit - LIKE A ROAD.flac}"></audio-player>
+
+<audio-series label="master" hide="mix">
+<audio-series label="delay" feedback gain="default{-1.35}" delay="default{0.0}" mix="default{-0.35}">
+<audio-swap></audio-swap>
+<audio-filter-bank hide="mix type gain detune" label="reverb" count="1000" type="allpass"
+frequency="default{2000}" q="default{0.00001}"></audio-filter-bank>
+</audio-series>
+
+<audio-gain label="makeup gain" gain="default{2.3}" hide="mix bypass"></audio-gain>
+</audio-series><!-- master -->
+
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-app>
+
+<script src="statistics/simple-statistics.min.js"></script>
+<script type="module">
+import * as audio from "./audio.js";
+import {primes, integers} from "./primes.js";
+import {$} from "./utils.js";
+ 
+//$("audio-app").addEventListener("loaded", e => {
+const fb = $("audio-filter-bank");
+let index = primes(1,fb.filters.length-1);
+if (index .length > 10) index = ss.equalIntervalBreaks(index, 10);
+index = index.reverse();
+index.pop();
+console.error(index);
+
+//fb._fbn = createFeedbackNetwork (fb, index);
+//console.error("created feedback network: ", fb._fbn);
+//}); // loaded
+
+function createFeedbackNetwork(fb, index) {
+if (!fb.filters || !(fb.filters instanceof Array) || fb.filters.length < index.length) return [];
+
+return index.map(i => Math.floor(i))
+.map(i => fb.filters[i])
+.map(f => {
+const node = {};
+node.filter = f;
+node.delay = audio.context.createDelay();
+node.gain = audio.context.createGain();
+
+node.delay.delayTime.value = r(.0001, 0.0015);
+node.gain.gain.value = r(0.2, 0.6);
+
+node.filter.connect(node.delay).connect(node.gain).connect(fb.input);
+return node;
+}); // map
+} // createFeedbackNetwork
+
+function  scale (x, in1,in2, out1,out2) {
+in1 = Math.min(in1,in2);
+in2 = Math.max(in1,in2);
+out1 = Math.min(out1,out2);
+out2 = Math.max(out1,out2);
+const f = Math.abs(out1-out2) / Math.abs(in1-in2);
+
+return f* Math.abs(x-in1) + out1;
+} // scale
+
+function r(a=0, b=1) {return scale(Math.random(), 0,1, a,b);}
+
+</script>
+
+
+</body>
+</html>
