@@ -7,12 +7,15 @@
 </head>
 <body>
 
-<audio-app label="Filter Bank" hide-on-bypass> 
+<audio-app label="Filter Bank" hide-on-bypass enable-automation="shortcut{control shift a}"> 
 <audio-series>
-<audio-player label="play" src="default{media/01 - 11 - Jerry Garcia - GarciaLive Volume 6_ 24 bit - LIKE A ROAD.flac}"></audio-player>
+<audio-player label="play"
+src="default{media/01 - 11 - Jerry Garcia - GarciaLive Volume 6_ 24 bit - LIKE A ROAD.flac} shortcut{control u}"
+play="shortcut{control x}"
+seek="shortcut{control shift t}"></audio-player>
 
 <audio-series label="master" hide="mix">
-<audio-series label="delay" feedback gain="default{-1.35}" delay="default{0.0}" mix="default{-0.35}">
+<audio-series label="delay" feedback gain="default{-1.35}" delay="default{0.0} automate{r(0, 0.0055)}" mix="default{-0.35}">
 <audio-swap></audio-swap>
 <audio-filter-bank hide="mix type gain detune" label="reverb" count="1000" type="allpass"
 frequency="2000" q="0.00001"></audio-filter-bank>

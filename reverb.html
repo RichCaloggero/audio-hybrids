@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Reverb</title>
+<script type="module" src="load.js"></script>
+</head>
+<body>
+<audio-app label="Reverb" hide-on-bypass> 
+<audio-series>
+<audio-pulse label="pulse"></audio-pulse>
+
+<audio-parallel>
+<audio-filter-bank label="low reverb" frequency="1000" q="1" hide="mix type gain detune" count="333" type="allpass"></audio-filter-bank>
+<audio-filter-bank label="mid reverb" frequency="2000" q="1" hide="mix type gain detune" count="333" type="allpass"></audio-filter-bank>
+<audio-filter-bank label="high reverb" frequency="3500" q="1" hide="mix type gain detune" count="333" type="allpass"></audio-filter-bank>
+</audio-parallel>
+
+<audio-gain label="volume" gain="3" hide="mix bypass"></audio-gain>
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-app>
+
+<script src="statistics/simple-statistics.min.js"></script>
+<script type="module">
+import * as audio from "./audio.js";
+import {primes, integers} from "./primes.js";
+import {$} from "./utils.js";
+ 
+const fb = $("audio-filter-bank");
+let index = primes(1,fb.filters.length-1);
+if (index .length > 10) index = ss.equalIntervalBreaks(index, 10);
+index = index.reverse();
+index.pop();
+console.debug(index);
+
+//fb._fbn = createFeedbackNetwork (fb, index);
+//console.debug("created feedback network: ", fb._fbn);
+
+function createFeedbackNetwork(fb, index) {
+if (!fb.filters || !(fb.filters instanceof Array) || fb.filters.length < index.length) return [];
+const gainAdjust = audio.context.createGain();
+gainAdjust.gain.value = 1 / index.length;
+
+return index.map(i => Math.floor(i))
+.map(i => fb.filters[i])
+.map(f => {
+const node = {};
+node.filter = f;
+node.delay = audio.context.createDelay();
+node.gain = audio.context.createGain();
+
+node.delay.delayTime.value = r(.0001, 0.0015);
+node.gain.gain.value = r(0.2, 0.6);
+
+node.filter.connect(node.delay).connect(node.gain).connect(gainAdjust).connect(fb.input);
+return node;
+}); // map
+} // createFeedbackNetwork
+
+function  scale (x, in1,in2, out1,out2) {
+in1 = Math.min(in1,in2);
+in2 = Math.max(in1,in2);
+out1 = Math.min(out1,out2);
+out2 = Math.max(out1,out2);
+const f = Math.abs(out1-out2) / Math.abs(in1-in2);
+
+return f* Math.abs(x-in1) + out1;
+} // scale
+
+function r(a=0, b=1) {return scale(Math.random(), 0,1, a,b);}
+
+
+</script>
+
+</body>
+</html>
