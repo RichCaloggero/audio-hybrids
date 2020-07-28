@@ -53,7 +53,7 @@ const keymap = new Map([[
 
 export function globalKeyboardHandler (e) {
 const text = keyToText(eventToKey(e));
-console.debug(`globalKeyboardHandler: ${text}`);
+//console.debug(`globalKeyboardHandler: ${text}`);
 if (!text) return true;
 
 return execute(e.composed? e.target.shadowRoot.activeElement : e.target, text, e);

@@ -181,6 +181,7 @@ root._focusDialog = true;
 function initialize(host, key) {
 host._load = {};
 root = host;
+// this keeps statusMessage() pointed at correct host even in render mode
 if (!root0) root0 = host;
 
 function loadHandler () {

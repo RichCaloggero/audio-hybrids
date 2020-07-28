@@ -32,7 +32,6 @@ audio.context.audioWorklet.addModule("automator.worklet.js")
 //alert ("starting parameter-automator");
 automator = new AudioWorkletNode(audio.context, "parameter-automator");
 //alert("automator node created");
-app.root.querySelector("audio-player").output.connect(automator);
 
 automator.port.onmessage = e => {
 if (app.root.enableAutomation) {
@@ -232,9 +231,12 @@ else if (property === "gain") node = host._gain;
  
 if (node) {
 if (host.aliases && host.aliases[property]) property = host.aliases[property];
+else if (property === "delay") property = "delayTime";
+
 if (node[property]) {
 if (node[property] instanceof AudioParam) setAudioParam(node[property], value, t);
 else node[property] = value;
+
 } else {
 throw new Error(`automateProperty: ${node} has no property ${property}; aborting`);
 } // if

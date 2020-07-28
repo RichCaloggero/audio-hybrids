@@ -25,57 +25,5 @@ frequency="2000" q="0.00001"></audio-filter-bank>
 </audio-series>
 </audio-app>
 
-<script src="statistics/simple-statistics.min.js"></script>
-<script type="module">
-import * as audio from "./audio.js";
-import {primes, integers} from "./primes.js";
-import {$} from "./utils.js";
- 
-//$("audio-app").addEventListener("loaded", e => {
-const fb = $("audio-filter-bank");
-let index = primes(1,fb.filters.length-1);
-if (index .length > 10) index = ss.equalIntervalBreaks(index, 10);
-index = index.reverse();
-index.pop();
-console.error(index);
-
-//fb._fbn = createFeedbackNetwork (fb, index);
-//console.error("created feedback network: ", fb._fbn);
-//}); // loaded
-
-function createFeedbackNetwork(fb, index) {
-if (!fb.filters || !(fb.filters instanceof Array) || fb.filters.length < index.length) return [];
-
-return index.map(i => Math.floor(i))
-.map(i => fb.filters[i])
-.map(f => {
-const node = {};
-node.filter = f;
-node.delay = audio.context.createDelay();
-node.gain = audio.context.createGain();
-
-node.delay.delayTime.value = r(.0001, 0.0015);
-node.gain.gain.value = r(0.2, 0.6);
-
-node.filter.connect(node.delay).connect(node.gain).connect(fb.input);
-return node;
-}); // map
-} // createFeedbackNetwork
-
-function  scale (x, in1,in2, out1,out2) {
-in1 = Math.min(in1,in2);
-in2 = Math.max(in1,in2);
-out1 = Math.min(out1,out2);
-out2 = Math.max(out1,out2);
-const f = Math.abs(out1-out2) / Math.abs(in1-in2);
-
-return f* Math.abs(x-in1) + out1;
-} // scale
-
-function r(a=0, b=1) {return scale(Math.random(), 0,1, a,b);}
-
-</script>
-
-
 </body>
 </html>
