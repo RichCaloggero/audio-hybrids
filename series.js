@@ -43,7 +43,7 @@ try {
 host.wet.disconnect(host._delay); 
 console.debug(`${host._id}: feedback disconnected`);
 } catch (e) {
-console.error(`${host._id}: failed to disconnect feedback`);
+console.debug(`${host._id}: failed to disconnect feedback`);
 } // try
 } // if
 } // observe

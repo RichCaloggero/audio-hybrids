@@ -26,13 +26,13 @@ define ("audio-parallel", Parallel);
 function initialize (host) {
 element.waitForChildren(host, children => {
 if (children.length < 2) {
-console.error(`${host._id}: must have at least two children; aborting`);
-throw new Error(`must have at least two children`);
+app.statusMessage(`${host._id}: must have at least two children; aborting`);
+throw new Error(`${host._id}: must have at least two children; aborting`);
 } // if
 
 children.forEach(child => {
-host.input.connect(child.input);
-child.output.connect(host.wet);
+if (host.input && child.input) host.input.connect(child.input);
+if (host.output && child.output) child.output.connect(host.wet);
 }); // forEach
 
 host.output.gain.value = 1 / children.length;
