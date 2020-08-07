@@ -13,6 +13,7 @@ import   "./destination.js";
 import "./pulse.js";
 import   "./gain.js";
 import   "./delay.js";
+import   "./delay1.js";
 import   "./filter.js";
 import   "./filterBank.js";
 import   "./panner.js";
