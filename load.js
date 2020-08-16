@@ -20,6 +20,7 @@ import   "./panner.js";
 import   "./stereoProcessor.js";
 import   "./swap.js";
 import "./band.js";
+import "./reverb.js";
 
 // utilities
 import "./utils.js";
