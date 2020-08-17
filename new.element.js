@@ -17,26 +17,27 @@ const prefix = "audio";
 */
 export function create (name, defaults, creator, ...definitions) {
 console.debug(`create(${name}):`);
+const aliases = new Map(definitions.filter(d => d instanceof Array));
+debugger;
 
-const _defaults = Object.assign({}, commonDefaults(), defaults);
 const parameters = parameterMap(creator);
 const data = dataMap(parameters);
 if (creator instanceof AudioNode) {
 Object.assign(defaults, 
-Object.assign(Object.fromEntries([...data.entries()]), defaults)
+Object.assign(Object.fromEntries([...data.entries()]), commonDefaults(), defaults)
 );
 } // if
 
-const aliases = new Map([].concat(definitions.filter(d => d instanceof Array)));
+debugger;
 const descriptors = {};
-descriptors._aliases = (key) => aliases.get(key) || key;
+descriptors._webaudioProp = (name) => aliases.get(name) || name;
 
 Object.assign(descriptors,
 commonProperties(name),
 ...createDescriptors(parameters, invertMap(aliases)),
 ...definitions.filter(d => !(d instanceof Array))
 ); // assign
-descriptors.render = createRenderer(descriptors, Object.keys(descriptors));
+descriptors.render = createRenderer(descriptors, data);
 
 registry[name] = { descriptors, creator, parameters, defaults,
 idGen: idGen(name)
@@ -50,7 +51,11 @@ return [...parameters.entries()].map(createDescriptor);
 
 function createDescriptor (p) {
 const webaudioProp = p[0];
-const uiProp = invertedAliases.has(webaudioProp)? invertedAliases.get(webaudioProp) : webaudioProp;
+const uiProp = invertedAliases.get(webaudioProp) || webaudioProp;
+
+debugger;
+console.debug(`createDescriptor: ${webaudioProp}, ${uiProp}`);
+
 
 return {[uiProp]: {
 connect: connect,
@@ -106,10 +111,11 @@ yield `${name}${count}`;
 
 export function connect (host, key) {
 const creator = getHostInfo(host).creator;
+//if (host._id === "reverb1") debugger;
 
 if (!isInitialized(host)) {
 host._id = getHostInfo(host).idGen.next().value;
-console.debug(`${host._id}: initializing...`);
+console.debug(`${host._id}: connect(${key}) initializing...`, host);
 audio.initialize(host);
 
 if (creator instanceof Function) {
@@ -186,7 +192,7 @@ _rendered: render(host => {
 host.dispatchEvent(new CustomEvent("uiReady", {bubbles: true}));
 console.debug(`commonProperties: ${host._id}: render complete`);
 return () => {};
-}), // render
+}), // _rendered
 
 label: {
 connect: (host, key) => host[key] = host.getAttribute(key) || "",

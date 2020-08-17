@@ -23,6 +23,7 @@ return (context = contextStack.pop());
 
 // initialize webaudio elements (connection elements such as series and parallel are initialized within their own modules)
 export function initialize (host) {
+//if (host._id === "reverb1") console.debug(`audio.initialize new.element : ${host._id}`, host);
 host.input = context.createGain();
 host.output = context.createGain();
 host.wet = context.createGain();
@@ -64,7 +65,8 @@ host.__mix(1);
 host.__bypass(false);
 host.__silentBypass(false);
 
-//console.log(`${host._id}: webaudio nodes created`);
+//if (host._id === "reverb1") debugger;
+
 return host;
 } // initialize
 

@@ -5,18 +5,21 @@ import * as ui from "./ui.js";
 
 let reverbProcessor;
 let defaults = {};
+let Reverb;
 
-audio.context.audioWorklet.addModule("dattorroReverb.js")
+const instantiateModule = async () => await audio.context.audioWorklet.addModule("dattorroReverb.js");
+
+instantiateModule()
 .then(() => {
 reverbProcessor = new AudioWorkletNode(audio.context, "DattorroReverb", {outputChannelCount: [2]});
 
-const Reverb = element.create("reverb", defaults, reverbProcessor); // element.create
+Reverb = element.create("reverb", defaults, reverbProcessor, [["dryGain", "dry"], ["wetGain", "wet"]]); // element.create
 
 console.debug("defaults: ", defaults);
 console.debug("reverb descriptors: ", Reverb);
 
 define("audio-reverb", Reverb);
+console.debug("define finished");
 }).catch(error => {
-alert(`reverb.js: cannot create AudioWorklet reverb processor; aborting`);
 console.error(`reverb.js: ${error}`);
  }); // Promise.then
