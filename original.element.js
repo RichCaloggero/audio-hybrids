@@ -3,134 +3,119 @@ import * as audio from "./audio.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
-import {parameterMap, dataMap} from "./parameterMap.js";
-import {isDefined, getHostInfo, setHostInfo, initializeHost, isInitialized} from "./registry.js";
 
+const registry = Object.create(null);
 const prefix = "audio";
-const invalidPropertyNames = ["input", "output", "dry", "wet", "bypass", "hide", "silentBypass"];
 
-/* creates a descriptor object which can be passed to hybrids define() to create a custom element
-- name: element name (without prefix);
-- defaults: default values;
-- creator: a webaudio node or user supplied initialization function used to bootstrap the custom element;
-- definitions (rest parameter): either user supplied descriptor objects or an alias array;
-- alias array: array of pairs [ui parameter name , webaudio parameter name];
-*/
 export function create (name, defaults, creator, ...definitions) {
 console.debug(`create(${name}):`);
-const aliases = new Map(definitions.filter(d => d instanceof Array));
 
-const parameters = parameterMap(creator);
-const data = dataMap(parameters);
-if (creator instanceof AudioNode) {
-Object.assign(defaults, 
-Object.assign(Object.fromEntries([...data.entries()]), commonDefaults(), defaults)
-);
-} // if
-
-const descriptors = {};
-descriptors._webaudioProp = (name) => aliases.get(name) || name;
-
-Object.assign(descriptors,
+const descriptors = Object.assign(
 commonProperties(name),
-...createDescriptors(parameters, invertMap(aliases)),
-...definitions.filter(d => !(d instanceof Array))
+...definitions.map(definition => definition instanceof Array? createDescriptors(definition) : definition)
 ); // assign
-descriptors.render = createRenderer(descriptors, data);
 
-setHostInfo(name, { descriptors, creator, parameters, defaults,
-idGen: idGen(name)
+const _defaults = Object.assign({}, commonDefaults(), defaults);
+if (typeof(creator) === "string" && creator in audio.context) {
+const info = getPropertyInfo(audio.context[creator].call(audio.context), descriptors.aliases());
+Object.keys(info).forEach(key => {
+if (!Object.keys(_defaults).includes(key)) {
+_defaults[key] = Object.assign({}, info[key], _defaults[key])
+} // if
 });
+} // if
+Object.assign(defaults, _defaults);
+
+registry[name] = { descriptors, creator, defaults,
+idGen: idGen(name)
+};
 
 return descriptors;
 } // create
 
-function createDescriptors (parameters, invertedAliases) {
-return [...parameters.entries()].map(createDescriptor).filter(d => d);
+export function createDescriptors (props) {
+const aliases = {};
+const result = Object.assign({}, ...props.map(p => createDescriptor(p)));
+result.aliases = () => aliases;
+//console.debug(`adding aliases${result.aliases}`);
+return result;
 
 function createDescriptor (p) {
-const webaudioProp = p[0];
-const uiProp = invertedAliases.get(webaudioProp) || webaudioProp;
-const param = p[1]; // either an AudioParam or a primitive string / number
+let webaudioProp;
+let key;
+if (p instanceof Array) {
+createAlias(p);
+key = p[0];
+webaudioProp = p[1];
+} else {
+key = webaudioProp = p;
+} // if
 
-console.debug(`createDescriptor: ${webaudioProp}, ${uiProp}`);
-
-
-return invalidPropertyNames.includes(uiProp)? null
-: {[uiProp]: {
+return {[key]: {
+get: (host, value) => getWebaudioProp(host.node, webaudioProp),
+set: (host, value) => setWebaudioProp(host.node, webaudioProp, value),
 connect: connect,
-observe: (host, value) => setParameter(host, host.node, webaudioProp, param, value)
 } // descriptor
 };
 
-function setParameter (host, node, name, parameter, newValue) {
-if (parameter instanceof AudioParam) parameter.value = Number(newValue);
-else if (node && node[name]) node[name] = typeof(parameter) === "number"? Number(newValue) : String(newValue);
-} // setParameter
+function getWebaudioProp (node, prop) {
+return node[prop] instanceof AudioParam? node[prop].value : node[prop];
+} // getWebaudioProp
+
+function setWebaudioProp (node, prop, value) {
+const parameter = node[prop];
+
+if (parameter instanceof AudioParam) return setAudioParam(parameter, value);
+else return setParam(node, prop, value);
+
+function setAudioParam (audioParam, value) {
+const dt = app.root.enableAutomation? ui.automationInterval / 3 : 0;
+
+if (Number.isNaN(value)) return 0;
+try {
+const val = Number(value);
+if (dt === 0) return (audioParam.value = val);
+audioParam.setTargetAtTime(val, 0, dt);
+return val;
+
+} catch (e) {
+console.error("setAudioParam: ", prop, audioParam, value, `: ${e}`);
+return audioParam.default;
+} // try
+} // setAudioParam
+
+function setParam (node, prop, value) {
+//console.debug(`setParam: ${node}, ${prop}, ${value}`);
+if (Number(node[prop]) || node[prop] === 0)
+return (node[prop] = Number(value));
+else return (node[prop] = value);
+} // setParam
+} // setWebaudioProp
 } // createDescriptor
+
+function createAlias(p) {
+aliases[p[0]] = p[1];
+} // createAlias
 } // createDescriptors
 
-function createRenderer (descriptors, data) {
-const keys = [...data.entries()].map(e => e[0]).filter(k => !invalidPropertyNames.includes(k));
-console.debug(`keys: ${keys}`);
-return render((host) => {
-return (host, target) => {
-target.innerHTML = (`
-<fieldset class="${host.tagName.toLowerCase()}">
-<legend><h2 role="heading" aria-level="${host._depth}">${host.label}</h2></legend>
-<p>${keys.join(", ")}</p>
-<hr>
-
-${keys.map(key => `
-<label>${key}:
-<input type="text" data-name="${key}" value="${host[key]}">
-</label>
-`).join("\n")}
-</fieldset>
-`); // html
-return target;
-}; // callback
-}); // callback
-} // createRenderer
-
-
-export function alias(host, key) {
-return (host._aliases && host._aliases.has(key))?
-host.aliases.get(key) : key;
-} // alias
-
-function* idGen (name) {
-const map = new Map();
-while (true) {
-if (!map.has(name)) map.set(name, 0);
-const count = map.get(name) + 1;
-map.set(name, count);
-yield `${name}${count}`;
-} // while
-} // idGen
-
-
-/// connection and attributes
 
 export function connect (host, key) {
 const creator = getHostInfo(host).creator;
 
 if (!isInitialized(host)) {
 host._id = getHostInfo(host).idGen.next().value;
-console.debug(`${host._id}: connect(${key}) initializing...`, host);
+console.log(`${host._id}: initializing...`);
 audio.initialize(host);
 
 if (creator instanceof Function) {
-// custom element (most likely a connector like parallel or series)
 creator(host);
 initializeHost(host);
 
-} else if (creator instanceof AudioNode) {
-host.node = creator;
+}else if (typeof(creator) === "string" && creator in audio.context) {
+host.node = audio.context[creator].call(audio.context);
 host.input.connect(host.node).connect(host.wet);
 initializeHost(host);
 signalReady(host);
-//if (host._id === "reverb1") debugger;
 
 } else {
 throw new Error(`bad creator; aborting`);
@@ -158,12 +143,34 @@ return processAttribute(host, key) || defaults[key]?.default;
 } // getDefault
 
 
-function commonProperties (name) {
+function getHostInfo (host) {
+const name = host._name;
 if (!name) {
-throw new Error(`commonProperties: name is null; aborting`);
-} else if (isDefined(name)) {
-throw new Error(`create: duplicate descriptors generated: ${getHostInfo(name)._id}; aborting`);
+console.error(`bad element: aborting;\n`, host);
+throw new Error(`bad element`);
 } // if
+
+if (registry[name]) return registry[name];
+
+console.error(`no registry info for ${name}; aborting`);
+throw new Error(`no registry info`);
+} // getHostInfo
+
+export function isInitialized (host) {
+return host._initialized;
+} // isInitialized
+
+export function initializeHost (host) {
+host._initialized = true;
+console.log (`${host._id}: initialization complete`);
+} // initializeHost
+
+
+function commonProperties (name) {
+if (registry[name]) {
+throw new Error(`create: duplicate descriptors generated: ${_id}; aborting`);
+} // if
+
 return {
 _depth: 0,
 _name: () => name,
@@ -174,7 +181,7 @@ _rendered: render(host => {
 host.dispatchEvent(new CustomEvent("uiReady", {bubbles: true}));
 console.debug(`commonProperties: ${host._id}: render complete`);
 return () => {};
-}), // _rendered
+}), // render
 
 label: {
 connect: (host, key) => host[key] = host.getAttribute(key) || "",
@@ -195,7 +202,7 @@ processHide(host);
 }, // hide
 
 bypass: {
-connect: (host, key) => host[key] = host.hasAttribute("bypass") || false,
+connect: (host, key) => host[key] = host.hasAttribute(key) || false,
 observe: (host, value) => {
 host.__bypass(value);
 host.__silentBypass(host.silentBypass && value);
@@ -285,6 +292,53 @@ element._isReady = true;
 //console.debug (`${element._id} signaling ready`);
 } // signalReady
 
+function getPropertyInfo (node, _alias = []) {
+const exclude = ["channelCount", "channelCountMode", "channelInterpretation", "numberOfInputs", "numberOfOutputs"];
+const alias = invert(_alias);
+
+return Object.assign({}, ...keys(node)
+.filter(key => !exclude.includes(key))
+.map(key => [key, node[key]])
+.filter(p => typeof(p[1]) === "string" || typeof(p[1]) === "number" || p[1] instanceof AudioParam)
+.map(p => {
+const [key, value] = p;
+const info = Object.create(null);
+info[alias[key] || key] = value instanceof AudioParam?
+{min: value.minValue, max: value.maxValue, default: value.defaultValue, step: 1}
+: {default: value};
+return info;
+})); // map
+
+function keys (node) {
+const result = [];
+	for (let key in node) result.push(key);
+return result;
+} // keys
+} // getPropertyInfo
+
+function invert (data) {
+return Object.assign(Object.create(null),
+...Object.keys(data)
+.map(key => ({[data[key]]: key}))
+); // assign
+} // invert
+
+
+export function alias(host, key) {
+return (host.aliases && host.aliases[key])?
+host.aliases[key] :  key;
+} // alias
+
+function* idGen (name) {
+const map = new Map();
+while (true) {
+if (!map.has(name)) map.set(name, 0);
+const count = map.get(name) + 1;
+map.set(name, count);
+yield `${name}${count}`;
+} // while
+} // idGen
+
 export function processAttribute (host, key, attribute) {
 if (!attribute) attribute = key;
 if (!host.hasAttribute(attribute)) return undefined;
@@ -348,8 +402,4 @@ const containers = ["series", "parallel", "split"];
 return containers.includes(host._name);
 } // isContainer
 
-function invertMap (m) {
-return new Map(
-[...m.entries()].map(e => [e[1], e[0]])
-); // new Map
-} // invertMap
+

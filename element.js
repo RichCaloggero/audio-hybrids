@@ -3,8 +3,8 @@ import * as audio from "./audio.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
+import {isDefined, getHostInfo, setHostInfo, initializeHost, isInitialized} from "./registry.js";
 
-const registry = Object.create(null);
 const prefix = "audio";
 
 export function create (name, defaults, creator, ...definitions) {
@@ -26,9 +26,9 @@ _defaults[key] = Object.assign({}, info[key], _defaults[key])
 } // if
 Object.assign(defaults, _defaults);
 
-registry[name] = { descriptors, creator, defaults,
+setHostInfo(name, { descriptors, creator, defaults,
 idGen: idGen(name)
-};
+});
 
 return descriptors;
 } // create
@@ -143,32 +143,12 @@ return processAttribute(host, key) || defaults[key]?.default;
 } // getDefault
 
 
-function getHostInfo (host) {
-const name = host._name;
-if (!name) {
-console.error(`bad element: aborting;\n`, host);
-throw new Error(`bad element`);
-} // if
-
-if (registry[name]) return registry[name];
-
-console.error(`no registry info for ${name}; aborting`);
-throw new Error(`no registry info`);
-} // getHostInfo
-
-export function isInitialized (host) {
-return host._initialized;
-} // isInitialized
-
-export function initializeHost (host) {
-host._initialized = true;
-console.log (`${host._id}: initialization complete`);
-} // initializeHost
-
 
 function commonProperties (name) {
-if (registry[name]) {
-throw new Error(`create: duplicate descriptors generated: ${_id}; aborting`);
+if (!name) {
+throw new Error(`commonProperties: name is null; aborting`);
+} else if (isDefined(name)) {
+throw new Error(`create: duplicate descriptors generated: ${getHostInfo(name)._id}; aborting`);
 } // if
 
 return {
