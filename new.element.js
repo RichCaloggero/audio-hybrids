@@ -22,6 +22,7 @@ const aliases = new Map(definitions.filter(d => d instanceof Array));
 
 const parameters = parameterMap(creator);
 const data = dataMap(parameters);
+
 // add common controls to our data map now
 data.set("mix", {type: "number", min: -1, max: 1, default: 1});
 data.set("bypass", {type: "boolean", default: false});
@@ -29,12 +30,13 @@ data.set("bypass", {type: "boolean", default: false});
 
 if (creator instanceof AudioNode) {
 Object.assign(defaults, 
-Object.assign(Object.fromEntries([...data.entries()]), commonDefaults(), defaults)
+Object.assign(Object.fromEntries([...data.entries()].filter(entry => validPropertyName(entry[0]))), commonDefaults(), defaults)
 );
 } // if
 
 const descriptors = {};
 descriptors._webaudioProp = (name) => aliases.get(name) || name;
+descriptors._defaults = () => defaults;
 
 Object.assign(descriptors,
 commonProperties(name),
@@ -78,11 +80,11 @@ else if (node && node[name]) node[name] = typeof(parameter) === "number"? Number
 } // createDescriptors
 
 function createRenderer (defaults) {
-const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" || name !== "mix");
+const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" && name !== "mix");
 console.debug(`createRenderer: keys ${keys}`);
 
 return render((host) => {
-const values = keys.map(k => ui.number(k, k, host[k]));
+const values = keys.map(k => ui.renderControl(k, host[k], defaults[k]));
 
 return html`
 <fieldset class="${host.tagName.toLowerCase()}">

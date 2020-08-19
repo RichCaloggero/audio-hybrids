@@ -69,6 +69,18 @@ ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.ste
 `; // return
 } // commonControls
 
+export function renderControl (name, value, data) {
+const control = { name, label: separateWords(name), defaultValue: value || data.default };
+switch (data.type) {
+case "boolean": return boolean(control);
+case "string": return text(control);
+case "number": return number(control.label, control.name, control.defaultValue, data);
+case "list": return list(control.label, control.name, control.defaultValue, data.values);
+default: throw new Error(`renderControl: unknown type: ${data.type}`);
+} // switch
+} // renderControl
+
+
 export function text ({ label, name, defaultValue }) {
 if (!label) label = separateWords(name) || "";
 return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"
