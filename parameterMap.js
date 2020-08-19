@@ -21,7 +21,7 @@ Object.getOwnPropertyNames(Object.getPrototypeOf(node))
 function parameterData (p) {
 if (p instanceof AudioParam) {
 return {type: "number", default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate};
-} else if (typeof(p) === "string" || typeof(p) === "number") {
+} else if (typeof(p) === "boolean" || typeof(p) === "string" || typeof(p) === "number") {
 return {type: typeof(p), default: p};
 } else {
 return null;

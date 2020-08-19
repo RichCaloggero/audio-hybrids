@@ -7,11 +7,51 @@
 <body>
 <h1>await test</h1>
 
+<div id="log" role="log"></div>
+
+<my-element value="1" other="frog"></my-element>
 
 <script  type="module">
-import * as m1 from "m1.js";
-import * as m2 from "m2.js";
-import * as m3 from "m3.js";
+import {html, render, define} from "../hybrids/index.js";
+
+const renderTemplate = (host) => {
+console.debug(keys, host);
+//const values = keys.map(k => [k, host[k]]);
+const values = keys.map(k => html`<p>${k}: ${host[k]}</p>`);
+
+
+return html`
+<fieldset>
+<legend><h2>my-element</h2></legend>
+${values}
+</fieldset>
+`;
+} // renderTemplate
+
+
+
+const descriptors = {
+value: {
+connect: (host, key) => host[key] = host.getAttribute(key),
+observe: (host, value) => display("value", value)
+},
+
+other: {
+connect: (host, key) => host[key] = host.getAttribute(key),
+observe: (host, value) => display("other", value)
+},
+
+render: render(
+(keys => renderTemplate)("other", "value")
+)}; // descriptors
+
+define ("my-element", descriptors);
+
+function display (key, value) {
+const p = document.createElement("p");
+p.textContent = `${key}: ${value}\n`;
+$("#log").appendChild(p);
+} // display
 
 
 function $ (s,c = document) {return c.querySelector(s);}

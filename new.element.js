@@ -1,4 +1,4 @@
-import {define, property, render} from "./hybrids/index.js";
+import {define, property, render, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
@@ -7,7 +7,7 @@ import {parameterMap, dataMap} from "./parameterMap.js";
 import {isDefined, getHostInfo, setHostInfo, initializeHost, isInitialized} from "./registry.js";
 
 const prefix = "audio";
-const invalidPropertyNames = ["input", "output", "dry", "wet", "bypass", "hide", "silentBypass"];
+const invalidPropertyNames = ["input", "output", "dry", "wet"];
 
 /* creates a descriptor object which can be passed to hybrids define() to create a custom element
 - name: element name (without prefix);
@@ -22,6 +22,11 @@ const aliases = new Map(definitions.filter(d => d instanceof Array));
 
 const parameters = parameterMap(creator);
 const data = dataMap(parameters);
+// add common controls to our data map now
+data.set("mix", {type: "number", min: -1, max: 1, default: 1});
+data.set("bypass", {type: "boolean", default: false});
+
+
 if (creator instanceof AudioNode) {
 Object.assign(defaults, 
 Object.assign(Object.fromEntries([...data.entries()]), commonDefaults(), defaults)
@@ -36,7 +41,9 @@ commonProperties(name),
 ...createDescriptors(parameters, invertMap(aliases)),
 ...definitions.filter(d => !(d instanceof Array))
 ); // assign
-descriptors.render = createRenderer(descriptors, data);
+
+
+if (!(creator instanceof Function)) descriptors.render = createRenderer(defaults);
 
 setHostInfo(name, { descriptors, creator, parameters, defaults,
 idGen: idGen(name)
@@ -56,7 +63,7 @@ const param = p[1]; // either an AudioParam or a primitive string / number
 console.debug(`createDescriptor: ${webaudioProp}, ${uiProp}`);
 
 
-return invalidPropertyNames.includes(uiProp)? null
+return !validPropertyName(uiProp)? null
 : {[uiProp]: {
 connect: connect,
 observe: (host, value) => setParameter(host, host.node, webaudioProp, param, value)
@@ -70,27 +77,22 @@ else if (node && node[name]) node[name] = typeof(parameter) === "number"? Number
 } // createDescriptor
 } // createDescriptors
 
-function createRenderer (descriptors, data) {
-const keys = [...data.entries()].map(e => e[0]).filter(k => !invalidPropertyNames.includes(k));
-console.debug(`keys: ${keys}`);
-return render((host) => {
-return (host, target) => {
-target.innerHTML = (`
-<fieldset class="${host.tagName.toLowerCase()}">
-<legend><h2 role="heading" aria-level="${host._depth}">${host.label}</h2></legend>
-<p>${keys.join(", ")}</p>
-<hr>
+function createRenderer (defaults) {
+const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" || name !== "mix");
+console.debug(`createRenderer: keys ${keys}`);
 
-${keys.map(key => `
-<label>${key}:
-<input type="text" data-name="${key}" value="${host[key]}">
-</label>
-`).join("\n")}
+return render((host) => {
+const values = keys.map(k => ui.number(k, k, host[k]));
+
+return html`
+<fieldset class="${host.tagName.toLowerCase()}">
+${ui.legend({ label: host.label, _depth: host._depth })}
+${ui.commonControls({ bypass: host.bypass, mix: host.mix, defaults })}
+<hr>
+${values}
 </fieldset>
-`); // html
-return target;
-}; // callback
-}); // callback
+`; // html
+}); // render}); // callback
 } // createRenderer
 
 
@@ -167,6 +169,8 @@ throw new Error(`create: duplicate descriptors generated: ${getHostInfo(name)._i
 return {
 _depth: 0,
 _name: () => name,
+
+
 _connected: property(true, connect),
 
 // when this is called, then the shadowRoot is rendered, so dispatch our uiReady event for waitForUi to catch
@@ -353,3 +357,45 @@ return new Map(
 [...m.entries()].map(e => [e[1], e[0]])
 ); // new Map
 } // invertMap
+
+function validPropertyName (name) {
+return !invalidPropertyNames.includes(name);
+} // validPropertyName
+
+function renderablePropertyName (name) {
+const unrenderable = ["hide", "silentBypass"];
+return name[0] !== "_"
+&& validPropertyName(name)
+&& !unrenderable.includes(name);
+} // renderableProperty
+
+
+function renderTemplate (host) {
+const keys = Object.keys(host).filter(renderablePropertyName);
+//console.debug(keys, host);
+const values = keys.map(k => html`
+${ui.number(k, k, host[k])}
+`);
+
+
+return html`
+<fieldset>
+${ui.legend({ label: host.label, _depth: host._depth })}
+${values}
+</fieldset>
+`;
+} // renderTemplate
+
+/*function renderTemplate () {
+return (host) => {
+console.debug(keys, host);
+const values = keys.map(k => html`<p>${k}: ${host[k]}</p>`);
+
+return html`
+<fieldset>
+<legend><h2>my-element</h2></legend>
+${keys.map(k => html`<p>${k}: ${host[k]}</p>`)}
+</fieldset>
+`;
+} // renderTemplate
+*/
