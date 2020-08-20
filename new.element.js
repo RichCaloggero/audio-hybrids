@@ -84,7 +84,7 @@ const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePr
 console.debug(`createRenderer: keys ${keys}`);
 
 return render((host) => {
-const values = keys.map(k => ui.renderControl(k, host[k], defaults[k]));
+const values = keys.map(k => ui.renderControl(k, host[k], defaults));
 
 return html`
 <fieldset class="${host.tagName.toLowerCase()}">

@@ -70,8 +70,8 @@ ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.ste
 } // commonControls
 
 export function renderControl (name, value, data) {
-const control = { name, label: separateWords(name), defaultValue: value || data.default };
-switch (data.type) {
+const control = { name, label: separateWords(name), defaultValue: value || data[name].default };
+switch (data[name].type) {
 case "boolean": return boolean(control);
 case "string": return text(control);
 case "number": return number(control.label, control.name, control.defaultValue, data);
@@ -119,7 +119,8 @@ console.error(e);
 [min, max, step, type] = rest;
 } // if
 
-//if (name === "mix") console.debug(`ui.number: ${name} default is ${defaultValue}, ${min}, ${max}, ${step}`);
+if (!step && min !== undefined && max !== undefined) step = (max - min) / 100;
+
 return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}"
 min="${min}" max="${max}" step="${step}"
 accesskey="${name[0]}"
