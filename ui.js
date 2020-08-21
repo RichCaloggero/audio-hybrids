@@ -70,13 +70,15 @@ ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.ste
 } // commonControls
 
 export function renderControl (name, value, data) {
+console.debug(`renderControl: ${name}, ${value}, `, data);
+
 const control = { name, label: separateWords(name), defaultValue: value || data[name].default };
 switch (data[name].type) {
 case "boolean": return boolean(control);
 case "string": return text(control);
 case "number": return number(control.label, control.name, control.defaultValue, data);
 case "list": return list(control.label, control.name, control.defaultValue, data.values);
-default: throw new Error(`renderControl: unknown type: ${data.type}`);
+default: throw new Error(`renderControl: unknown type: ${data[name].type}`, name, value, data);
 } // switch
 } // renderControl
 

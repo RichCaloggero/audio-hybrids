@@ -24,7 +24,7 @@ return {type: "number", default: p.defaultValue, min: p.minValue, max: p.maxValu
 } else if (typeof(p) === "boolean" || typeof(p) === "string" || typeof(p) === "number") {
 return {type: typeof(p), default: p};
 } else {
-return null;
+return "";
 } // if
 } // parameterData
  

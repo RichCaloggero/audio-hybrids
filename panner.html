@@ -6,63 +6,11 @@
 <script type="module" src="load.js"></script>
 </head>
 <body>
-
-<fieldset id="parameters">
-<legend><h2>Parameters</h2></legend>
-<label>rate: <input id="rate" type="range" value="1" min="0.1" max="2.0" step="0.1" accesskey="r"></label>
-</fieldset>
-
-
-
 <audio-app label="panner test" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
 <audio-player label="player" src="default{media/t.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-<audio-split label="channel delay" hide="mix">
-<audio-delay label="left delay"
-delay="default{0} automate{c(rate*t/1.5+.8, 0.0015,0.004)}"
-step="0.0001" hide="mix bypass"></audio-delay>
-<audio-gain></audio-gain>
-</audio-split>
- 
-<audio-parallel label="mid side" hide="mix">
-<audio-series id="side" label="side" silent-bypass hide="mix">
-<audio-swap  mix="-0.5" hide="mix bypass"></audio-swap>
-<audio-gain label="side gain" gain="1.0" min="-5.0" max="5.0" step="0.05" hide="mix bypass"></audio-gain>
-
-<audio-series label="3d" mix="-0.4">
-<audio-filter label="remove bass" type="lowshelf" frequency="150" gain="-29" hide="mix bypass type q detune"></audio-filter>
-<audio-filter label="upper limit" type="lowpass" frequency="700" q="0.5" hide="mix bypass type gain detune"></audio-filter>
-<audio-series label="delay" feedback
-delay="default{0.00016} automate{s(rate*t/2, 0.0015, 0.00353)}"
-gain="-0.75" hide="mix">
-<audio-swap></audio-swap>
-</audio-series>
-
-<audio-stereo-processor label="rotate"
-rotate="default{0} automate{c(rate*t, 0,90)}"
-hide="mix"></audio-stereo-processor>
-</audio-series>
-
 <audio-panner label="side panner"></audio-panner>
-</audio-series><!-- side -->
-
-<audio-series id="mid" silent-bypass  label="mid" hide="mix">
-<audio-swap  mix="0.5" hide="mix bypass"></audio-swap>
-<audio-delay id="mid-delay" label="mid delay"
-delay="default{0} automate{s(rate*t, 0,0.0004)}"
-hide="mix"></audio-delay>
-<audio-gain label="mid gain" gain="0.8" min="-5.0" max="5.0" step="0.05" hide="mix bypass"></audio-gain>
-
-<audio-panner label="mid panner"></audio-panner>
-</audio-series><!-- mid -->
-</audio-parallel>
-
-<audio-parallel label="binaural eQ for speakers" hide="mix">
-<audio-filter label="low" hide="type mix detune q" type="lowshelf" frequency="480" gain="2.0"></audio-filter>
-<audio-filter label="mid" hide="type mix detune" type="peaking" frequency="4000" gain="-11" q="1"></audio-filter>
-<audio-filter label="high mid" hide="type mix detune" type="peaking" frequency="8000" gain="8" q="2"></audio-filter>
-</audio-parallel>
 
 <audio-gain label="output volume" gain="1" hide="bypass mix"></audio-gain>
 
@@ -70,15 +18,6 @@ hide="mix"></audio-delay>
 </audio-series>
 </audio-app>
 
-<script>
-rate = Number($("#rate").value);
-$("#rate").addEventListener("change", e => rate = Number(e.target.value));
-
-function $(selector, context = document) {
-return context.querySelector(selector);
-} // $
-
-</script>
 
 </body>
 </html>

@@ -18,7 +18,7 @@ const invalidPropertyNames = ["input", "output", "dry", "wet"];
 */
 export function create (name, defaults, creator, ...definitions) {
 console.debug(`create(${name}):`);
-const aliases = new Map(definitions.filter(d => d instanceof Array));
+const aliases = new Map(...definitions.filter(d => d instanceof Array));
 
 const parameters = parameterMap(creator);
 const data = dataMap(parameters);
@@ -30,12 +30,14 @@ data.set("bypass", {type: "boolean", default: false});
 
 if (creator instanceof AudioNode) {
 Object.assign(defaults, 
-Object.assign(Object.fromEntries([...data.entries()].filter(entry => validPropertyName(entry[0]))), commonDefaults(), defaults)
+Object.assign(Object.fromEntries([...fixData(data, invertMap(aliases)).entries()].filter(entry => validPropertyName(entry[0]))),
+commonDefaults(),
+fixTypes(defaults))
 );
 } // if
 
 const descriptors = {};
-descriptors._webaudioProp = (name) => aliases.get(name) || name;
+descriptors._webaudioProp = () => (name) => aliases.get(name) || name;
 descriptors._defaults = () => defaults;
 
 Object.assign(descriptors,
@@ -43,7 +45,6 @@ commonProperties(name),
 ...createDescriptors(parameters, invertMap(aliases)),
 ...definitions.filter(d => !(d instanceof Array))
 ); // assign
-
 
 if (!(creator instanceof Function)) descriptors.render = createRenderer(defaults);
 
@@ -134,7 +135,6 @@ host.node = creator;
 host.input.connect(host.node).connect(host.wet);
 initializeHost(host);
 signalReady(host);
-//if (host._id === "reverb1") debugger;
 
 } else {
 throw new Error(`bad creator; aborting`);
@@ -388,16 +388,26 @@ ${values}
 `;
 } // renderTemplate
 
-/*function renderTemplate () {
-return (host) => {
-console.debug(keys, host);
-const values = keys.map(k => html`<p>${k}: ${host[k]}</p>`);
+function fixData(data, invertedAliases) {
+return new Map(
+[...data.entries()].map(entry => {
+const _name = invertedAliases.get(entry[0]) || entry[0];
+const _data = entry[1];
+console.debug("name: ", _name);
 
-return html`
-<fieldset>
-<legend><h2>my-element</h2></legend>
-${keys.map(k => html`<p>${k}: ${host[k]}</p>`)}
-</fieldset>
-`;
-} // renderTemplate
-*/
+return [_name, _data];
+}) // map
+); // new Map
+} // fixData
+
+function fixTypes (obj) {
+return Object.fromEntries(
+Object.entries(obj).map(entry => {
+const _data = entry[1];
+if (_data.type === undefined) {
+_data.type = _data.default === undefined? "string" : typeof(_data.default);
+} // if
+return entry;
+}) // map
+); // fromEntries
+} // fixTypes
