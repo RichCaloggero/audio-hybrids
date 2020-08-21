@@ -5,7 +5,9 @@ else return null;
 } // parameterMap
 
 export function dataMap (parameterMap) {
-return parameterMap instanceof Map || parameterMap instanceof AudioParamMap? new Map([...parameterMap.entries()].map(p => [p[0], parameterData(p[1])])) : null;
+return parameterMap instanceof Map || parameterMap instanceof AudioParamMap?
+new Map([...parameterMap.entries()].map(p => [p[0], parameterData(p[1])]))
+: null;
 } // dataMap
 
 function createParameterMap (node) {
@@ -19,12 +21,20 @@ Object.getOwnPropertyNames(Object.getPrototypeOf(node))
 } // createParameterMap
 
 function parameterData (p) {
-if (p instanceof AudioParam) {
-return {type: "number", default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate};
-} else if (typeof(p) === "boolean" || typeof(p) === "string" || typeof(p) === "number") {
-return {type: typeof(p), default: p};
+const result = p instanceof AudioParam? {default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate}
+: {default: p};
+
+if (p instanceof AudioParam || p instanceof Number || typeof(p) === "number") {
+result.type = result.uiType = "number";
+} else if (typeof(p) === "string" || p instanceof String) {
+result.type = "string"; result.uiType = "text";
+} else if (typeof(p) === "boolean" || p instanceof Boolean) {
+result.type = "boolean";
+
 } else {
-return "";
+return {};
 } // if
+
+return result;
 } // parameterData
  

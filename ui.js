@@ -98,7 +98,7 @@ case "boolean": return boolean(control);
 case "string": return text(control);
 case "number": return number(control.label, control.name, control.defaultValue, data);
 case "list": return list(control.label, control.name, control.defaultValue, data[name].values);
-default: throw new Error(`renderControl: unknown type: ${data[name].type}`, name, value, data);
+default: throw new Error(`renderControl: unknown type: ${name}, ${value}, `, data);
 } // switch
 } // renderControl
 
