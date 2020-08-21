@@ -20,7 +20,9 @@ export function create (name, defaults, creator, ...definitions) {
 console.debug(`create(${name}):`);
 const aliases = new Map(...definitions.filter(d => d instanceof Array));
 
+// get parameters from node or audio worklet
 const parameters = parameterMap(creator);
+// convert to our own data format
 const data = dataMap(parameters);
 
 // add common controls to our data map now
@@ -28,26 +30,32 @@ data.set("mix", {type: "number", min: -1, max: 1, default: 1});
 data.set("bypass", {type: "boolean", default: false});
 
 
+// if we are wrapping an AudioNode (which includes AudioWorkletNode) then convert to our own defaults object
+// * consider using map instead, after all elements use this new element.create()
 if (creator instanceof AudioNode) {
-Object.assign(defaults, 
-Object.assign(Object.fromEntries([...fixData(data, invertMap(aliases)).entries()].filter(entry => validPropertyName(entry[0]))),
+Object.assign(defaults, // will be reflected in individual element source modules
+Object.assign(Object.fromEntries([...fixData(data, invertMap(aliases)).entries()].filter(entry => validPropertyName(entry[0]))), // add type info
 commonDefaults(),
-fixTypes(defaults))
+fixTypes(defaults)) // be sure our user supplied info is retained
 );
 } // if
 
+// descriptors is what hybrids will see and convert to a custom element constructor
 const descriptors = {};
-descriptors._webaudioProp = () => (name) => aliases.get(name) || name;
-descriptors._defaults = () => defaults;
+descriptors._webaudioProp = () => (name) => aliases.get(name) || name; // this may be dropped; not sure if it is useful / necessary
+descriptors._defaults = () => defaults; // link to defaults on actual element DOM node
 
 Object.assign(descriptors,
 commonProperties(name),
 ...createDescriptors(parameters, invertMap(aliases)),
-...definitions.filter(d => !(d instanceof Array))
+...definitions.filter(d => !(d instanceof Array)) // preserve user supplied property definitions (in addition or instead of those defined by audio nodes)
 ); // assign
 
-if (!(creator instanceof Function)) descriptors.render = createRenderer(defaults);
+// if we're wrapping an AudioNode, create the UI
+// other elements such as our connectors need to build UI, if necessary, in their own modules 
+if (!(creator instanceof Function)) descriptors.render = ui.createRenderer(defaults);
 
+// this is used by connect() when an element is actually used and connected to the DOM
 setHostInfo(name, { descriptors, creator, parameters, defaults,
 idGen: idGen(name)
 });
@@ -80,23 +88,7 @@ else if (node && node[name]) node[name] = typeof(parameter) === "number"? Number
 } // createDescriptor
 } // createDescriptors
 
-function createRenderer (defaults) {
-const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" && name !== "mix");
-console.debug(`createRenderer: keys ${keys}`);
 
-return render((host) => {
-const values = keys.map(k => ui.renderControl(k, host[k], defaults));
-
-return html`
-<fieldset class="${host.tagName.toLowerCase()}">
-${ui.legend({ label: host.label, _depth: host._depth })}
-${ui.commonControls({ bypass: host.bypass, mix: host.mix, defaults })}
-<hr>
-${values}
-</fieldset>
-`; // html
-}); // render}); // callback
-} // createRenderer
 
 
 export function alias(host, key) {
@@ -239,6 +231,51 @@ mix: {default: 1.0, min: -1.0, max: 1.0, step: 0.1},
 } // commonDefaults
 
 
+export function processAttribute (host, key, attribute) {
+if (!attribute) attribute = key;
+if (!host.hasAttribute(attribute)) return undefined;
+const value = host.getAttribute(attribute);
+
+// case boolean attribute, presence with empty string value means true
+if (value === "") return true;
+
+
+const data = getData(host, key, ui.parse(value));
+//console.debug(`processAttribute: ${JSON.stringify(data)}`);
+
+if (data.automate) ui.requestAutomation(data.automate);
+if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
+if (data.default) {
+if (data.default === "true") return true;
+else if (data.default === "false") return false;
+else return data.default;
+} // if
+
+return undefined;
+
+function getData (host, property, data) {
+const nodeProperty = host.node && host.aliases? host.aliases[property] : "";
+return Object.assign({}, ...data.map(item => {
+if (item.length === 1) {
+return {default: item[0]};
+} else {
+const [operator, operand] = item;
+if (operator === "automate" || operator === "-automate") {
+return {automate: {host, property, nodeProperty, text: operand, enabled: operator[0] !== "-"}};
+} // if automate
+
+if (operator === "shortcut"){
+return {shortcut: {host, property, text: operand}};
+} // if shortcut
+
+if (operator === "default") {
+return {default: operand};
+} // if default
+} // if
+}) // map
+); // assign
+} // getData
+} // processAttribute
 
 export function waitForChildren (element, callback) {
 let children = Array.from(element.children)
@@ -291,51 +328,6 @@ element._isReady = true;
 //console.debug (`${element._id} signaling ready`);
 } // signalReady
 
-export function processAttribute (host, key, attribute) {
-if (!attribute) attribute = key;
-if (!host.hasAttribute(attribute)) return undefined;
-const value = host.getAttribute(attribute);
-
-// case boolean attribute, presence with empty string value means true
-if (value === "") return true;
-
-
-const data = getData(host, key, ui.parse(value));
-//console.debug(`processAttribute: ${JSON.stringify(data)}`);
-
-if (data.automate) ui.requestAutomation(data.automate);
-if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
-if (data.default) {
-if (data.default === "true") return true;
-else if (data.default === "false") return false;
-else return data.default;
-} // if
-
-return undefined;
-
-function getData (host, property, data) {
-const nodeProperty = host.node && host.aliases? host.aliases[property] : "";
-return Object.assign({}, ...data.map(item => {
-if (item.length === 1) {
-return {default: item[0]};
-} else {
-const [operator, operand] = item;
-if (operator === "automate" || operator === "-automate") {
-return {automate: {host, property, nodeProperty, text: operand, enabled: operator[0] !== "-"}};
-} // if automate
-
-if (operator === "shortcut"){
-return {shortcut: {host, property, text: operand}};
-} // if shortcut
-
-if (operator === "default") {
-return {default: operand};
-} // if default
-} // if
-}) // map
-); // assign
-} // getData
-} // processAttribute
 
 function processHide (host) {
 setTimeout(() => {
@@ -360,33 +352,17 @@ return new Map(
 ); // new Map
 } // invertMap
 
-function validPropertyName (name) {
+export function validPropertyName (name) {
 return !invalidPropertyNames.includes(name);
 } // validPropertyName
 
-function renderablePropertyName (name) {
+export function renderablePropertyName (name) {
 const unrenderable = ["hide", "silentBypass"];
 return name[0] !== "_"
 && validPropertyName(name)
 && !unrenderable.includes(name);
 } // renderableProperty
 
-
-function renderTemplate (host) {
-const keys = Object.keys(host).filter(renderablePropertyName);
-//console.debug(keys, host);
-const values = keys.map(k => html`
-${ui.number(k, k, host[k])}
-`);
-
-
-return html`
-<fieldset>
-${ui.legend({ label: host.label, _depth: host._depth })}
-${values}
-</fieldset>
-`;
-} // renderTemplate
 
 function fixData(data, invertedAliases) {
 return new Map(

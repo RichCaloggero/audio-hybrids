@@ -1,4 +1,5 @@
-import {html} from "./hybrids/index.js";
+import {renderablePropertyName} from "./new.element.js";
+import {render, html} from "./hybrids/index.js";
 import * as app from "./app.js";
 import * as audio from "./audio.js";
 import * as keymap from "./keymap.js";
@@ -56,6 +57,25 @@ app.statusMessage("ui: automator initialized");
 console.log("UI initialization complete.");
 } // initialize
 
+/// rendering
+
+export function createRenderer (defaults, aliases) {
+const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" && name !== "mix");
+
+return render((host) => {
+const values = keys.map(k => renderControl(k, host[k], defaults));
+
+return html`
+<fieldset class="${host.tagName.toLowerCase()}">
+${legend({ label: host.label, _depth: host._depth })}
+${commonControls({ bypass: host.bypass, mix: host.mix, defaults })}
+<hr>
+${values}
+</fieldset>
+`; // html
+}); // render}); // callback
+} // createRenderer
+
 export function legend ({ _depth=1, label } = {}) {
 return html`<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>`;
 } // legend
@@ -77,7 +97,7 @@ switch (data[name].type) {
 case "boolean": return boolean(control);
 case "string": return text(control);
 case "number": return number(control.label, control.name, control.defaultValue, data);
-case "list": return list(control.label, control.name, control.defaultValue, data.values);
+case "list": return list(control.label, control.name, control.defaultValue, data[name].values);
 default: throw new Error(`renderControl: unknown type: ${data[name].type}`, name, value, data);
 } // switch
 } // renderControl

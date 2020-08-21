@@ -12,7 +12,7 @@ function createParameterMap (node) {
 return (
 new Map(
 Object.getOwnPropertyNames(Object.getPrototypeOf(node))
-.filter(p => typeof(node[p]) === "string" || node[p] instanceof AudioParam)
+.filter(p => typeof(node[p]) === "number" ||  typeof(node[p]) === "string" || node[p] instanceof AudioParam)
 .map(p => [p, node[p]])
 ) // new Map
  ); // return
