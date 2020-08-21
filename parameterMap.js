@@ -32,7 +32,7 @@ result.type = "string"; result.uiType = "text";
 result.type = "boolean";
 
 } else {
-return {};
+return null;
 } // if
 
 return result;
