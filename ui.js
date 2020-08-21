@@ -129,21 +129,25 @@ function pressed (value) {return value? "true" : "false";}
 
 
 export function number (label, name, defaultValue, ...rest) {
-let min, max, step, type;
+let min, max, step, uiType;
 if (rest.length === 1 && rest[0] instanceof Object) {
 try {
-({ min, max, step, type } = rest[0][name]);
+({ min, max, step, uiType } = rest[0][name]);
 } catch (e) {
 console.error(e);
 } // catch
 
 } else {
-[min, max, step, type] = rest;
+[min, max, step, uiType] = rest;
 } // if
 
 if (!step && min !== undefined && max !== undefined) step = (max - min) / 100;
 
-return html`<label>${label}: <input type="${type || 'number'}" defaultValue="${defaultValue}" onchange="${html.set(name)}"
+return html`
+<label>${label}:
+<input type="${uiType || 'number'}"
+defaultValue="${defaultValue}"
+onchange="${html.set(name)}"
 min="${min}" max="${max}" step="${step}"
 accesskey="${name[0]}"
 data-name="${name}">
