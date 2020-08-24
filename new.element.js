@@ -21,7 +21,7 @@ console.debug(`create(${name}):`);
 const aliases = new Map(...definitions.filter(d => d instanceof Array));
 
 // get parameters from node or audio worklet
-const parameters = parameterMap(creator);
+const parameters = parameterMap(creator) || new Map;
 // convert to our own data format
 const data = dataMap(parameters);
 
@@ -30,15 +30,17 @@ data.set("mix", {type: "number", min: -1, max: 1, default: 1});
 data.set("bypass", {type: "boolean", default: false});
 
 
-// if we are wrapping an AudioNode (which includes AudioWorkletNode) then convert to our own defaults object
+// convert to our own defaults object
 // * consider using map instead, after all elements use this new element.create()
-if (creator instanceof AudioNode) {
-Object.assign(defaults, // will be reflected in individual element source modules
-Object.assign(Object.fromEntries([...fixData(data, invertMap(aliases)).entries()].filter(entry => validPropertyName(entry[0]))), // add type info
-commonDefaults(),
-fixTypes(defaults)) // be sure our user supplied info is retained
-);
-} // if
+Object.assign(
+defaults, // will be reflected in individual element source modules
+Object.assign(Object.fromEntries(
+[...fixData(data, invertMap(aliases)).entries()] // add type info
+.filter(entry => validPropertyName(entry[0])) // filter out invalid names like output, wet, dry, input, etc
+), // assign
+fixTypes(defaults)) // be sure our user supplied info is retained and add missing type info
+); // assign
+//} // if
 
 // descriptors is what hybrids will see and convert to a custom element constructor
 const descriptors = {};
@@ -164,7 +166,6 @@ return {
 _depth: 0,
 _name: () => name,
 
-
 _connected: property(true, connect),
 
 // when this is called, then the shadowRoot is rendered, so dispatch our uiReady event for waitForUi to catch
@@ -193,18 +194,24 @@ processHide(host);
 }, // hide
 
 bypass: {
-connect: (host, key) => host[key] = host.hasAttribute("bypass") || false,
-observe: (host, value) => {
-host.__bypass(value);
-host.__silentBypass(host.silentBypass && value);
-hideOnBypass(host, app.root?.hideOnBypass && value);
-if (!value) processHide(host);
+connect: (host, key) => host[key] = host.hasAttribute("bypass"),
+/*observe: (host, value) => {
+if (value) {
+host.__bypass(true);
+if (app.root?.hideOnBypass) hideOnBypass(host);
+
+} else {
+host.__bypass(false);
+showAll(host);
+processHide(host);
+} // if
 } // observe
+*/
 },  // bypass
 
 silentBypass: {
 connect: (host, key) => host[key] = host.hasAttribute("silent-bypass"),
-observe: (host, value) => host.__silentBypass(host.bypass && value)
+//observe: (host, value) => host.__bypass(host.bypass)
 }, // silentBypass
 
 mix: {
@@ -214,22 +221,33 @@ observe: (host, value) => host.__mix(value)
 }; // properties
 }// commonProperties
 
-export function hideOnBypass (host, value) {
-setTimeout(() => {
+export function hideOnBypass (host) {
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
-.slice(2).forEach(x => x.hidden =  value);
-if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = value;
+.slice(2).forEach(x => x.hidden = true);
+if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = true;
 } // if
-}, 0);
 } // hideOnBypass
 
-export function commonDefaults () {
-return {
-mix: {default: 1.0, min: -1.0, max: 1.0, step: 0.1},
-};
-} // commonDefaults
+export function showAll (host) {
+if (host.shadowRoot) {
+Array.from(host.shadowRoot.querySelectorAll("fieldset > [hidden=true]"))
+.forEach(x => x.hidden = false);
+if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = false;
+} // if
+} // showAll
 
+function processHide (host) {
+setTimeout(() => {
+if (host._hide.length > 0 && host.shadowRoot) {
+host.shadowRoot.querySelectorAll("button,input,select").forEach(x => {
+if (x.dataset.name)
+(x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
+.hidden = host._hide.includes(x.dataset.name);
+}); // forEach
+} // if
+}, 0); // timeout
+} // processHide
 
 export function processAttribute (host, key, attribute) {
 if (!attribute) attribute = key;
@@ -329,17 +347,6 @@ element._isReady = true;
 } // signalReady
 
 
-function processHide (host) {
-setTimeout(() => {
-if (host._hide.length > 0 && host.shadowRoot) {
-host.shadowRoot.querySelectorAll("button,input,select").forEach(x => {
-if (x.dataset.name)
-(x.parentElement instanceof HTMLLabelElement? x.parentElement : x)
-.hidden = host._hide.includes(x.dataset.name);
-}); // forEach
-} // if
-}, 0); // timeout
-} // processHide
 
 export function isContainer (host) {
 const containers = ["series", "parallel", "split"];

@@ -1,5 +1,5 @@
 import {define, html, property} from "./hybrids/index.js";
-import * as element from "./element.js";
+import * as element from "./new.element.js";
 import * as audio from "./audio.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
@@ -24,10 +24,10 @@ host: 0.1
 };
 
 const defaults = {
-hideOnBypass: true,
-enableAutomation: false,
-automationType: "target",
-automationInterval: suggestedAutomationIntervals["target"],
+hideOnBypass: {default: true},
+enableAutomation: {default: false},
+automationType: {default: "target"},
+automationInterval: {default: suggestedAutomationIntervals["target"]},
 };
 
 const App = element.create("app", defaults, initialize, {
@@ -229,7 +229,7 @@ return _depth;
 } // depth
 
 export function statusMessage (text, append = true) {
-const _status = root0.shadowRoot?.querySelector("#status");
+const _status = root0?.shadowRoot?.querySelector("#status");
 if (!_status) {
 alert(text);
 return;

@@ -48,6 +48,8 @@ if (value) {
 this.dry.disconnect();
 this.wet.disconnect();
 this._bypass.connect(this.output);
+this._bypass.gain.value = this.silentBypass? 0 : 1;
+
 } else {
 this.dry.connect(this.output);
 this.wet.connect(this.output);
@@ -57,15 +59,9 @@ this._bypass.disconnect();
 //console.debug(`- ${this.wet.gain.value} ${this.dry.gain.value} ${this._bypass}`);
 } // __bypass
 
-host.__silentBypass = function (value) {
-this._bypass.gain.value = value? 0 : 1;
-} // __silentBypass
 
 host.__mix(1);
 host.__bypass(false);
-host.__silentBypass(false);
-
-//if (host._id === "reverb1") debugger;
 
 return host;
 } // initialize

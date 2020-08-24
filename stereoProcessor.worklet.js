@@ -1,7 +1,5 @@
-let flag = false;
-
 class _StereoProcessor extends AudioWorkletProcessor {
-/*static get parameterDescriptors () {
+static get parameterDescriptors () {
 return [{
 name: "rotation",
 defaultValue: 0,
@@ -28,7 +26,6 @@ maxValue: 100.0,
 automationRate: "k-rate"
 }];
 } // get parameterDescriptors
-*/
 
 constructor () {
 super ();
@@ -38,13 +35,14 @@ this.balance = 0;
 this.center = 0;
 
 
-this.port.onmessage = e => {
+/*this.port.onmessage = e => {
 const data = e.data;
 const name = data[0];
 const value = data[1];
 this[name] = value;
 //console.debug(`worklet: parameter ${name} set to ${value}`);
 };
+*/
 
 console.log("AudioWorkletProcessor initialized...");
 } // constructor
@@ -54,7 +52,7 @@ const inputBuffer = inputs[0];
 const outputBuffer = outputs[0];
 
 if (inputBuffer.length > 0) {
-processAudio.call(this, inputBuffer, outputBuffer);
+processAudio(inputBuffer, outputBuffer, parameters);
 } // if
 return true;
 } // process
@@ -64,8 +62,13 @@ return true;
 
 registerProcessor("stereo-processor", _StereoProcessor);
 
-function processAudio (inputBuffer, outputBuffer) {
+function processAudio (inputBuffer, outputBuffer, parameters) {
 if (inputBuffer.length !== 2 || outputBuffer.length !== 2) throw new Error("processAudio: can only process stereo signals");
+
+const rotation = parameters.rotation[0];
+const width = parameters.width[0];
+const center = parameters.center[0];
+const balance = parameters.balance[0];
 
 const inLeft = inputBuffer[0];
 const inRight = inputBuffer[1];
@@ -73,8 +76,8 @@ const outLeft = outputBuffer[0];
 const outRight = outputBuffer[1];
 
 for (let i = 0; i < inLeft.length; i++) {
-const rotated = rotate (inLeft[i], inRight[i], this.rotation);
-const rotatedEnhanced = stereoEnhance (rotated[0], rotated[1], this.center, this.width, this.balance);
+const rotated = rotate (inLeft[i], inRight[i], rotation);
+const rotatedEnhanced = stereoEnhance (rotated[0], rotated[1], center, width, balance);
 
 outLeft[i] = rotatedEnhanced[0];
 outRight[i] = rotatedEnhanced[1];

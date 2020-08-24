@@ -7,7 +7,7 @@ let reverbProcessor;
 let defaults = {};
 let Reverb;
 
-const instantiateModule = async () => await audio.context.audioWorklet.addModule("dattorroReverb.js");
+const instantiateModule = async () => await audio.context.audioWorklet.addModule("dattorroReverb.worklet.js");
 
 instantiateModule()
 .then(() => {
@@ -15,8 +15,6 @@ reverbProcessor = new AudioWorkletNode(audio.context, "DattorroReverb", {outputC
 
 Reverb = element.create("reverb", defaults, reverbProcessor, [["dryGain", "dry"], ["wetGain", "wet"]]); // element.create
 
-console.debug("defaults: ", defaults);
-console.debug("reverb descriptors: ", Reverb);
 
 define("audio-reverb", Reverb);
 console.debug("define finished");
