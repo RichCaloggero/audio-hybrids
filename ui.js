@@ -70,7 +70,7 @@ return html`
 ${legend({ label: host.label, _depth: host._depth })}
 ${commonControls({ bypass: host.bypass, mix: host.mix, defaults })}
 <hr>
-${values}
+${!(app.root.hideOnBypass && host.bypass) && values}
 </fieldset>
 `; // html
 }); // render}); // callback

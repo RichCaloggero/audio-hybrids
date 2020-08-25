@@ -62,6 +62,7 @@ setHostInfo(name, { descriptors, creator, parameters, defaults,
 idGen: idGen(name)
 });
 
+//if (name === "filter") debugger;
 return descriptors;
 } // create
 
@@ -200,13 +201,13 @@ observe: (host, value) => {
 if (value) {
 host.__bypass(true);
 //if (host._id === "filter1") debugger;
-if (app.root?.hideOnBypass) hideOnBypass(host);
-//[...host.shadowRoot?.querySelectorAll("fieldset *")]
-//.slice(2)
-//.forEach(x => x.hidden = true);
+//if (app.root?.hideOnBypass) {
+hideOnBypass(host);
+//} // if
 
 } else {
 host.__bypass(false);
+showAll(host);
 processHide(host);
 } // if
 } // observe
