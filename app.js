@@ -66,7 +66,7 @@ else statusMessage("Done.");
 
 hideOnBypass: {
 connect: (host, key) => host[key] = true,
-observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
+//observe: (host) => host.querySelectorAll("*").forEach(host => element.hideOnBypass(host))
 }, // hideOnBypass
 
 enableAutomation: {

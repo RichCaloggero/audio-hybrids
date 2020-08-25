@@ -171,6 +171,7 @@ _connected: property(true, connect),
 // when this is called, then the shadowRoot is rendered, so dispatch our uiReady event for waitForUi to catch
 _rendered: render(host => {
 host.dispatchEvent(new CustomEvent("uiReady", {bubbles: true}));
+
 console.debug(`commonProperties: ${host._id}: render complete`);
 return () => {};
 }), // _rendered
@@ -195,23 +196,24 @@ processHide(host);
 
 bypass: {
 connect: (host, key) => host[key] = host.hasAttribute("bypass"),
-/*observe: (host, value) => {
+observe: (host, value) => {
 if (value) {
 host.__bypass(true);
+//if (host._id === "filter1") debugger;
 if (app.root?.hideOnBypass) hideOnBypass(host);
+//[...host.shadowRoot?.querySelectorAll("fieldset *")]
+//.slice(2)
+//.forEach(x => x.hidden = true);
 
 } else {
 host.__bypass(false);
-showAll(host);
 processHide(host);
 } // if
 } // observe
-*/
 },  // bypass
 
 silentBypass: {
 connect: (host, key) => host[key] = host.hasAttribute("silent-bypass"),
-//observe: (host, value) => host.__bypass(host.bypass)
 }, // silentBypass
 
 mix: {
@@ -222,14 +224,15 @@ observe: (host, value) => host.__mix(value)
 }// commonProperties
 
 export function hideOnBypass (host) {
-if (host.shadowRoot) {
-Array.from(host.shadowRoot.querySelectorAll("fieldset > *"))
-.slice(2).forEach(x => x.hidden = true);
-if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = true;
-} // if
+const elements = [...host.shadowRoot?.querySelectorAll("fieldset > *")].slice(2)
+//if (host._id === "filter1") debugger;
+elements.forEach(x => x.hidden = true);
+console.error("hidden = ", elements.reduce((a, x) => a += x.hidden? 1 : 0, 0));
+if (host.shadowRoot?.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = true;
 } // hideOnBypass
 
 export function showAll (host) {
+if (host._id === "filter1") console.error("showAll called");
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > [hidden=true]"))
 .forEach(x => x.hidden = false);
@@ -238,7 +241,7 @@ if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot")
 } // showAll
 
 function processHide (host) {
-setTimeout(() => {
+//setTimeout(() => {
 if (host._hide.length > 0 && host.shadowRoot) {
 host.shadowRoot.querySelectorAll("button,input,select").forEach(x => {
 if (x.dataset.name)
@@ -246,7 +249,7 @@ if (x.dataset.name)
 .hidden = host._hide.includes(x.dataset.name);
 }); // forEach
 } // if
-}, 0); // timeout
+//}, 0); // timeout
 } // processHide
 
 export function processAttribute (host, key, attribute) {
