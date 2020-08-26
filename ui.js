@@ -90,7 +90,7 @@ ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.ste
 } // commonControls
 
 export function renderControl (name, value, data) {
-console.debug(`renderControl: ${name}, ${value}, `, data);
+//console.debug(`renderControl: ${name}, ${value}, `, data);
 
 const control = { name, label: separateWords(name), defaultValue: value || data[name].default };
 switch (data[name].type) {
@@ -575,3 +575,11 @@ return `${s[0].toUpperCase()}${s.slice(1)}`;
 export function separateWords (s) {
 return capitalize(s.replace(/([A-Z])/g, " $1").toLowerCase().trim());
 } // separateWords
+
+export function dbToGain (db) {
+return Math.pow(10, (db / 20));
+} dbToGain
+
+export function gainToDb (gain) {
+return 20 * Math.log10( gain );
+} // gainToDb

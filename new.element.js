@@ -85,8 +85,14 @@ observe: (host, value) => setParameter(host, host.node, webaudioProp, param, val
 };
 
 function setParameter (host, node, name, parameter, newValue) {
-if (parameter instanceof AudioParam) parameter.value = Number(newValue);
-else if (node && node[name]) node[name] = typeof(parameter) === "number"? Number(newValue) : String(newValue);
+if (parameter instanceof AudioParam) {
+node[name].value = Number(newValue);
+//console.debug ("setParameter: ", host._id, name, parameter.value);
+
+} else if (node && node[name]) {
+node[name] = typeof(parameter) === "number"? Number(newValue) : String(newValue);
+//console.debug ("setParameter: ", host._id, name, parameter);
+} // if
 } // setParameter
 } // createDescriptor
 } // createDescriptors
@@ -126,7 +132,7 @@ creator(host);
 initializeHost(host);
 
 } else if (creator instanceof AudioNode) {
-host.node = creator;
+host.node = new creator.constructor(audio.context);
 host.input.connect(host.node).connect(host.wet);
 initializeHost(host);
 signalReady(host);
@@ -201,9 +207,9 @@ observe: (host, value) => {
 if (value) {
 host.__bypass(true);
 //if (host._id === "filter1") debugger;
-//if (app.root?.hideOnBypass) {
+if (app.root?.hideOnBypass) {
 hideOnBypass(host);
-//} // if
+} // if
 
 } else {
 host.__bypass(false);
