@@ -259,9 +259,18 @@ if (x.dataset.name)
 //}, 0); // timeout
 } // processHide
 
+/// processing attributes
+
+/* this function attempts to get the html attribute associated with the supplied key
+
+- if attribute doesn't exist, look up key in _defaults on host (supplied in element's module), or return undefined if no default
+- if attribute exists and value is empty string, return true (boolean attribute)
+- if attribute exists, try to parse it for default value, shortcut definition, and/or automation spec, or lookup default value in host._defaults, or return undefined
+*/
+
 export function processAttribute (host, key, attribute) {
 if (!attribute) attribute = key;
-if (!host.hasAttribute(attribute)) return undefined;
+if (!host.hasAttribute(attribute)) return host._defaults[key]?.default || undefined;
 const value = host.getAttribute(attribute);
 
 // case boolean attribute, presence with empty string value means true
@@ -279,7 +288,7 @@ else if (data.default === "false") return false;
 else return data.default;
 } // if
 
-return undefined;
+return host._defaults[key]?.default || undefined;
 
 function getData (host, property, data) {
 const nodeProperty = host.node && host.aliases? host.aliases[property] : "";

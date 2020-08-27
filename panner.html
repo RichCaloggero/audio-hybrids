@@ -6,11 +6,14 @@
 <script type="module" src="load.js"></script>
 </head>
 <body>
-<audio-app label="panner test" hide-on-bypass automation-interval="default{0.1} shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
+<audio-app label="panner test" hide-on-bypass automation-interval="shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
 <audio-player label="player" src="default{media/t.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-<audio-panner label="panner"></audio-panner>
+<audio-panner label="panner"
+x="automate{20*cos(t/2)}"
+z="automate{20*sin(t/2)}"
+refDistance="100"></audio-panner>
 
 <audio-filter label="filter"></audio-filter>
 

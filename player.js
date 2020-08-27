@@ -90,6 +90,6 @@ host.node = audio.context.createMediaElementSource(host.audioElement);
 } // if
 
 host.node.connect(host.output);
-if (ui.automator) host.output.connect (ui.automator);
+//if (ui.automator) host.output.connect (ui.automator);
 element.signalReady(host);
 } // initialize

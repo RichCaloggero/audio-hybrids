@@ -27,7 +27,7 @@ const defaults = {
 hideOnBypass: {default: true},
 enableAutomation: {default: false},
 automationType: {default: "target"},
-automationInterval: {default: suggestedAutomationIntervals["target"]},
+automationInterval: {type: "number", default: suggestedAutomationIntervals["target"], min: 0.1, max: 1.0, step: 0.05},
 };
 
 const App = element.create("app", defaults, initialize, {
@@ -60,7 +60,7 @@ observe: (host, value) => {
 if (isRenderMode()) return;
 const url = root.querySelector("audio-player").audioElement.src;
 if (value) loadAudio(url);
-else statusMessage("Done.");
+else statusMessage("Render mode disabled.");
 } // observe
 }, // renderAudio
 
@@ -78,7 +78,7 @@ value? ui.enableAutomation() : ui.disableAutomation();
 }, // enableAutomation
 
 automationInterval: {
-connect: (host, key) => host[key] = Number(element.processAttribute(host, key, "automation-interval")) || defaults.automationInterval,
+connect: (host, key) => host[key] = Number(element.processAttribute(host, key, "automation-interval")),
 observe: (host, value) => ui.setAutomationInterval(Number(value))
 }, // automationInterval
 
@@ -86,7 +86,7 @@ automationType: {
 connect: (host, key) => host[key] = element.processAttribute(host, key, "automation-type") || defaults.automationType,
 observe: (host, value) => {
 ui.setAutomationType(value);
-host.automationInterval = suggestedAutomationIntervals[value];
+host.automationInterval = suggestedAutomationIntervals[value] || host.automationInterval;
 } // observe
 }, // automationType
 

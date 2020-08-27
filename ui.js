@@ -269,8 +269,7 @@ else if (property === "gain") node = host._gain;
 //console.debug(`automateProperty: node = ${node}`);
  
 if (node) {
-if (host.aliases && host.aliases[property]) property = host.aliases[property];
-else if (property === "delay") property = "delayTime";
+property = host._webaudioProp? host._webaudioProp(property) : property;
 
 if (node[property]) {
 if (node[property] instanceof AudioParam) setAudioParam(node[property], value, t);
