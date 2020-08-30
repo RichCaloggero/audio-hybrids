@@ -3,8 +3,8 @@ import * as ui from "./ui.js";
 import {define, property, render, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as app from "./app.js";
-import * as keymap from "./keymap.js";
 import {parameterMap, dataMap} from "./parameterMap.js";
+import * as utils from "./utils.js";
 
 const prefix = "audio";
 
@@ -35,7 +35,7 @@ Object.assign(
 defaults, // will be reflected in individual element source modules
 Object.assign(Object.fromEntries(
 [...fixData(data, invertMap(aliases)).entries()] // add type info
-.filter(entry => validPropertyName(entry[0])) // filter out invalid names like output, wet, dry, input, etc
+.filter(entry => ui.validPropertyName(entry[0])) // filter out invalid names like output, wet, dry, input, etc
 ), // assign
 fixTypes(defaults)) // be sure our user supplied info is retained and add missing type info
 ); // assign
@@ -76,7 +76,7 @@ const param = p[1]; // either an AudioParam or a primitive string / number
 //console.debug(`createDescriptor: ${webaudioProp}, ${uiProp}`);
 
 
-return !validPropertyName(uiProp)? null
+return !ui.validPropertyName(uiProp)? null
 : {[uiProp]: {
 connect: connect,
 observe: (host, value) => setParameter(host, host.node, webaudioProp, param, value)
@@ -158,7 +158,7 @@ host[key] = value;
 } // connect
 
 export function getDefault (host, key, defaults = {}) {
-return processAttribute(host, key) || defaults[key]?.default;
+return ui.processAttribute(host, key) || defaults[key]?.default;
 } // getDefault
 
 
@@ -195,7 +195,7 @@ host._hide = [];
 host[key] = host.getAttribute(key) || "";
 }, // connect
 observe: (host, value) => {
-host._hide = value? ui.stringToList(value) : [];
+host._hide = value? utils.stringToList(value) : [];
 processHide(host);
 } // observe
 }, // hide
@@ -257,62 +257,6 @@ if (x.dataset.name)
 //}, 0); // timeout
 } // processHide
 
-/// processing attributes
-
-/* this function attempts to get the html attribute associated with the supplied key
-
-- if attribute doesn't exist, look up key in _defaults on host (supplied in element's module), or return undefined if no default
-- if attribute exists and value is empty string, return true (boolean attribute)
-- if attribute exists, try to parse it for default value, shortcut definition, and/or automation spec, or lookup default value in host._defaults, or return undefined
-*/
-
-export function processAttribute (host, key, attribute) {
-if (!attribute) attribute = key;
-//console.debug(`processAttribute: ${host._id}, ${key}, ${attribute}`);
-if (!host.hasAttribute(attribute)) return host._defaults[key]?.default || undefined;
-const value = host.getAttribute(attribute);
-
-// case boolean attribute, presence with empty string value means true
-if (value === "" && attribute === "enable-automation") console.debug("enableAutomation set to  true");
-if (value === "") return true;
-
-
-const data = getData(host, key, ui.parse(value));
-//console.debug(`processAttribute: ${JSON.stringify(data)}`);
-
-if (data.automate) ui.requestAutomation(data.automate);
-if (data.shortcut) ui.requestKeyDefinition(data.shortcut);
-if (data.default) {
-if (data.default === "true") return true;
-else if (data.default === "false") return false;
-else return data.default;
-} // if
-
-return host._defaults[key]?.default || undefined;
-
-function getData (host, property, data) {
-const nodeProperty = host.node && host.aliases? host.aliases[property] : "";
-return Object.assign({}, ...data.map(item => {
-if (item.length === 1) {
-return {default: item[0]};
-} else {
-const [operator, operand] = item;
-if (operator === "automate" || operator === "-automate") {
-return {automate: {host, property, nodeProperty, text: operand, enabled: operator[0] !== "-"}};
-} // if automate
-
-if (operator === "shortcut"){
-return {shortcut: {host, property, text: operand}};
-} // if shortcut
-
-if (operator === "default") {
-return {default: operand};
-} // if default
-} // if
-}) // map
-); // assign
-} // getData
-} // processAttribute
 
 export function waitForChildren (element, callback) {
 let children = Array.from(element.children)
@@ -367,31 +311,12 @@ element._isReady = true;
 
 
 
-export function isContainer (host) {
-const containers = ["series", "parallel", "split"];
-return containers.includes(host._name);
-} // isContainer
 
 function invertMap (m) {
 return new Map(
 [...m.entries()].map(e => [e[1], e[0]])
 ); // new Map
 } // invertMap
-
-export function validPropertyName (name) {
-return !invalidPropertyNames().includes(name);
-} // validPropertyName
-
-function invalidPropertyNames () {
-return ["input", "output", "dry", "wet"]; // need this to be hoisted
-} // invalidPropertyNames
-
-export function renderablePropertyName (name) {
-const unrenderable = ["hide", "silentBypass"];
-return name[0] !== "_"
-&& validPropertyName(name)
-&& !unrenderable.includes(name);
-} // renderableProperty
 
 
 function fixData(data, invertedAliases) {

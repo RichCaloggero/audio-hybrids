@@ -21,7 +21,7 @@ app.statusMessage(e);
 return "";
 } // try
 }, // set
-connect: (host, key) => host[key] = element.processAttribute(host, key) || "",
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || "",
 }, // src
 
 play: {

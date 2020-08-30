@@ -4,7 +4,9 @@ import * as audio from "./audio.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
 import * as recorder from "./recorder.js";
-//import * as offlineRender from "./offlineRender.js";
+import * as renderMode from "./renderMode.js";
+import * as automation from "./automation.js";
+import * as utils from "./utils.js";
 
 export let root = null;
 export let root0 = null;
@@ -48,7 +50,7 @@ observe: (host, value) => value && setTimeout(() => host.shadowRoot.querySelecto
 record: {
 connect: (host, key) => host.key = false,
 observe: (host, value) => {
-if (isRenderMode()) return;
+if (audio.isRenderMode) return;
 if (value) recorder.start();
 else statusMessage("Recording disabled.");
 } // observe
@@ -57,9 +59,9 @@ else statusMessage("Recording disabled.");
 renderAudio: {
 connect: (host, key) => host.key = false,
 observe: (host, value) => {
-if (isRenderMode()) return;
+if (audio.isRenderMode) return;
 const url = root.querySelector("audio-player").audioElement.src;
-if (value) loadAudio(url);
+if (value) renderMode.loadAudio(url);
 else statusMessage("Render mode disabled.");
 } // observe
 }, // renderAudio
@@ -71,23 +73,23 @@ connect: (host, key) => host[key] = true,
 
 enableAutomation: {
 connect: (host, key) => {
-host[key] = element.processAttribute(host, key, "enable-automation");
+host[key] = ui.processAttribute(host, key, "enable-automation");
 }, // connect
 observe: (host, value) => {
-if (isRenderMode()) return;
-value? ui.enableAutomation() : ui.disableAutomation();
+if (audio.isRenderMode) return;
+value? automation.enableAutomation() : automation.disableAutomation();
 } // observe
 }, // enableAutomation
 
 automationInterval: {
-connect: (host, key) => host[key] = Number(element.processAttribute(host, key, "automation-interval")),
-observe: (host, value) => ui.setAutomationInterval(Number(value))
+connect: (host, key) => host[key] = Number(ui.processAttribute(host, key, "automation-interval")),
+observe: (host, value) => automation.setAutomationInterval(Number(value))
 }, // automationInterval
 
 automationType: {
-connect: (host, key) => host[key] = element.processAttribute(host, key, "automation-type") || defaults.automationType,
+connect: (host, key) => host[key] = ui.processAttribute(host, key, "automation-type") || defaults.automationType,
 observe: (host, value) => {
-ui.setAutomationType(value);
+automation.setAutomationType(value);
 host.automationInterval = suggestedAutomationIntervals[value] || host.automationInterval;
 } // observe
 }, // automationType
@@ -192,9 +194,16 @@ console.log(`${host._id}: load complete`);
 } // if
 } // loadHandler
 
-//if (!isRenderMode()) {
 waitForUi(() => {
-ui.initialize()
+if (audio.isRenderMode) {
+	renderMode.start();
+console.debug("app.initialize: render mode...");
+
+} else {
+	ui.initialize()
+keymap.initialize();
+automation.initialize();
+} // if
 host._load.uiInitialized = true;
 host.dispatchEvent(new CustomEvent("uiInitialized"));
 //console.debug(`${host._id} ui initialized.`);
@@ -220,7 +229,7 @@ let e = start;
 //console.debug(`depth: ${e._id} begin at  ${_depth}`);
 
 while (e && e !== root) {
-if (element.isContainer(e.parentElement) && e.parentElement.getAttribute("label")) _depth += 1;
+if (utils.isContainer(e.parentElement) && e.parentElement.getAttribute("label")) _depth += 1;
 //console.debug(`depth: ${e._id}, ${e.parentElement.container}, ${e.parentElement.label} = ${_depth}`);
 e = e.parentElement;
 } // while
@@ -243,18 +252,6 @@ if (!append) _status.innerHTML = "";
 _status.appendChild(_message);
 } // statusMessage
 
-
-/*export function statusMessage (text, append) {
-if (isRenderMode()) return;
-
-if (append) {
-root.message = `${root.message}<br>${text}`;
-} else {
-(root || App).message = text;
-setTimeout(() => (root || App).message = "", 3000);
-} // if
-} // statusMessage
-*/
 
 function waitForUi (callback) {
 // wait for all elements to have a shadowRoot, which means they are completely rendered in the dom
@@ -317,200 +314,4 @@ returnFocus: root.shadowRoot.querySelector(".record")
 }); // displayDialog
 } // showRecordingControls 
 
-/// render audio
 
-
-function loadAudio (url) {
-statusMessage("Loading...");
-fetch(url)
-.then(response=> {
-if (response.ok) return response.arrayBuffer();
-else throw new Error(response.statusText);
- }).then(data => {
-const audioContext = new AudioContext();
-return audioContext.decodeAudioData(data)
-}).then(buffer => {
-renderAudio(buffer);
-statusMessage(`${Number(buffer.duration/60).toFixed(2)} minutes of audio loaded.`);
-}).catch(error => statusMessage(error));
-} // loadAudio
-
-function renderAudio (buffer) {
-console.debug("renderAudio:...");
-
-let container = document.createElement("iframe");
-	container.src = `${window.location.href}?render&length=${buffer.length}&rate=${audio.context.sampleRate}`;
-document.body.appendChild(container);
-//container.setAttribute("hidden", "");
-
-const channel = new MessageChannel();
-const parentPort = channel.port1;
-const childPort = channel.port2;
-container.addEventListener("loaded", e => {
-console.debug("iFrame loaded");
-container.contentWindow.postMessage("startAudioRender", "*", [childPort]);
-console.debug("sent init message to iFrame");
-
-parentPort.onmessage = e => {
-const message = e.data[0];
-const data = e.data[1];
-console.debug(`parent received ${message}: data length = ${data.length}`);
-
-switch (message) {
-case "error":
-app.statusMessage(data);
-break;
-
-case "audioRenderReady":
-const elementMap = copyAllValues(root, container.contentDocument.querySelector("audio-app"));
-childPort.postMessage(["scheduleAutomation", ui.getAutomationData()]);
-break;
-
-case "scheduleAutomationComplete":
-childPort.postMessage(["renderAudio", buffer]);
-break;
-
-case "renderComplete":
-renderResults.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
-renderResults.focus();
-console.debug("render: got results");
-console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-break;
-
-default:
-statusMessage(`renderAudio: unknown message - ${message}`);
-} // switch
-}; // onmessage handler
-}); // html loaded
-} // renderAudio
-
-function copyAllValues (oldRoot, newRoot) {
-const elementMap = new Map();
-//try {
-findAllControls(oldRoot)
-.filter(x => x.dataset.name)
-//.filter(x => x.dataset.name !== "record")
-.filter(x => x.dataset.name !== "renderAudio")
-.filter(x => !findHost(x, oldRoot)?.matches("audio-player"))
-.forEach(x => copyValue(x));
-console.debug("copy: values copied");
-
-function copyValue (input) {
-const name = input.dataset.name;
-const oldHost = findHost(input, oldRoot);
-const newHost = newRoot.querySelector(`[_id=${oldHost._id}]`);
-if (!newHost) {
-throw new Error(`copyValue: ${oldHost._id} has no corresponding element in ${newRoot._id}`);
-} // if
-
-newHost[name] = oldHost[name];
-console.debug(`copyValue: ${oldHost._id}.${name} => ${newHost._id}.${name} = ${oldHost[name]}`);
-} // copyValue
-
-function getValue (x) {
-return x.hasAttribute("aria-pressed")? (x.getAttribute("aria-pressed") === "true") : x.value
-} // getValue
-} // copyAllValues
-
-function findHost (element, root) {
-return Array.from(root.querySelectorAll("*"))
-.concat(root)
-.filter(x => x.shadowRoot.contains(element))
-[0];
-} // findHost
-
-
-function findAllControls(root) {
-const renderAudioButton = root.shadowRoot.querySelector("#renderAudio-controls")
-//.querySelector("button");
-return enumerateAll(root).filter(x => 
-x && x.matches && x.matches("input,select, [aria-pressed]")
-&& x !== renderAudioButton
-); // filter
-} // findAllControls
-
-
-function enumerateAll (root) {
-return [
-root,
-Array.from(root.children).map(x => enumerateAll(x)),
-root.shadowRoot? enumerateAll(root.shadowRoot) : []
-].flat(Infinity);
-} // enumerateAll
-
-function enumerateNonUi (root) {
-return enumerateAll(root)
-.filter(x => x instanceof module);
-} // enumerateNonUi
-
-
-
-// https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ 
-
-export function bufferToWave (abuffer, len) {
-var numOfChan = abuffer.numberOfChannels,
-length = len * numOfChan * 2 + 44,
-buffer = new ArrayBuffer(length),
-view = new DataView(buffer),
-channels = [], i, sample,
-offset = 0,
-pos = 0;
-
-// write WAVE header
-setUint32(0x46464952);                         // "RIFF"
-setUint32(length - 8);                         // file length - 8
-setUint32(0x45564157);                         // "WAVE"
-
-setUint32(0x20746d66);                         // "fmt " chunk
-setUint32(16);                                 // length = 16
-setUint16(1);                                  // PCM (uncompressed)
-setUint16(numOfChan);
-setUint32(abuffer.sampleRate);
-setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-setUint16(numOfChan * 2);                      // block-align
-setUint16(16);                                 // 16-bit (hardcoded in this demo)
-
-setUint32(0x61746164);                         // "data" - chunk
-setUint32(length - pos - 4);                   // chunk length
-
-// write interleaved data
-for(i = 0; i < abuffer.numberOfChannels; i++)
-channels.push(abuffer.getChannelData(i));
-
-while(pos < length) {
-for(i = 0; i < numOfChan; i++) {             // interleave channels
-sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
-sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
-view.setInt16(pos, sample, true);          // write 16-bit sample
-pos += 2;
-}
-offset++                                     // next source sample
-}
-
-// create Blob
-return new Blob([buffer], {type: "audio/wav"});
-
-function setUint16(data) {
-view.setUint16(pos, data, true);
-pos += 2;
-}
-
-function setUint32(data) {
-view.setUint32(pos, data, true);
-pos += 4;
-}
-} // bufferToWave
-
-
-export function isRenderMode () {
-return !window.location.search === "?render";
-} // isRenderMode
-
-function renderLength () {
-return new URLSearchParams(window.location.search).get("length");
-} // renderLength
-
-function renderRate () {
-return new URLSearchParams(window.location.search).get("rate");
-} // renderRate

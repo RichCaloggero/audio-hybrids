@@ -1,4 +1,7 @@
-import * as ui from "./ui.js";
+let definitionRequests = [];
+
+import * as automation from "./automation.js";
+import * as utils from "./utils.js";
 import * as app from "./app.js";
 import {html} from "./hybrids/index.js";
 
@@ -18,10 +21,10 @@ const keymap = new Map([[
 {help: "define key", function: getKey}
 ], [
 "enter",
-{help: "define automation", function: ui.defineAutomation}
+{help: "define automation", function: automation.defineAutomation}
 ], [
 "control enter",
-{help: "toggle automation", function: ui.toggleAutomation}
+{help: "toggle automation", function: automation.toggleAutomation}
 ], [
 "1",
 {type: "range", help: "set slider to value = 1", function: setValue1}
@@ -51,6 +54,11 @@ const keymap = new Map([[
 {type: "range, number", help: "decrease by 100 times step", function: decreaseBy100}
 ]]); // new map
 
+export function initialize () {
+	processKeyDefinitionRequests();
+app.root.addEventListener("keydown", globalKeyboardHandler);
+} // initialize
+
 export function globalKeyboardHandler (e) {
 const text = keyToText(eventToKey(e));
 //console.debug(`globalKeyboardHandler: ${text}`);
@@ -74,7 +82,7 @@ if (entry.type === "checkbox" || entry.tagName.toLowerCase() === "button") entry
 else entry.focus();
 
 } else if (entry instanceof Object && entry.function) {
-if (entry.type && !ui.stringToList(entry.type).includes(target.type)) return true;
+if (entry.type && !utils.stringToList(entry.type).includes(target.type)) return true;
 preventDefaultAction(e);
 //console.debug(`execute function ${entry.function.name}`);
 entry.function (target, text);
@@ -104,6 +112,11 @@ const entry = [...keymap.entries()].find(entry => entry[0].toLowerCase().trim() 
 return entry? entry[1] : null;
 } // getDefinition
 
+export  function requestKeyDefinition (definition) {
+//console.debug(`requestDefinition: ${definition.host._id}, ${definition.property}, ${definition.text}`);
+definitionRequests.push(definition);
+} // requestKeyDefinition
+
 export function defineKey (input, text) {
 text = normalizeKeyText(text);
 //console.debug("defineKey: ", text, input);
@@ -112,6 +125,30 @@ const oldKey = findKey(keymap, input);
 if (oldKey) keymap.delete(oldKey);
 keymap.set(text, input);
 } // defineKey
+
+function processKeyDefinitionRequests () {
+console.log(`processDefinitionRequests: processing ${definitionRequests.length} definition requests`);
+definitionRequests.forEach(request => {
+try {
+//console.debug("definition request: ", request);
+const input = utils.findUiControl(request.host, request.property);
+
+if (input) {
+defineKey(input, request.text);
+
+} else {
+throw new Error(`bad shortcut definition specified for ${request.host._id}. ${request.property}; skipped`);
+} // if
+
+} catch (e) {
+console.error(`${e.message} at ${e.lineNumber}`);
+app.statusMessage(e.message);
+} // catch
+}); // processRequest
+
+definitionRequests = [];
+} // processKeyDefinitionRequests
+
 
 function getKey (input) {
 const host = input.getRootNode().host;
@@ -144,7 +181,7 @@ key.key = t[t.length-1];
 //console.debug("- key: ", key);
 
 if (!key.key) throw new Error(`textToKey: ${text} is an invalid key descriptor; character must be last component as in "control shift x"`);
-else if (key.key.length > 1) key.key = ui.capitalize(key.key);
+else if (key.key.length > 1) key.key = utils.capitalize(key.key);
 else key.key = key.key.toLowerCase();
 //console.debug("textToKey: ", text, key);
 return key;
@@ -243,7 +280,7 @@ html`<tr><th>${entry[0]}</th>
 
 function getHelpText (item) {
 return item instanceof HTMLElement?
-`activate ${item.getRootNode().host._id} ${ui.getLabelText(item) || item.dataset.name}`
+`activate ${item.getRootNode().host._id} ${utils.getLabelText(item) || item.dataset.name}`
 : item.help;
 } // getHelpText
 } // keyboardHelp

@@ -1,6 +1,6 @@
 /* https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ */
 
-function bufferToWave (abuffer, len) {
+export function bufferToWave (abuffer, len) {
 var numOfChan = abuffer.numberOfChannels,
 length = len * numOfChan * 2 + 44,
 buffer = new ArrayBuffer(length),

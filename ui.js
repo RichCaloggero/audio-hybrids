@@ -1,68 +1,14 @@
-let automationEnabled = false;
 
-const automationQueue = new Map();
-const automationRequests = [];
-const definitionRequests = [];
 
-export let automator = null;
-export let automationInterval = 0.03; // seconds
-export let automationType = "linear";
-
-import {renderablePropertyName} from "./new.element.js";
 import {render, html} from "./hybrids/index.js";
 import * as app from "./app.js";
-import * as audio from "./audio.js";
+import * as automation from "./automation.js";
 import * as keymap from "./keymap.js";
-import * as renderMode from "./renderMode.js";
+import * as utils from "./utils.js";
 
-
-// to make with() work from function created via "new Function" , this needs to be global
-window.automationData = Object.create(Math);
-window.automationData.average = 0;
-window.automationData.frameAverage = 0;
-window.automationData.channelAverage = [0,0];
 
 
 export function initialize (e) {
-if (audio.isRenderMode) {
-automator = null;
-//console.debug("ui: render mode...");
-app.statusMessage("ui: render mode...");
-renderMode.start();
-
-} else {
-processAutomationRequests();
-processKeyDefinitionRequests();
-app.root.addEventListener("keydown", keymap.globalKeyboardHandler);
-
-audio.context.audioWorklet.addModule("automator.worklet.js")
-.then(() => {
-//alert ("starting parameter-automator");
-automator = new AudioWorkletNode(audio.context, "parameter-automator");
-//alert("automator node created");
-
-automator.port.onmessage = e => {
-if (!app.isRenderMode() && automationEnabled) {
-const message = e.data;
-if (message instanceof Array) {
-// envelope following code here -- make quantities available as variables which can be used by automation functions
-Object.assign(window.automationData, Object.fromEntries(message));
-
-} else if (message === "tick") {
-// if we receive a tick message, process the queue
-automationQueue.forEach(e => automate(e));
-} // if
-} // if enabled
-}; // onMessage
-
-if (app.root.enableAutomation) enableAutomation();
-setAutomationInterval(automationInterval);
-app.root._automator = automator;
-app.statusMessage("ui: automator initialized");
-}) // worklet initialized
-.catch(error => app.statusMessage(error));
-} // if not render mode
-
 console.log("UI initialization complete.");
 } // initialize
 
@@ -101,7 +47,7 @@ ${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.ste
 export function renderControl (name, value, data) {
 //console.debug(`renderControl: ${name}, ${value}, `, data);
 
-const control = { name, label: separateWords(name), defaultValue: value || data[name].default };
+const control = { name, label: utils.separateWords(name), defaultValue: value || data[name].default };
 switch (data[name].type) {
 case "boolean": return boolean(control);
 case "string": return text(control);
@@ -113,13 +59,13 @@ default: throw new Error(`renderControl: unknown type: ${name}, ${value}, `, dat
 
 
 export function text ({ label, name, defaultValue }) {
-if (!label) label = separateWords(name) || "";
+if (!label) label = utils.separateWords(name) || "";
 return html`<label>${label}: <input type="text" defaultValue="${defaultValue}" onchange="${html.set(name)}"
 accesskey="${name[0]}" data-name="${name}"></label>`;
 } // text
 
 export function boolean ({ label, name, defaultValue } = {}) {
-if (!label) label = separateWords(name) || "";
+if (!label) label = utils.separateWords(name) || "";
 //console.debug(`boolean: ${name}, ${defaultValue}`);
 return html`<button aria-label="${label}"
 aria-pressed="${pressed(defaultValue)}"
@@ -194,6 +140,80 @@ defaultValue === option[0].toLowerCase().trim() || defaultValue === option[1].to
 } // list
 
 
+/// processing attributes
+
+/* this function attempts to get the html attribute associated with the supplied key
+
+- if attribute doesn't exist, look up key in _defaults on host (supplied in element's module), or return undefined if no default
+- if attribute exists and value is empty string, return true (boolean attribute)
+- if attribute exists, try to parse it for default value, shortcut definition, and/or automation spec, or lookup default value in host._defaults, or return undefined
+*/
+
+
+export function processAttribute (host, key, attribute) {
+if (!attribute) attribute = key;
+//console.debug(`processAttribute: ${host._id}, ${key}, ${attribute}`);
+if (!host.hasAttribute(attribute)) return host._defaults[key]?.default || undefined;
+const value = host.getAttribute(attribute);
+
+// case boolean attribute, presence with empty string value means true
+if (value === "" && attribute === "enable-automation") console.debug("enableAutomation set to  true");
+if (value === "") return true;
+
+
+const data = getData(host, key, utils.parse(value));
+//console.debug(`processAttribute: ${JSON.stringify(data)}`);
+
+if (data.automate) automation.requestAutomation(data.automate);
+if (data.shortcut) keymap.requestKeyDefinition(data.shortcut);
+if (data.default) {
+if (data.default === "true") return true;
+else if (data.default === "false") return false;
+else return data.default;
+} // if
+
+return host._defaults[key]?.default || undefined;
+
+function getData (host, property, data) {
+const nodeProperty = host.node && host.aliases? host.aliases[property] : "";
+return Object.assign({}, ...data.map(item => {
+if (item.length === 1) {
+return {default: item[0]};
+} else {
+const [operator, operand] = item;
+if (operator === "automate" || operator === "-automate") {
+return {automate: {host, property, nodeProperty, text: operand, enabled: operator[0] !== "-"}};
+} // if automate
+
+if (operator === "shortcut"){
+return {shortcut: {host, property, text: operand}};
+} // if shortcut
+
+if (operator === "default") {
+return {default: operand};
+} // if default
+} // if
+}) // map
+); // assign
+} // getData
+} // processAttribute
+
+ export function validPropertyName (name) {
+return !invalidPropertyNames().includes(name);
+} // validPropertyName
+
+export function invalidPropertyNames () {
+return ["input", "output", "dry", "wet"]; // need this to be hoisted
+} // invalidPropertyNames
+
+ function renderablePropertyName (name) {
+const unrenderable = ["hide", "silentBypass"];
+return name[0] !== "_"
+&& validPropertyName(name)
+&& !unrenderable.includes(name);
+} // renderableProperty
+
+
 
 function isNumericInput (input) {
 return input.type === "number" || input.type === "range"
@@ -206,315 +226,4 @@ return typeof(min) === "number" && typeof(max) === "number" && typeof(value) ===
 } // inRange
 
 
-export function enableAutomation () {
-automationEnabled = true;
-if (app.isRenderMode()) return;
-if (!automator) return;
-
-automator.port.postMessage(["enable", true]);
-app.statusMessage(`Automation of ${countEnabledAutomationItems ()} items enabled; queue size is ${automationQueue.size} .`);
-} // enableAutomation
-
-export function disableAutomation () {
-automationEnabled = false;
-if (app.isRenderMode()) return;
-if (!automator) return;
-
-automator.port.postMessage(["enable", false]);
-app.statusMessage("Automation disabled.");
-} // disableAutomation
-
-
-
-function countEnabledAutomationItems () {
-return Array.from(automationQueue.values())
-.filter(x => x.enabled)
-.length;
- } // countEnabledAutomationItems 
-
-function automate (e) {
-if (!e.enabled) return;
-const t = audio.context.currentTime;
-const value = e.function(t);
-const host = e.host;
-//console.debug(`automate ${host._id}.${e.property} = ${t}`);
-switch (automationType) {
-case "host": host[e.property] = value;
-break;
-
-case "input":
-e.input.value = Number(value);
-e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
-break;
-
-default: automateAudioParam(host, e.property, value, t);
-} // switch
-} // automate
-
-function automateAudioParam (host, property, value, t) {
-let node = host.node;
-if (host._name === "series") {
-if (property === "delay") node = host._delay;
-else if (property === "gain") node = host._gain;
-} // if
-//console.debug(`automateProperty: node = ${node}`);
- 
-if (node) {
-property = host._webaudioProp? host._webaudioProp(property) : property;
-
-if (node[property]) {
-if (node[property] instanceof AudioParam) setAudioParam(node[property], value, t);
-else node[property] = value;
-
-} else {
-throw new Error(`automateProperty: ${node} has no property ${property}; aborting`);
-} // if
-
-} else {
-console.error(`automateProperty: no AudioParam; falling back to host automation`);
-automationType = "host";
-} // if
-} // automateAudioParam
-
-function setAudioParam (param, value, t) {
-switch (automationType) {
-case "instantaneous": param.setValueAtTime(value, t); break;
-case "linear": param.linearRampToValueAtTime(value, t); break;
-case "exponential": param.exponentialRampToValueAtTime(value, t); break;
-case "target": param.setTargetAtTime(value, t, automationInterval); break;
-default: return;
-} // switch
-
-if (app.isRenderMode()) console.debug(`setAudioParam: ${automationType}, ${param}, ${value.toFixed(5)}, ${t.toFixed(3)}`);
-
-return;
-} // setAudioparam
-
-export function isAutomationEnabled (input) {
-if (!input) return automationEnabled;
-if (automationQueue.has(input)) {
-return automationQueue.get(input).enabled;
-} else {
-return false;
-} // if
-} // isAutomationEnabled
-
-export function toggleAutomation (input) {
-if (automationQueue.has(input)) {
-const e = automationQueue.get(input);
-e.enabled = !e.enabled;
-automationQueue.set(input, e);
-app.statusMessage(`${e.enabled? "enabled" : "disabled"} automation for ${e.property}`);
-} // if
-} // toggleAutomation
-
-export function defineAutomation (input) {
-if (!input.dataset.name) return;
-if (!input.getRootNode()) return;
-const property = input.dataset.name;
-const host = input.getRootNode().host;
-//console.debug("defining automation for ", host, property);
-const labelText = getLabelText(input) || property;
-const automationData = automationQueue.has(input)?
-automationQueue.get(input)
-: {input, labelText, host, property, text: "", function: null, enabled: false};
-//console.debug("automation data: ", automationData);
-
-app.prompt(`automation for ${labelText}`, automationData.text, text => {
-//console.debug(`response: ${text}`);
-if (text) {
-const _function = compileFunction(text);
-
-if (_function) {
-//console.debug(`response: compiled to ${_function}`);
-automationQueue.set(input,
-Object.assign(automationData, {text, function: _function})
-);
-
-} else {
-return false;
-} // if
-} // if
-
-input.focus();
-return true;
-}); // prompt
-} // defineAutomation
-
-export function requestAutomation (data) {
-automationRequests.push (data);
-//console.debug("requestAutomation: ", data);
-} // requestAutomation
-
-function processAutomationRequests () {
-console.log(`processing ${automationRequests.length} automation requests`);
-processRequests(automationRequests, request => {
-try {
-//console.debug("automation request: ", request);
-const input = findUiControl(request.host, request.property);
-
-if (input) {
-request.function = compileFunction(request.text);
-if (request.function) {
-automationQueue.set (input,
-Object.assign({}, request, {input: input}, {labelText: getLabelText(input), enabled: request.enabled || false})
-); // set
-} else {
-throw new Error(`${request.text}: cannot compile; aborting`);
-} // if
-
-} else {
-throw new Error(`bad automation specified for ${request.host._id}. ${request.property}; skipped`);
-} // if
-
-} catch (e) {
-console.error(`${e.message} at ${e.lineNumber}`);
-app.statusMessage(e.message);
-} // catch
-}); // processRequest
-} // processAutomationRequests
-
-
-export const requestKeyDefinition = function requestKeyDefinition (definition) {
-//console.debug(`requestDefinition: ${definition.host._id}, ${definition.property}, ${definition.text}`);
-definitionRequests.push(definition);
-} // requestKeyDefinition
-
-function processKeyDefinitionRequests () {
-console.log(`processDefinitionRequests: processing ${definitionRequests.length} definition requests`);
-processRequests (definitionRequests, request => {
-try {
-//console.debug("definition request: ", request);
-const input = findUiControl(request.host, request.property);
-
-if (input) {
-keymap.defineKey(input, request.text);
-
-} else {
-throw new Error(`bad shortcut definition specified for ${request.host._id}. ${request.property}; skipped`);
-} // if
-
-} catch (e) {
-console.error(`${e.message} at ${e.lineNumber}`);
-app.statusMessage(e.message);
-} // catch
-}); // processRequest
-} // processKeyDefinitionRequests
-
-
-function processRequests (queue, callback) {
-let request;
-while (request = queue.shift()) {
-callback(request);
-} // while
-} // processRequest
-
-export function findUiControl (host, property) {
-const element = host.shadowRoot?.querySelector(`[data-name='${property}']`);
-//console.debug(`findUiControl: ${host._id}.${property}: ${element}`);
-return element;
-} // findUiControl
-
-export function compileFunction (text, parameter = "t") {
-try {
-return new Function (parameter,
-`with (automationData) {
-function  scale (x, in1,in2, out1,out2) {
-in1 = Math.min(in1,in2);
-in2 = Math.max(in1,in2);
-out1 = Math.min(out1,out2);
-out2 = Math.max(out1,out2);
-const f = Math.abs(out1-out2) / Math.abs(in1-in2);
-
-return f* Math.abs(x-in1) + out1;
-} // scale
-
-function s (x, l=-1.0, u=1.0) {return scale(Math.sin(x), -1,1, l,u);}
-function c (x, l=-1.0, u=1.0) {return scale(Math.cos(x), -1,1, l,u);}
-function r(a=0, b=1) {return scale(Math.random(), 0,1, a,b);}
-
-return ${text};
-} // Math
-`); // new Function
-
-} catch (e) {
-app.statusMessage(e);
-return null;
-} // try
-} // compileFunction
-
-export function setAutomationInterval (value) {
-automationInterval = value;
-if (automator && !app.isRenderMode()) automator.port.postMessage(["automationInterval", automationInterval]);
-//console.debug(`automationInterval: ${value}`);
-} // setAutomationInterval
-
-export function setAutomationType (value) {
-automationType= value;
-//console.debug(`automationType: ${value}`);
-} // setAutomationType 
-
-export function setAutomator (value) {
-automator = value;
-//console.debug(`automator: ${value}`);
-} // setAutomator
-
-export function parse (expression) {
-if (!expression) return [];
-
-let parser =
-/^([-+]?[\d.]+)$|^([-\w]+)$|([-\w]+?)\{(.+?)\}/gi;
-//console.debug("intermediate: ", [...expression.matchAll(parser)]);
-
-const result = [...expression.matchAll(parser)]
-.map(a => a.filter(x => x))
-.map(a => a.slice(1));
-//console.debug("parse: ", result);
-return result;
-} // parse
-
-export function findAllUiElements () {
-return Array.from(document.querySelectorAll("audio-context *"))
-.map(x => Array.from(x.shadowRoot.querySelectorAll("input,select,button")))
-.flat(9);
-} // findAllUiElements
-
-export function getLabelText (input) {
-const groupLabel = input.closest("fieldset").querySelector("[role='heading']").textContent;
-return (`${groupLabel} / ${input.parentElement.textContent}`).trim();
-} // getLabelText
-
-export function stringToList (s) {
-const r = /, *?| +?/i;
-return s.split(r).filter(s => s.length > 0);
-} // stringToList
-
-
-export function capitalize (s) {
-return `${s[0].toUpperCase()}${s.slice(1)}`;
-} // capitalize
-
-export function separateWords (s) {
-return capitalize(s.replace(/([A-Z])/g, " $1").toLowerCase().trim());
-} // separateWords
-
-export function dbToGain (db) {
-return Math.pow(10, (db / 20));
-} dbToGain
-
-export function gainToDb (gain) {
-return 20 * Math.log10( gain );
-} // gainToDb
-
-export function getAutomationData () {
-return [...automationQueue.entries()].map(e => e[1])
-.filter(e => e.enabled)
-.map(e => ({id: e.host._id, text: e.text, property: e.property}))
-.map( e => {
-//console.debug("pipeline: ", e);
-//debugger;
-return e;
-})
-.map(e => e); // pipeline
-} // getAutomationData
 

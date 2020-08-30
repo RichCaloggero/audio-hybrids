@@ -16,14 +16,14 @@ _gain: null,
 
 
 delay: {
-connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => {
 if (host.feedback && host._delay) host._delay.delayTime.value = Number(value);
 } // observe
 }, // delay
 
 gain: {
-connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => {
 if (host.feedback) host._gain.gain.value = Number(value);
 } // observe
