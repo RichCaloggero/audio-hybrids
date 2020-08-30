@@ -1,15 +1,20 @@
+let automationEnabled = false;
+
+const automationQueue = new Map();
+const automationRequests = [];
+const definitionRequests = [];
+
+export let automator = null;
+export let automationInterval = 0.03; // seconds
+export let automationType = "linear";
+
 import {renderablePropertyName} from "./new.element.js";
 import {render, html} from "./hybrids/index.js";
 import * as app from "./app.js";
 import * as audio from "./audio.js";
 import * as keymap from "./keymap.js";
+import * as renderMode from "./renderMode.js";
 
-export let automator = null;
-export let automationInterval = 0.03; // seconds
-export let automationType = "linear";
-const automationQueue = new Map();
-const automationRequests = [];
-const definitionRequests = [];
 
 // to make with() work from function created via "new Function" , this needs to be global
 window.automationData = Object.create(Math);
@@ -19,9 +24,11 @@ window.automationData.channelAverage = [0,0];
 
 
 export function initialize (e) {
-if (app.isRenderMode()) {
+if (audio.isRenderMode) {
 automator = null;
+//console.debug("ui: render mode...");
 app.statusMessage("ui: render mode...");
+renderMode.start();
 
 } else {
 processAutomationRequests();
@@ -35,7 +42,7 @@ automator = new AudioWorkletNode(audio.context, "parameter-automator");
 //alert("automator node created");
 
 automator.port.onmessage = e => {
-if (app.root.enableAutomation) {
+if (!app.isRenderMode() && automationEnabled) {
 const message = e.data;
 if (message instanceof Array) {
 // envelope following code here -- make quantities available as variables which can be used by automation functions
@@ -48,10 +55,12 @@ automationQueue.forEach(e => automate(e));
 } // if enabled
 }; // onMessage
 
+if (app.root.enableAutomation) enableAutomation();
 setAutomationInterval(automationInterval);
 app.root._automator = automator;
 app.statusMessage("ui: automator initialized");
-}).catch(error => app.statusMessage(error));
+}) // worklet initialized
+.catch(error => app.statusMessage(error));
 } // if not render mode
 
 console.log("UI initialization complete.");
@@ -198,44 +207,24 @@ return typeof(min) === "number" && typeof(max) === "number" && typeof(value) ===
 
 
 export function enableAutomation () {
-if (!automator) {
-if (!app.isRenderMode()) app.statusMessage(`enableAutomation: automator worklet not started; aborting`);
-return;
-} // if
+automationEnabled = true;
+if (app.isRenderMode()) return;
+if (!automator) return;
 
 automator.port.postMessage(["enable", true]);
 app.statusMessage(`Automation of ${countEnabledAutomationItems ()} items enabled; queue size is ${automationQueue.size} .`);
 } // enableAutomation
 
 export function disableAutomation () {
-if (!automator) {
-if (!app.isRenderMode()) app.statusMessage(`disableAutomation: automator worklet not started; aborting`);
-return;
-} // if
+automationEnabled = false;
+if (app.isRenderMode()) return;
+if (!automator) return;
 
 automator.port.postMessage(["enable", false]);
 app.statusMessage("Automation disabled.");
 } // disableAutomation
 
-/*export function enableAutomation () {
-automator = setTimeout(function _tick () {
-automationQueue.forEach(e => automate(e));
-if (automator) setTimeout(_tick, 1000*automationInterval);
-}, 1000*automationInterval); // startAutomation
 
-app.statusMessage(`Automation of ${automationQueue.size} elements enabled.`);
-} // enableAutomation
-*/
-
-/*export function disableAutomation () {
-if (automator) {
-clearTimeout(automator);
-automator = null;
-} // if
-
-app.statusMessage("Automation disabled.");
-} // disableAutomation
-*/
 
 function countEnabledAutomationItems () {
 return Array.from(automationQueue.values())
@@ -244,20 +233,22 @@ return Array.from(automationQueue.values())
  } // countEnabledAutomationItems 
 
 function automate (e) {
-if (e.enabled) {
-//console.debug(`automate ${e.host._id}.${e.property} = ${e.function(audio.context.currentTime)}`);
+if (!e.enabled) return;
+const t = audio.context.currentTime;
+const value = e.function(t);
+const host = e.host;
+//console.debug(`automate ${host._id}.${e.property} = ${t}`);
 switch (automationType) {
-case "host": //e.host[e.property] = e.function(audio.context.currentTime);
+case "host": host[e.property] = value;
 break;
 
 case "input":
-e.input.value = Number(e.function(audio.context.currentTime));
+e.input.value = Number(value);
 e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
 break;
 
-default: automateAudioParam(e.host, e.property, e.function(audio.context.currentTime), audio.context.currentTime);
+default: automateAudioParam(host, e.property, value, t);
 } // switch
-} // if
 } // automate
 
 function automateAudioParam (host, property, value, t) {
@@ -283,104 +274,30 @@ throw new Error(`automateProperty: ${node} has no property ${property}; aborting
 console.error(`automateProperty: no AudioParam; falling back to host automation`);
 automationType = "host";
 } // if
-
-function setAudioParam (param, value, t) {
-//console.debug(`setAudioParam: ${automationType}, ${param}, ${value.toFixed(5)}, ${t.toFixed(3)}`);
-switch (automationType) {
-case "instantaneous": param.setValueAtTime(value, t); break;
-case "linear": param.linearRampToValueAtTime(value, t+automationInterval); break;
-case "exponential": param.exponentialRampToValueAtTime(value, t+automationInterval); break;
-case "target": param.setTargetAtTime(value, t, automationInterval); break;
-default: break;
-} // switch
-
-//console.debug(`setAudioParam: value = ${param.value}`);
-return;
-} // setAudioparam
 } // automateAudioParam
 
+function setAudioParam (param, value, t) {
+switch (automationType) {
+case "instantaneous": param.setValueAtTime(value, t); break;
+case "linear": param.linearRampToValueAtTime(value, t); break;
+case "exponential": param.exponentialRampToValueAtTime(value, t); break;
+case "target": param.setTargetAtTime(value, t, automationInterval); break;
+default: return;
+} // switch
+
+if (app.isRenderMode()) console.debug(`setAudioParam: ${automationType}, ${param}, ${value.toFixed(5)}, ${t.toFixed(3)}`);
+
+return;
+} // setAudioparam
+
 export function isAutomationEnabled (input) {
+if (!input) return automationEnabled;
 if (automationQueue.has(input)) {
 return automationQueue.get(input).enabled;
+} else {
+return false;
 } // if
 } // isAutomationEnabled
-
-export function scheduleAutomation (duration, elementMap) {
-if (app.isRenderMode()) {
-const timeStepCount = duration / automationInterval;
-const itemCount = automationQueue.size;
-const items = transformAutomationItems(automationQueue, elementMap);
-console.debug(`scheduleAutomation: duration = ${duration.toFixed(2)}, itemCount = ${itemCount}, interval = ${automationInterval.toFixed(3)}, timeStepCount = ${Math.floor(timeStepCount)}`);
-
-try {
-let count = 0;
-
-items.forEach(item => {
-count += 1;
-const value = item.function(0);
-//showAutomationItem(item, 0);
-
-item.audioParam.setValueAtTime(value, 0);
-}); // forEach item
-
-for (let t = automationInterval; t < duration; t += automationInterval) {
-items.forEach(item => {
-count += 1;
-const value = item.function(t);
-
-//if (count <= 20) showAutomationItem(item, t);
-
-item.audioParam.exponentialRampToValueAtTime(value, t);
-}); // forEach item
-} // for duration
-} catch (e) {
-console.error(e);
-app.statusMessage(e);
-} // try
-
-console.debug("scheduleAutomation: complete");
-
-function showAutomationItem (item, t) {
-console.debug(`scheduleAutomation: automationItem: ${item.host._id}.${item.property} = ${item.function(t).toFixed(4)} {${item.text}}`);
-} // displayAutomationItem
-} // if
-
-
-function transformAutomationItems (automationQueue, elementMap) {
-const items = [];
-
-automationQueue.forEach(e => {
-if (e.enabled) {
-const host = elementMap.get(e.host);
-if (!host) throw new Error(`transformAutomationItems: cannot find new host corresponding to ${e.host._id}`);
-let node = host.node;
-
-// special case audio-series
-if (host.matches("audio-series")) {
-if (e.property === "delay") {
-node = host._delay;
-e.nodeProperty = "delayTime";
-} else if (e.property === "gain") {
-node = host._gain;
-e.nodeProperty = "gain";
-} // if
-} // if
-
-const property = e.nodeProperty;
-const audioParam = node[property];
-if (node && audioParam) {
-items.push({
-property, node, audioParam, host,
-function: e.function,
-text: e.text
-}); // push
-} // if
-} // if enabled
-}); // forEach
-
-return items;
-} // transformAutomationItems
-} // scheduleAutomation
 
 export function toggleAutomation (input) {
 if (automationQueue.has(input)) {
@@ -433,7 +350,7 @@ function processAutomationRequests () {
 console.log(`processing ${automationRequests.length} automation requests`);
 processRequests(automationRequests, request => {
 try {
-console.debug("automation request: ", request);
+//console.debug("automation request: ", request);
 const input = findUiControl(request.host, request.property);
 
 if (input) {
@@ -458,7 +375,7 @@ app.statusMessage(e.message);
 } // processAutomationRequests
 
 
-export function requestKeyDefinition (definition) {
+export const requestKeyDefinition = function requestKeyDefinition (definition) {
 //console.debug(`requestDefinition: ${definition.host._id}, ${definition.property}, ${definition.text}`);
 definitionRequests.push(definition);
 } // requestKeyDefinition
@@ -526,15 +443,21 @@ return null;
 } // try
 } // compileFunction
 
-export function setAutomationInterval (x) {
-automationInterval = x;
+export function setAutomationInterval (value) {
+automationInterval = value;
 if (automator && !app.isRenderMode()) automator.port.postMessage(["automationInterval", automationInterval]);
+//console.debug(`automationInterval: ${value}`);
 } // setAutomationInterval
 
 export function setAutomationType (value) {
 automationType= value;
+//console.debug(`automationType: ${value}`);
 } // setAutomationType 
 
+export function setAutomator (value) {
+automator = value;
+//console.debug(`automator: ${value}`);
+} // setAutomator
 
 export function parse (expression) {
 if (!expression) return [];
@@ -582,3 +505,16 @@ return Math.pow(10, (db / 20));
 export function gainToDb (gain) {
 return 20 * Math.log10( gain );
 } // gainToDb
+
+export function getAutomationData () {
+return [...automationQueue.entries()].map(e => e[1])
+.filter(e => e.enabled)
+.map(e => ({id: e.host._id, text: e.text, property: e.property}))
+.map( e => {
+//console.debug("pipeline: ", e);
+//debugger;
+return e;
+})
+.map(e => e); // pipeline
+} // getAutomationData
+

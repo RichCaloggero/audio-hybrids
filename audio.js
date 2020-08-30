@@ -1,25 +1,17 @@
-import * as app from "./app.js";
 
-export let context = new AudioContext();
-/*if (app.isRenderMode()) {
-context = new OfflineAudioContext(2, app.renderLength(), context.sampleRate);
-console.debug(`audio: offline audio context defined: ${app.renderLength()}`);
+export let length;
+export let isRenderMode;
+export let sampleRate;
+
+if (renderModeParams()) {
+isRenderMode = true;
+length = renderModeParams().get("length");
+sampleRate = renderModeParams().get("rate");
 } // if
-*/
 
-const contextStack = [];
-
-// set context for render
-export function pushContext (_context) {
-if (! _context) return null;
-contextStack.push(context);
-context = _context;
-return _context;
-} // pushContext
-
-export function popContext () {
-return (context = contextStack.pop());
-} // popContext
+export const context = isRenderMode?
+new OfflineAudioContext(2, length, sampleRate)
+: new AudioContext();
 
 // initialize webaudio elements (connection elements such as series and parallel are initialized within their own modules)
 export function initialize (host) {
@@ -68,3 +60,7 @@ return host;
 
 console.debug(`audio: ${context}`);
 
+function renderModeParams () {
+const params = new URL(window.location.href).searchParams;
+return params.has("render")? params : false;
+} // renderModeParams

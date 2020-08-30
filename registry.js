@@ -1,7 +1,14 @@
-const registry = new Map();
+let registry = new Map();
+export const isDefined = name => registry?.has(name);
+
+/*export function isDefined (name) {
+return registry.has(name);
+} // isDefined
+*/
+
 
 export function setHostInfo (name, info) {
-if (registry.has(name)) {
+if (registry?.has(name)) {
 throw new Error(`Duplicate host name: ${name}; aborting`);
 } else {
 registry.set(name, info);
@@ -16,7 +23,7 @@ throw new Error(`bad element`);
 } // if
 
 
-if (registry.has(name)) return registry.get(name);
+if (registry?.has(name)) return registry.get(name);
 
 throw new Error(`no registry info for ${name}; aborting`);
 } // getHostInfo
@@ -30,6 +37,3 @@ host._initialized = true;
 console.log (`${host._id}: initialization complete`);
 } // initializeHost
 
-export function isDefined (name) {
-return registry.has(name);
-} // isDefined

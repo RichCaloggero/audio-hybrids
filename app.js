@@ -26,7 +26,7 @@ host: 0.1
 const defaults = {
 hideOnBypass: {default: true},
 enableAutomation: {default: false},
-automationType: {default: "target"},
+automationType: {default: "instantaneous", values: ["target", "exponential", "linear", "instantaneous", "host", "input"]},
 automationInterval: {type: "number", default: suggestedAutomationIntervals["target"], min: 0.1, max: 1.0, step: 0.05},
 };
 
@@ -70,7 +70,9 @@ connect: (host, key) => host[key] = true,
 }, // hideOnBypass
 
 enableAutomation: {
-connect: (host, key) => host[key] = element.processAttribute(host, key, "enable-automation") || false,
+connect: (host, key) => {
+host[key] = element.processAttribute(host, key, "enable-automation");
+}, // connect
 observe: (host, value) => {
 if (isRenderMode()) return;
 value? ui.enableAutomation() : ui.disableAutomation();
@@ -100,8 +102,7 @@ ${ui.legend({ label })}
 ${ui.boolean({ label: "hide on bypass", name: "hideOnBypass", defaultValue: hideOnBypass })}
 
 ${ui.boolean({ label: "enable automation", name: "enableAutomation", defaultValue: enableAutomation })}
-${ui.list("automation type", "automationType", automationType,
-["target", "exponential", "linear", "instantaneous", "host", "input"])}
+${ui.list("automation type", "automationType", automationType, defaults.automationType.values)}
 ${ui.number("automation interval", "automationInterval", automationInterval, 0.01, 0.3, 0.01)}
 
 <div role="region" aria-label="status" aria-live="polite" id="status">
@@ -196,7 +197,7 @@ waitForUi(() => {
 ui.initialize()
 host._load.uiInitialized = true;
 host.dispatchEvent(new CustomEvent("uiInitialized"));
-console.debug(`${host._id} ui initialized.`);
+//console.debug(`${host._id} ui initialized.`);
 loadHandler();
 }); // waitForUi
 //} // if
@@ -336,72 +337,52 @@ statusMessage(`${Number(buffer.duration/60).toFixed(2)} minutes of audio loaded.
 
 function renderAudio (buffer) {
 console.debug("renderAudio:...");
-const offlineContext = new OfflineAudioContext(2, buffer.length, audio.context.sampleRate);
-audio.pushContext(offlineContext);
-const _automator = ui.automator;
-const _root = root;
 
-const html = root.outerHTML;
-let container = document.createElement("div");
-//container.setAttribute("hidden", "");
+let container = document.createElement("iframe");
+	container.src = `${window.location.href}?render&length=${buffer.length}&rate=${audio.context.sampleRate}`;
 document.body.appendChild(container);
-container.innerHTML = html;
-console.debug("render: html created; ", _root, root);
+//container.setAttribute("hidden", "");
 
-/*let container = document.createElement("iframe");
-container.src = `${location.pathname}?render=${buffer.length}`;
-root.parentElement.appendChild(container);
-let offlineRoot = null;
-console.debug(`render: iframe.src: ${container.src}`);
-
-container.contentWindow.onload = () => {
-offlineRoot = container.contentWindow.document.querySelector("audio-app");
-console.debug("render: iFrame loaded");
-*/
-
-
+const channel = new MessageChannel();
+const parentPort = channel.port1;
+const childPort = channel.port2;
 container.addEventListener("loaded", e => {
-setTimeout(() => {
-const elementMap = copyAllValues(_root, root);
-console.debug("render: ui values copied");
-_root.renderAudioData = {buffer, elementMap};
+console.debug("iFrame loaded");
+container.contentWindow.postMessage("startAudioRender", "*", [childPort]);
+console.debug("sent init message to iFrame");
 
-const player = container.querySelector("audio-player");
-player.node.buffer = buffer;
-console.debug ("render: source created");
+parentPort.onmessage = e => {
+const message = e.data[0];
+const data = e.data[1];
+console.debug(`parent received ${message}: data length = ${data.length}`);
 
-if (root.enableAutomation) {
-// need to pass _root so we can map original automation queue items to the new elements created by renderAudio
-ui.scheduleAutomation(buffer.duration, elementMap);
-console.debug("renderAudio: automation items added");
-} // if
+switch (message) {
+case "error":
+app.statusMessage(data);
+break;
 
+case "audioRenderReady":
+const elementMap = copyAllValues(root, container.contentDocument.querySelector("audio-app"));
+childPort.postMessage(["scheduleAutomation", ui.getAutomationData()]);
+break;
 
-statusMessage("Rendering audio, please wait...");
+case "scheduleAutomationComplete":
+childPort.postMessage(["renderAudio", buffer]);
+break;
 
-// audio.context refers to the offline context now
-player.node.start();
-audio.context.startRendering()
-.then(buffer => {
-console.debug("render: got a buffer; ", buffer);
-
-const renderResults = _root.shadowRoot.querySelector("#render-results");
+case "renderComplete":
 renderResults.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
 renderResults.focus();
 console.debug("render: got results");
-
-// restoring...
-player.node.disconnect(player.output);
-audio.popContext();
-root = _root;
-container.remove();
-container = null;
 console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
 statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-}).catch(error => statusMessage(`render: ${error}\n${error.stack}\n`));
-}, 1); // timeout
+break;
+
+default:
+statusMessage(`renderAudio: unknown message - ${message}`);
+} // switch
+}; // onmessage handler
 }); // html loaded
-//}; // newContext ready
 } // renderAudio
 
 function copyAllValues (oldRoot, newRoot) {
@@ -412,22 +393,20 @@ findAllControls(oldRoot)
 //.filter(x => x.dataset.name !== "record")
 .filter(x => x.dataset.name !== "renderAudio")
 .filter(x => !findHost(x, oldRoot)?.matches("audio-player"))
-.forEach(x => setValue(x));
+.forEach(x => copyValue(x));
 console.debug("copy: values copied");
-return elementMap;
 
-function setValue (x) {
-const name = x.dataset.name;
-const oldHost = findHost(x, oldRoot);
-const newHost = newRoot.parentElement.querySelector(oldHost.tagName.toLowerCase());
+function copyValue (input) {
+const name = input.dataset.name;
+const oldHost = findHost(input, oldRoot);
+const newHost = newRoot.querySelector(`[_id=${oldHost._id}]`);
 if (!newHost) {
-throw new Error(`setValue: ${oldHost._id} has no corresponding element in ${newRoot._id}`);
+throw new Error(`copyValue: ${oldHost._id} has no corresponding element in ${newRoot._id}`);
 } // if
 
 newHost[name] = oldHost[name];
-if (!elementMap.has(oldHost)) elementMap.set(oldHost, newHost);
-console.debug(`setValue: ${oldHost._id}.${name} => ${newHost._id}.${name} = ${oldHost[name]}`);
-} // setValue
+console.debug(`copyValue: ${oldHost._id}.${name} => ${newHost._id}.${name} = ${oldHost[name]}`);
+} // copyValue
 
 function getValue (x) {
 return x.hasAttribute("aria-pressed")? (x.getAttribute("aria-pressed") === "true") : x.value
@@ -467,7 +446,7 @@ return enumerateAll(root)
 
 
 
-/* https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ */
+// https://www.russellgood.com/how-to-convert-audiobuffer-to-audio-file/ 
 
 export function bufferToWave (abuffer, len) {
 var numOfChan = abuffer.numberOfChannels,
@@ -525,14 +504,13 @@ pos += 4;
 
 
 export function isRenderMode () {
-return audio.context instanceof OfflineAudioContext;
+return !window.location.search === "?render";
 } // isRenderMode
 
-/*export function isRenderMode () {
-return !!new URL(location).searchParams.get("render");
-} // isRenderMode
-
-export function renderLength () {
-return Number(new URL(location).searchParams.get("render"));
+function renderLength () {
+return new URLSearchParams(window.location.search).get("length");
 } // renderLength
-*/
+
+function renderRate () {
+return new URLSearchParams(window.location.search).get("rate");
+} // renderRate

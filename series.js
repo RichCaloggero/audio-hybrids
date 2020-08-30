@@ -79,7 +79,7 @@ if (last.output) last.output.connect(host.wet);
 console.log(`${host._id}: ${children.length} children connected in series`);
 }); // waitForChildren
 
-console.debug(`${host._id}.initialized.`);
+//console.debug(`${host._id}.initialized.`);
 } // initialize
 
 function connectFeedback (host) {
@@ -87,13 +87,13 @@ if (host.feedback) {
 /*if (isDelayInForwardPath(host)) {
 host.wet.connect(host._gain).connect(host.input);
 host._delay = null;
-console.debug(`${host._id}.connectFeedback: delay in forward path`);
+//console.debug(`${host._id}.connectFeedback: delay in forward path`);
 } else {
 */
 host.wet.connect(host._feedbackDelay).connect(host._gain).connect(host.input);
 host._delay = host._feedbackDelay;
 //} // if
-console.debug(`${host._id}.connectFeedback: connected feedback`);
+//console.debug(`${host._id}.connectFeedback: connected feedback`);
 
 } else {
 //if (host._delay) {
@@ -104,7 +104,7 @@ try { host.wet.disconnect(host._gain); } catch (e) {}
 */
 host._delay = null;
 
-console.debug(`${host._id}.connectFeedback: disconnected feedback`);
+//console.debug(`${host._id}.connectFeedback: disconnected feedback`);
 } // if
 } // connectFeedback
 

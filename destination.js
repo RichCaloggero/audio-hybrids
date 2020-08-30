@@ -7,7 +7,6 @@ const defaults = {};
 
 const Destination = element.create("destination", defaults, initialize, {
 render: ({ label, _depth }) => {
-console.debug(`${label}: rendering...`);
 return html`
 <fieldset class="destination">
 ${ui.legend({ label, _depth })}

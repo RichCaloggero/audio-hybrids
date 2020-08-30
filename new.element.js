@@ -1,13 +1,12 @@
+import {isDefined, getHostInfo, setHostInfo, initializeHost, isInitialized} from "./registry.js";
+import * as ui from "./ui.js";
 import {define, property, render, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as app from "./app.js";
-import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
 import {parameterMap, dataMap} from "./parameterMap.js";
-import {isDefined, getHostInfo, setHostInfo, initializeHost, isInitialized} from "./registry.js";
 
 const prefix = "audio";
-const invalidPropertyNames = ["input", "output", "dry", "wet"];
 
 /* creates a descriptor object which can be passed to hybrids define() to create a custom element
 - name: element name (without prefix);
@@ -17,7 +16,7 @@ const invalidPropertyNames = ["input", "output", "dry", "wet"];
 - alias array: array of pairs [ui parameter name , webaudio parameter name];
 */
 export function create (name, defaults, creator, ...definitions) {
-console.debug(`create(${name}):`);
+//console.debug(`create(${name}):`);
 const aliases = new Map(...definitions.filter(d => d instanceof Array));
 
 // get parameters from node or audio worklet
@@ -74,7 +73,7 @@ const webaudioProp = p[0];
 const uiProp = invertedAliases.get(webaudioProp) || webaudioProp;
 const param = p[1]; // either an AudioParam or a primitive string / number
 
-console.debug(`createDescriptor: ${webaudioProp}, ${uiProp}`);
+//console.debug(`createDescriptor: ${webaudioProp}, ${uiProp}`);
 
 
 return !validPropertyName(uiProp)? null
@@ -123,7 +122,7 @@ const creator = getHostInfo(host).creator;
 
 if (!isInitialized(host)) {
 host._id = getHostInfo(host).idGen.next().value;
-console.debug(`${host._id}: connect(${key}) initializing...`, host);
+//console.debug(`${host._id}: connect(${key}) initializing...`);
 audio.initialize(host);
 
 if (creator instanceof Function) {
@@ -179,7 +178,7 @@ _connected: property(true, connect),
 _rendered: render(host => {
 host.dispatchEvent(new CustomEvent("uiReady", {bubbles: true}));
 
-console.debug(`commonProperties: ${host._id}: render complete`);
+//console.debug(`commonProperties: ${host._id}: render complete`);
 return () => {};
 }), // _rendered
 
@@ -239,7 +238,6 @@ if (host.shadowRoot?.querySelector("slot")) host.shadowRoot.querySelector("slot"
 } // hideOnBypass
 
 export function showAll (host) {
-if (host._id === "filter1") console.error("showAll called");
 if (host.shadowRoot) {
 Array.from(host.shadowRoot.querySelectorAll("fieldset > [hidden=true]"))
 .forEach(x => x.hidden = false);
@@ -270,10 +268,12 @@ if (x.dataset.name)
 
 export function processAttribute (host, key, attribute) {
 if (!attribute) attribute = key;
+//console.debug(`processAttribute: ${host._id}, ${key}, ${attribute}`);
 if (!host.hasAttribute(attribute)) return host._defaults[key]?.default || undefined;
 const value = host.getAttribute(attribute);
 
 // case boolean attribute, presence with empty string value means true
+if (value === "" && attribute === "enable-automation") console.debug("enableAutomation set to  true");
 if (value === "") return true;
 
 
@@ -331,7 +331,7 @@ if (!children.includes(e.target)) return;
 
 // remove this child and we're done if no more children left to process
 children = children.filter(x => x !== e.target);
-console.debug(`${element._id}: child ${e.target._id} is ready; ${children.length} remaining`);
+//console.debug(`${element._id}: child ${e.target._id} is ready; ${children.length} remaining`);
 if (children.length > 0) return;
 
 // no more children left, so remove this handler and signal ready on this element
@@ -343,7 +343,7 @@ runCallback(element, callback);
 } // handleChildReady
 
 function runCallback (element, callback) {
-console.debug(`${element._id}: all children ready; executing callback`);
+//console.debug(`${element._id}: all children ready; executing callback`);
 
 try {
 //callback(Array.from(element.children));
@@ -379,8 +379,12 @@ return new Map(
 } // invertMap
 
 export function validPropertyName (name) {
-return !invalidPropertyNames.includes(name);
+return !invalidPropertyNames().includes(name);
 } // validPropertyName
+
+function invalidPropertyNames () {
+return ["input", "output", "dry", "wet"]; // need this to be hoisted
+} // invalidPropertyNames
 
 export function renderablePropertyName (name) {
 const unrenderable = ["hide", "silentBypass"];
@@ -395,7 +399,7 @@ return new Map(
 [...data.entries()].map(entry => {
 const _name = invertedAliases.get(entry[0]) || entry[0];
 const _data = entry[1];
-console.debug("name: ", _name);
+//console.debug("name: ", _name);
 
 return [_name, _data];
 }) // map
