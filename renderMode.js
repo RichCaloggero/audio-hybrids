@@ -1,12 +1,15 @@
+import {bufferToWave} from "./bufferToWave.js";
 import * as audio from "./audio.js";
 import * as automation from "./automation.js";
 import * as player from "./player.js";
+import * as app from "./app.js";
+
 
 let port;
-
+let _document;
 
 export function loadAudio (url) {
-statusMessage("Loading...");
+app.statusMessage("Loading...");
 fetch(url)
 .then(response=> {
 if (response.ok) return response.arrayBuffer();
@@ -16,109 +19,112 @@ const audioContext = new AudioContext();
 return audioContext.decodeAudioData(data)
 }).then(buffer => {
 renderAudio(buffer);
-statusMessage(`${Number(buffer.duration/60).toFixed(2)} minutes of audio loaded.`);
+app.statusMessage(`${Number(buffer.duration/60).toFixed(2)} minutes of audio loaded.`);
 }).catch(error => statusMessage(error));
 } // loadAudio
 
+
 function renderAudio (buffer) {
-console.debug("renderAudio:...");
+//console.debug("renderAudio:...");
 
 let container = document.createElement("iframe");
 	container.src = `${window.location.href}?render&length=${buffer.length}&rate=${audio.context.sampleRate}`;
 document.body.appendChild(container);
 //container.setAttribute("hidden", "");
 
-const channel = new MessageChannel();
-const parentPort = channel.port1;
-const childPort = channel.port2;
-container.addEventListener("loaded", e => {
-console.debug("iFrame loaded");
-container.contentWindow.postMessage("startAudioRender", "*", [childPort]);
-console.debug("sent init message to iFrame");
+container.addEventListener("load", e => {
+//console.debug("iFrame loaded");
 
-parentPort.onmessage = e => {
+container.contentWindow.postMessage(["startAudioRender", ""], location.origin);
+
+window.onmessage = e => {
+if (e.origin !== location.origin) return;
 const message = e.data[0];
 const data = e.data[1];
-console.debug(`parent received ${message}: data length = ${data.length}`);
+const source = e.source;
+//console.debug(`parent received ${message}: data length = ${data.length}`);
 
 switch (message) {
 case "error":
 app.statusMessage(data);
 break;
 
-case "audioRenderReady":
-const elementMap = copyAllValues(root, container.contentDocument.querySelector("audio-app"));
-childPort.postMessage(["scheduleAutomation", automation.getAutomationData()]);
+case "renderModeReady":
+app.statusMessage("Render mode ready.");
+copyAllValues(app.root, container.contentDocument.querySelector("audio-app"));
+container.contentWindow._transfer = {
+sourceAudio: buffer,
+automationData: automation.getAutomationData()
+}; // _transfer
+source.postMessage(["scheduleAutomation", ""]);
 break;
 
 case "scheduleAutomationComplete":
-childPort.postMessage(["renderAudio", buffer]);
+app.statusMessage("Automation scheduled.");
+source.postMessage(["renderAudio", ""]);
 break;
 
 case "renderComplete":
-renderResults.src = URL.createObjectURL(bufferToWave(buffer, buffer.length));
+//console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
+app.statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
+const renderResults = app.root.shadowRoot.querySelector("#render-results");
+renderResults.src = container.contentWindow._transfer.renderedBlob;
 renderResults.focus();
-console.debug("render: got results");
-console.debug(`render: Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
-statusMessage(`Render complete: ${Math.round(10*buffer.duration/60)/10} minutes of audio rendered.`);
 break;
 
 default:
-statusMessage(`renderAudio: unknown message - ${message}`);
+app.statusMessage(`renderAudio: unknown message - ${message}`);
 } // switch
-}; // onmessage handler
-}); // html loaded
+}; // parent receiver
+}); // iframe loaded
 } // renderAudio
 
 
 
 
-function start () {
-window.addEventListener("message", initPort);
+export function start (parentDocument) {
+window.addEventListener("message", messageHandler, false);
+_document = parentDocument;
 } // start
 
-function initPort(e) {
-port = e.ports[0];
-  port.onmessage = messageHandler;
-port.postMessage(["renderModeReady", ""]);
-} // initPort
-
-function sendErrorMessage (e) {
-port.postMessage(["error", e]);
-} // sendErrorMessage
-
 function messageHandler (e) {
+if (e.origin !== location.origin) return;
 const message = e.data[0];
 const data = e.data[1];
-console.debug(`child received ${message}: data length = ${data.length}`);
+const source = e.source;
+//console.debug(`child received ${message}: data length = ${data.length}`, data);
 
 switch(message) {
-case "scheduleAutomation": scheduleAutomation(data, (2 * audio.context.length) / audio.context.sampleRate);
-port.sendMessage(["scheduleAutomationComplete", ""]);
+case "startAudioRender":
+source.postMessage(["renderModeReady", ""]);
 break;
 
-case "render": startRender(data)
-.then(buffer => port.postMessage(["renderComplete", buffer]))
-.catch(error => sendErrorMessage(error));
+case "scheduleAutomation":
+scheduleAutomation(window._transfer.automationData, (2 * audio.context.length) / audio.context.sampleRate);
+source.postMessage(["scheduleAutomationComplete", ""]);
+break;
+
+case "renderAudio":
+startRender(window._transfer.sourceAudio, source);
 break;
 
 default: console.error(`render: unknown message; ${message}`);
+postError(source, `unknown message: ${message}`);
 break;
 } // switch
 } // messageHandler
 
 
 function scheduleAutomation (_data, duration) {
-if (!audio.isRenderMode) return;
+try {
 const data = transformAutomationData(_data);
 const automationInterval = automation.automationInterval;
 const timeStepCount = duration / automationInterval;
-const itemCount = automationQueue.size;
-console.debug(`scheduleAutomation: duration = ${duration.toFixed(2)}, itemCount = ${itemCount}, interval = ${automationInterval.toFixed(3)}, timeStepCount = ${Math.floor(timeStepCount)}`);
+const itemCount = data.length;
+//console.debug(`scheduleAutomation: duration = ${duration.toFixed(2)}, itemCount = ${itemCount}, interval = ${automationInterval.toFixed(3)}, timeStepCount = ${Math.floor(timeStepCount)}`);
 
 let count = 0;
 
-try {
 data.forEach(item => {
 count += 1;
 const value = item.function(0);
@@ -126,10 +132,10 @@ const value = item.function(0);
 
 item.audioParam.setValueAtTime(value, 0);
 }); // forEach item
-console.debug(`added ${count} items at t=0`);
+//console.debug(`added ${count} items at t=0`);
 
 for (let t = automationInterval; t < duration; t += automationInterval) {
-items.forEach(item => {
+data.forEach(item => {
 count += 1;
 const value = item.function(t);
 
@@ -141,76 +147,78 @@ item.audioParam.setValueAtTime(value, t);
 } // for duration
 } catch (e) {
 console.error(e);
-sendErrorMessage(e);
+app.statusMessage(e.message);
 } // try
 
-console.debug("scheduleAutomation: complete");
-//debugger;
-return count;
+//console.debug("scheduleAutomation: complete");
+return;
 
 function showAutomationItem (item, t) {
-console.debug(`scheduleAutomation: automationItem: ${item.host._id}.${item.property} = ${item.function(t).toFixed(4)} {${item.text}}`);
+//console.debug(`scheduleAutomation: automationItem: ${item.host._id}.${item.property} = ${item.function(t).toFixed(4)} {${item.text}}`);
 } // displayAutomationItem
 } // scheduleAutomation
 
 function transformAutomationData (data) {
 try {
 return data.map(e => {
-const host = document.querySelector(`[_id=${e.id}]`);
+const host = window.document.getElementById(e.id);
+
 if (!host) throw new Error(`scheduleAutomation: cannot find element with _id = ${e.id}; aborting`);
 const node = host.node;
 if (!node) throw new Error(`scheduleAutomation: ${e.id} has no associated webaudio node; aborting`);
 const property = host._webaudioProp(e.property);
 const audioParam = host.node[property];
 if (!(audioParam instanceof AudioParam)) throw new Error(`scheduleAutomation: ${e.id}.${e.property} is not an AudioParam instance; aborting...`);
+
 const func = automation.compileFunction(e.text);
 if (!func) throw new Error(`scheduleAutomation: cannot compile function; aborting
 ${e.text}
 `); // error
 
-return {...e, host, node, property, audioParam, function: func};
+return {host, node, property: e.property, audioParam, function: func, text: e.text};
 }); // map
 
 } catch(e) {
-sendErrorMessage(e);
+console.error(e);
+app.statusMessage(e.message);
 } // try
 } // transformAutomationData
 
-function startRender (buffer) {
-try {
+
+function startRender (buffer, port) {
 const source = player.source;
 if (!source) throw new Error(`startRender: no source; aborting...`);
 source.buffer = buffer;
-source.start();
-return audio.context.startRendering(); // promise
+source.start()
 
-} catch (e) {
-sendErrorMessage(e);
-} // try
+audio.context.startRendering()
+.then(buffer => {
+//console.debug("render: got results");
+window._transfer.renderedBlob = URL.createObjectURL(bufferToWave(buffer, buffer.length));
+port.postMessage(["renderComplete", ""]);
+}).catch(error => postError(port, error));
 } // startRender
 
 
 function copyAllValues (oldRoot, newRoot) {
-const elementMap = new Map();
 //try {
+const newControls = findAllControls(newRoot);
+if (newControls.length === 0) throw new Error("copyAllValues: no elements found in iFrame");
 findAllControls(oldRoot)
 .filter(x => x.dataset.name)
-//.filter(x => x.dataset.name !== "record")
 .filter(x => x.dataset.name !== "renderAudio")
 .filter(x => !findHost(x, oldRoot)?.matches("audio-player"))
-.forEach(x => copyValue(x));
-console.debug("copy: values copied");
+.forEach((x, i) => copyValue(x, i, newControls));
+//console.debug("copy: values copied");
 
-function copyValue (input) {
+function copyValue (input, index, output) {
 const name = input.dataset.name;
-const oldHost = findHost(input, oldRoot);
-const newHost = newRoot.querySelector(`[_id=${oldHost._id}]`);
-if (!newHost) {
-throw new Error(`copyValue: ${oldHost._id} has no corresponding element in ${newRoot._id}`);
-} // if
+const oldHost = findHost(input);
+const newHost = findHost(output[index]);
+if (oldHost._id === newHost._id) newHost[name] = oldHost[name];
+else throw new Error(`copyValue: cannot find host in iFrame corresponding to ${oldHost._id}; aborting...`);
 
-newHost[name] = oldHost[name];
-console.debug(`copyValue: ${oldHost._id}.${name} => ${newHost._id}.${name} = ${oldHost[name]}`);
+//console.debug(`copyValue: ${oldHost._id}.${name} => ${newHost._id}.${name} = ${oldHost[name]}`);
 } // copyValue
 
 function getValue (x) {
@@ -218,11 +226,8 @@ return x.hasAttribute("aria-pressed")? (x.getAttribute("aria-pressed") === "true
 } // getValue
 } // copyAllValues
 
-function findHost (element, root) {
-return Array.from(root.querySelectorAll("*"))
-.concat(root)
-.filter(x => x.shadowRoot.contains(element))
-[0];
+function findHost (element) {
+return element.getRootNode().host ;
 } // findHost
 
 
@@ -249,4 +254,14 @@ return enumerateAll(root)
 .filter(x => x instanceof module);
 } // enumerateNonUi
 
+
+function getHostById (id, doc = document) {
+[...doc.querySelectorAll("*")]
+.filter(e => e._id === id)
+[0];
+} // getHostById
+
+function postError (port, e) {
+port.postMessage(["error", e?.message || e]);
+} // postError
 

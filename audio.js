@@ -15,7 +15,6 @@ new OfflineAudioContext(2, length, sampleRate)
 
 // initialize webaudio elements (connection elements such as series and parallel are initialized within their own modules)
 export function initialize (host) {
-//if (host._id === "reverb1") console.debug(`audio.initialize new.element : ${host._id}`, host);
 host.input = context.createGain();
 host.output = context.createGain();
 host.wet = context.createGain();
@@ -58,7 +57,7 @@ host.__bypass(false);
 return host;
 } // initialize
 
-console.debug(`audio: ${context}`);
+//console.debug(`audio: ${context}`);
 
 function renderModeParams () {
 const params = new URL(window.location.href).searchParams;

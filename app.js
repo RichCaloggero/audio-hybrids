@@ -140,7 +140,7 @@ ${record && html`<div id="record-controls" role="region" aria-label="record">
 
 ${ui.boolean({label: "Render audio", name: "renderAudio", defaultValue: renderAudio})}
 ${renderAudio && html`<div id="renderAudio-controls" role="region" aria-label="Render audio">
-<audio id="render-results" controls></audio>
+<audio id="render-results" controls tabindex="0"></audio>
 </div>
 `} // renderAudio controls
 
@@ -196,7 +196,7 @@ console.log(`${host._id}: load complete`);
 
 waitForUi(() => {
 if (audio.isRenderMode) {
-	renderMode.start();
+	renderMode.start(document);
 console.debug("app.initialize: render mode...");
 
 } else {

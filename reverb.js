@@ -17,7 +17,6 @@ Reverb = element.create("reverb", defaults, reverbProcessor, [["dryGain", "dry"]
 
 
 define("audio-reverb", Reverb);
-console.debug("define finished");
 }).catch(error => {
 console.error(`reverb.js: ${error}`);
  }); // Promise.then

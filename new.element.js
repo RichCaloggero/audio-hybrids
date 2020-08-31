@@ -122,6 +122,7 @@ const creator = getHostInfo(host).creator;
 
 if (!isInitialized(host)) {
 host._id = getHostInfo(host).idGen.next().value;
+host.id = host._id;
 //console.debug(`${host._id}: connect(${key}) initializing...`);
 audio.initialize(host);
 

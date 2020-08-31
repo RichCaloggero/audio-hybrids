@@ -28,7 +28,7 @@ const data = e.data;
 const name = data[0];
 const value = data[1];
 this[name] = value;
-console.debug(`automator.worklet: parameter ${name} set to ${value}`);
+//console.debug(`automator.worklet: parameter ${name} set to ${value}`);
 
 if (this.enable) {
 this.startTime = currentTime;
