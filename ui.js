@@ -1,11 +1,8 @@
-
-
 import {render, html} from "./hybrids/index.js";
 import * as app from "./app.js";
 import * as automation from "./automation.js";
 import * as keymap from "./keymap.js";
 import * as utils from "./utils.js";
-
 
 
 export function initialize (e) {
@@ -18,12 +15,22 @@ export function createRenderer (defaults, aliases) {
 const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" && name !== "mix");
 
 return render((host) => {
-const values = keys.map(k => renderControl(k, host[k], defaults));
+const values = keys.map(k => {
+const data = defaults[k];
+const heading = data.ui?.heading;
+const row = data.ui?.row;
+
+let _html = renderControl(k, host[k], defaults[k]);
+_html = row? html`<br>${_html}` : _html;
+_html = heading? html`<h3 role="heading" aria-level="${host._depth+1}">${heading}</h3>\n${_html}` : _html;
+return _html;
+
+}); // map
 
 return html`
 <fieldset class="${host.tagName.toLowerCase()}">
 ${legend({ label: host.label, _depth: host._depth })}
-${commonControls({ bypass: host.bypass, mix: host.mix, defaults })}
+${commonControls({ bypass: host.bypass, mix: host.mix, data: defaults.mix })}
 <hr>
 ${!(app.root.hideOnBypass && host.bypass) && values}
 </fieldset>
@@ -35,26 +42,41 @@ export function legend ({ _depth=1, label } = {}) {
 return html`<legend><h2 role="heading" aria-level="${_depth}">${label}</h2></legend>`;
 } // legend
 
-export function commonControls ({ bypass, mix, defaults } = {}) {
+export function commonControls ({ bypass, mix, data = {}} = {}) {
 //console.debug("common: mix = ", mix);
 return html`
 ${boolean({ name: "bypass", defaultValue: bypass })}
-${number("mix", "mix", mix, defaults.mix.min, defaults.mix.max, defaults.mix.step, defaults.mix.type)}
+${number("mix", "mix", mix, data)}
 <br>
 `; // return
 } // commonControls
 
 export function renderControl (name, value, data) {
 //console.debug(`renderControl: ${name}, ${value}, `, data);
+let _html = "";
+const control = { name, label: utils.separateWords(name), defaultValue: value || data.default };
 
-const control = { name, label: utils.separateWords(name), defaultValue: value || data[name].default };
-switch (data[name].type) {
-case "boolean": return boolean(control);
-case "string": return text(control);
-case "number": return number(control.label, control.name, control.defaultValue, data);
-case "list": return list(control.label, control.name, control.defaultValue, data[name].values);
+
+switch (data.type) {
+case "boolean":
+return boolean(control);
+break;
+
+case "string":
+return text(control);
+break;
+
+case "number":
+return number(control.label, control.name, control.defaultValue, data);
+break;
+
+case "list": 
+return list(control.label, control.name, control.defaultValue, data.values);
+break;
+
 default: throw new Error(`renderControl: unknown type: ${name}, ${value}, `, data);
 } // switch
+
 } // renderControl
 
 
@@ -83,18 +105,8 @@ function pressed (value) {return value? "true" : "false";}
 } // boolean
 
 
-export function number (label, name, defaultValue, ...rest) {
-let min, max, step, uiType;
-if (rest.length === 1 && rest[0] instanceof Object) {
-try {
-({ min, max, step, uiType } = rest[0][name]);
-} catch (e) {
-console.error(e);
-} // catch
-
-} else {
-[min, max, step, uiType] = rest;
-} // if
+export function number (label, name, defaultValue, data) {
+let {step,min,max,uiType} = data;
 
 if (!step && min !== undefined && max !== undefined) step = (max - min) / 100;
 
@@ -108,7 +120,6 @@ accesskey="${name[0]}"
 data-name="${name}">
 </label>`;
 } // number
-
 
 
 export function list(label, name, defaultValue, options) {
@@ -212,7 +223,6 @@ return name[0] !== "_"
 && validPropertyName(name)
 && !unrenderable.includes(name);
 } // renderableProperty
-
 
 
 function isNumericInput (input) {

@@ -18,7 +18,7 @@ export * from   "./stereoProcessor.js";
 export * from   "./swap.js";
 export * from "./band.js";
 export * from "./reverb.js";
-//export * from "./renderMode.js";
+export * from "./room.js";
 
 // utilities
 export * from "./utils.js";

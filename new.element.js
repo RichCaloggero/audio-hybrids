@@ -43,8 +43,6 @@ fixTypes(defaults)) // be sure our user supplied info is retained and add missin
 
 // descriptors is what hybrids will see and convert to a custom element constructor
 const descriptors = {};
-descriptors._webaudioProp = () => (name) => aliases.get(name) || name; // this may be dropped; not sure if it is useful / necessary
-descriptors._defaults = () => defaults; // link to defaults on actual element DOM node
 
 Object.assign(descriptors,
 commonProperties(name),
@@ -52,6 +50,8 @@ commonProperties(name),
 ...definitions.filter(d => !(d instanceof Array)) // preserve user supplied property definitions (in addition or instead of those defined by audio nodes)
 ); // assign
 
+descriptors._webaudioProp = () => (name) => aliases.get(name) || name; // this may be dropped; not sure if it is useful / necessary
+descriptors._defaults = () => defaults; // link to defaults on actual element DOM node
 // if we're wrapping an AudioNode, create the UI
 // other elements such as our connectors need to build UI, if necessary, in their own modules 
 if (!(creator instanceof Function)) descriptors.render = ui.createRenderer(defaults);
@@ -61,7 +61,6 @@ setHostInfo(name, { descriptors, creator, parameters, defaults,
 idGen: idGen(name)
 });
 
-//if (name === "filter") debugger;
 return descriptors;
 } // create
 
@@ -148,10 +147,8 @@ if (creator instanceof Function && key !== "mix") {
 return;
 } // if
 
-const _defaults = getHostInfo(host)?.defaults;
-//console.debug(`defaults for ${host._id}: `, _defaults);
 
-let value = getDefault(host, key, _defaults);
+let value = getDefault(host, key, host._defaults);
 // NaN (not-a-number) tests falsey
 //console.debug(`element.connect: ${host._id}(${key}): setting value to ${value}`);
 host[key] = value;
@@ -206,7 +203,6 @@ connect: (host, key) => host[key] = host.hasAttribute("bypass"),
 observe: (host, value) => {
 if (value) {
 host.__bypass(true);
-//if (host._id === "filter1") debugger;
 if (app.root?.hideOnBypass) {
 hideOnBypass(host);
 } // if
@@ -232,7 +228,6 @@ observe: (host, value) => host.__mix(value)
 
 export function hideOnBypass (host) {
 const elements = [...host.shadowRoot?.querySelectorAll("fieldset > *")].slice(2)
-//if (host._id === "filter1") debugger;
 elements.forEach(x => x.hidden = true);
 console.error("hidden = ", elements.reduce((a, x) => a += x.hidden? 1 : 0, 0));
 if (host.shadowRoot?.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = true;
