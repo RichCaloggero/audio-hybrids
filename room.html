@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Room Test</title>
+<script src="resonanceAudio.min.js"></script>
+<script type="module" src="load.js"></script>
+</head>
+<body>
+<audio-app label="Room test" hide-on-bypass automation-interval="shortcut{control shift i}" enable-automation="default{true} shortcut{control shift a}"> 
+<audio-series>
+<audio-player label="player" src="default{media/t1.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
+
+<audio-room label="room simulator"></audio-room>
+
+<audio-gain label="output volume" gain="1" hide="bypass mix"></audio-gain>
+
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-app>
+
+
+</body>
+</html>

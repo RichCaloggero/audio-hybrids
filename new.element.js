@@ -20,7 +20,7 @@ export function create (name, defaults, creator, ...definitions) {
 const aliases = new Map(...definitions.filter(d => d instanceof Array));
 
 // get parameters from node or audio worklet
-const parameters = parameterMap(creator) || new Map;
+const parameters = parameterMap(creator) || new Map();
 // convert to our own data format
 const data = dataMap(parameters);
 
