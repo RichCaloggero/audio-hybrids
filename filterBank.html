@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Filter Bank</title>
+<script type="module" src="load.js"></script>
+</head>
+<body>
+
+<audio-app label="Filter Bank" hide-on-bypass enable-automation="shortcut{control shift a}"> 
+<audio-series>
+<audio-player label="play"
+src="default{media/01 - 11 - Jerry Garcia - GarciaLive Volume 6_ 24 bit - LIKE A ROAD.flac} shortcut{control u}"
+play="shortcut{control x}"
+seek="shortcut{control shift t}"></audio-player>
+
+<audio-series label="master" hide="mix">
+<audio-series label="delay" feedback gain="default{-1.35}" delay="default{0.0} automate{r(0, 0.0055)}" mix="default{-0.35}">
+<audio-swap></audio-swap>
+<audio-filter-bank hide="mix type gain detune" label="reverb" count="1000" type="allpass"
+frequency="2000" q="0.00003"></audio-filter-bank>
+</audio-series>
+
+<audio-gain label="makeup gain" gain="default{2.3}" hide="mix bypass"></audio-gain>
+</audio-series><!-- master -->
+
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-app>
+
+</body>
+</html>

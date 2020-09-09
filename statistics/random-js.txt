@@ -1,0 +1,13 @@
+http://www.walkingrandomly.com/?p=4855
+
+Randomness and Monte Carlo Simulations in Javascript.
+March 2nd, 2013 | Categories: programming, random numbers, Statistics | Tags: 
+In a recent article, Matt Asher considered the feasibility of doing statistical computations in JavaScript.  In particular, he showed that the generation of 10 million normal variates can be as fast in Javascript as it is in R provided you use Google’s Chrome for the web browser.  From this, one might infer that using javascript to do your Monte Carlo simulations could be a good idea.
+It is worth bearing in mind, however, that we are not comparing like for like here.
+The default random number generator for R uses the Mersenne Twister algorithm which is of very high quality, has a huge period and is well suited for Monte Carlo simulations.  It is also the default algorithm for modern versions of MATLAB and is available in many other high quality mathematical products such as Mathematica, The NAG library, Julia and Numpy.
+The algorithm used for Javascript’s math.random() function depends upon your web-browser.  A little googling uncovered a document that gives details on some implementations.  According to this document, Internet Explorer and Firefox both use 48 bit Linear Congruential Generator (LCG)-style generators but use different methods to set the seed.  Safari on Mac OS X uses a 31 bit LCG generator and Version 8 of Chrome on Windows uses 2 calls to rand() in msvcrt.dll.  So, for V8 Chrome on Windows, Math.random() is a floating point number consisting of the second rand() value, concatenated with the first rand() value, divided by 2^30.
+The points I want to make here are:-
+• Javascript’s math.random() uses different algorithms between browsers.
+• These algorithms have relatively small periods.  For example, a 48-bit LCG has a period of 2^48 compared to 2^19937-1 for Mersenne Twister.
+• They have poor statistical properties.  For example, the 48bit LCG implemented in Java’s java.util.Random function fails 21 of the BigCrush tests.  I haven’t found any test results for JavaScript implementations but expect them to be at least as bad. I understand that Mersenne Twister fails 2 of the BigCrush tests but these are not considered to be an issue by many people.
+• You can’t manually set the seed for math.random() so reproducibility is impossible.

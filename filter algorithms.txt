@@ -1,0 +1,20 @@
+Algorithm 7.1 Convolution with a finite impulse response (FIR) filter
+http://digitalsoundandmusic.com/chapters/ch7/
+
+/*Input:
+x, an array of digitized audio samples (i.e., in the time domain) of size M
+h, a convolution filter of size N (Specifically, a finite-impulse-response filter, FIR
+Output:
+y, the audio samples, filtered
+*/
+for 
+(n=0toN-1)
+ {
+y(n)=h(n)?x(n)=
+?
+N-1
+k=0
+h(k)x(n-k)
+where 
+x(n-k)=0ifn-k<0
+}
