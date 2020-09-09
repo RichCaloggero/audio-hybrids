@@ -1,7 +1,8 @@
  import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
+import * as connector from "./connector.js";
 import * as app from "./app.js";
 import {FrequencyBand} from "./frequencyBand.js";
 
@@ -54,6 +55,6 @@ host.input.connect(host.node.input);
 host.node.output.connect(host.wet);
 
 console.log(`${host._id}: frequency band initialized`);
-element.signalReady(host);
+connector.signalReady(host);
 } // initialize
 

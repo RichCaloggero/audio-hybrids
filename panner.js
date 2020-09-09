@@ -1,6 +1,6 @@
 import {define, html} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 // this helps to define a reasonable order and provides some defaults for step

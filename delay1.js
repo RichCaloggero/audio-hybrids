@@ -1,6 +1,6 @@
  import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 

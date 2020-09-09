@@ -1,3 +1,21 @@
+export function textToPosition (text) {
+const p = text.split(/,[ ]*\[ ]+/)
+.map(x => Number(x))
+.filter(x => !Number(isNaN(x)));
+
+if (p.length !== 3) {
+app.statusMessage("bad position specified");
+return [];
+} // if
+
+return p;
+} // textToPosition
+
+export function positionToText (p) {
+return p.join(", ");
+} // positionToText
+
+
 export function isContainer (host) {
 const containers = ["series", "parallel", "split"];
 return containers.includes(host._name);
@@ -45,8 +63,17 @@ return `${s[0].toUpperCase()}${s.slice(1)}`;
 } // capitalize
 
 export function separateWords (s) {
-return capitalize(s.replace(/([A-Z])/g, " $1").toLowerCase().trim());
+return isUpperCase(s)? s
+: s.replace(/([A-Z])/g, " $1").toLowerCase().trim()
 } // separateWords
+
+export function isUpperCase (s) {
+return [...s].every(x => x.toUpperCase() === x);
+} // isUpperCase
+
+function toHtmlId (s) {
+return separateWords(s).toLowerCase().replace(" ", "-");
+} // toHtmlId
 
 export function dbToGain (db) {
 return Math.pow(10, (db / 20));

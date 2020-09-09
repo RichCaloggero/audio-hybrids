@@ -1,5 +1,6 @@
 import {define, html, property} from "./hybrids/index.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 import * as audio from "./audio.js";
 import * as ui from "./ui.js";
 import * as keymap from "./keymap.js";
@@ -136,13 +137,13 @@ ${ui.boolean({label: "record", name: "record", defaultValue: record})}
 ${record && html`<div id="record-controls" role="region" aria-label="record">
 <audio id="recorder-results" controls></audio>
 </div>
-`} // record controls
+`}
 
 ${ui.boolean({label: "Render audio", name: "renderAudio", defaultValue: renderAudio})}
 ${renderAudio && html`<div id="renderAudio-controls" role="region" aria-label="Render audio">
 <audio id="render-results" controls tabindex="0"></audio>
 </div>
-`} // renderAudio controls
+`}
 
 </fieldset>
 <slot></slot>
@@ -200,18 +201,18 @@ if (audio.isRenderMode) {
 console.debug("app.initialize: render mode...");
 
 } else {
-	ui.initialize()
+	ui.initialize();
 keymap.initialize();
 automation.initialize();
 } // if
 host._load.uiInitialized = true;
 host.dispatchEvent(new CustomEvent("uiInitialized"));
-//console.debug(`${host._id} ui initialized.`);
+console.debug(`${host._id} ui initialized.`);
 loadHandler();
 }); // waitForUi
 //} // if
 
-element.waitForChildren(host, children => {
+connector.waitForChildren(host, children => {
 // calculate element depth to render correct heading levels in fieldset legends
 root.querySelectorAll("*").forEach(host => host._depth = depth(host));
 
@@ -220,8 +221,6 @@ host.dispatchEvent(new CustomEvent("audioGraphConnected"));
 console.log(`${host._id} graph connected.`);
 loadHandler();
 }); // wait for children
-
-
 } // initialize
 
 export function depth (start, _depth = 2) {

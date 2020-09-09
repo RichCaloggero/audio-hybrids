@@ -1,6 +1,7 @@
  import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 import * as ui from "./ui.js";
 
 
@@ -63,7 +64,7 @@ host._gain = audio.context.createGain();
 host._gain.gain.value = 0;
 
 
-element.waitForChildren(host, children => {
+connector.waitForChildren(host, children => {
 const first = children[0];
 const last = children[children.length-1];
 

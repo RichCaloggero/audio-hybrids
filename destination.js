@@ -1,6 +1,7 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 import * as ui from "./ui.js";
 
 const defaults = {};
@@ -23,5 +24,5 @@ function initialize (host) {
 host.node = audio.context.destination;
 host.input.connect(host.node);
 host.output = null;
-element.signalReady(host);
+connector.signalReady(host);
 } // initialize

@@ -1,6 +1,7 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 import * as ui from "./ui.js";
 import * as app from "./app.js";
 
@@ -83,7 +84,7 @@ define ("audio-filter-bank", FilterBank);
 
 
 function initialize (host) {
-element.signalReady(host);
+connector.signalReady(host);
 } // initialize
 
 function initializeFilters (host, count = 1, type = "lowpass") {

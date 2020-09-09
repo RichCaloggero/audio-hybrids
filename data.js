@@ -21,7 +21,7 @@ Object.getOwnPropertyNames(Object.getPrototypeOf(node))
 } // createParameterMap
 
 function parameterData (p) {
-const result = p instanceof AudioParam? {default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate}
+const result = p instanceof AudioParam? {/*audioParam: p,*/ default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate}
 : {default: p};
 
 if (p instanceof AudioParam || p instanceof Number || typeof(p) === "number") {
@@ -38,3 +38,17 @@ return null;
 return result;
 } // parameterData
  
+export function invertMap (m) {
+return new Map(
+[...m.entries()].map(e => [e[1], e[0]])
+); // new Map
+} // invertMap
+
+
+
+export function addTypeInfo (data) {
+return data.type? data
+: Object.assign({}, data,
+{type: typeof(data.default) === "undefined"? "string" : typeof(data.default)}
+);
+} // addTypeInfo

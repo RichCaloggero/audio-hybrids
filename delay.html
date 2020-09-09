@@ -2,18 +2,15 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Panner Test</title>
+<title>Delay Test</title>
 <script async type="module" src="load.js"></script>
 </head>
 <body>
-<audio-app label="panner test" hide-on-bypass automation-interval="shortcut{control shift i}" enable-automation="default{true} shortcut{control shift a}"> 
+<audio-app label="Delay test" hide-on-bypass automation-interval="shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
 <audio-series>
 <audio-player label="player" src="default{media/t.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
 
-<audio-panner label="panner"
-x="automate{20*cos(t/2)}"
-z="automate{20*sin(t/2)}"
-refDistance="100"></audio-panner>
+<audio-delay label="delay" delay="automate{s(t, 0, 0.0002)}"></audio-delay>
 
 <audio-gain label="output volume" gain="1" hide="bypass mix"></audio-gain>
 

@@ -1,6 +1,7 @@
 import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
 
@@ -58,7 +59,7 @@ audio.context.audioWorklet.addModule("stereoProcessor.worklet.js")
 host.processor = new AudioWorkletNode(audio.context, "stereo-processor");
 console.log(`${host._id}: audio worklet created`);
 host.input.connect(host.processor).connect(host.wet);
-element.signalReady(host);
+connector.signalReady(host);
 }).catch(e => console.error(`${host._id}: ${e}`));
 } // initialize
 

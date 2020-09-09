@@ -11,28 +11,31 @@ console.log("UI initialization complete.");
 
 /// rendering
 
-export function createRenderer (defaults, aliases) {
-const keys = Object.entries(defaults).map(entry => entry[0]).filter(renderablePropertyName).filter(name => name !== "bypass" && name !== "mix");
+export function createRenderer (defaults) {
+const keys = Object.keys(defaults).filter(renderablePropertyName).filter(name => name !== "bypass" && name !== "mix");
 
 return render((host) => {
+const hideOnBypass = app.root?.hideOnBypass || false;
+
 const values = keys.map(k => {
 const data = defaults[k];
 const heading = data.ui?.heading;
 const row = data.ui?.row;
 
-let _html = renderControl(k, host[k], defaults[k]);
+let _html = renderControl(k, host[k], data);
 _html = row? html`<br>${_html}` : _html;
 _html = heading? html`<h3 role="heading" aria-level="${host._depth+1}">${heading}</h3>\n${_html}` : _html;
 return _html;
 
 }); // map
 
+
 return html`
 <fieldset class="${host.tagName.toLowerCase()}">
 ${legend({ label: host.label, _depth: host._depth })}
 ${commonControls({ bypass: host.bypass, mix: host.mix, data: defaults.mix })}
 <hr>
-${!(app.root.hideOnBypass && host.bypass) && values}
+${!(hideOnBypass && host.bypass) && values}
 </fieldset>
 `; // html
 }); // render}); // callback
@@ -53,8 +56,8 @@ ${number("mix", "mix", mix, data)}
 
 export function renderControl (name, value, data) {
 //console.debug(`renderControl: ${name}, ${value}, `, data);
-let _html = "";
 const control = { name, label: utils.separateWords(name), defaultValue: value || data.default };
+//console.debug("renderControl: ", control.name, control.defaultValue, data.type);
 
 
 switch (data.type) {
@@ -109,6 +112,9 @@ export function number (label, name, defaultValue, data) {
 let {step,min,max,uiType} = data;
 
 if (!step && min !== undefined && max !== undefined) step = (max - min) / 100;
+if (typeof(min) === "undefined") min = Number.EPSILON;
+if (typeof(max) === "undefined") max = Number.MAX_VALUE;
+if (typeof(step) === "undefined") step = 1;
 
 return html`
 <label>${label}:
@@ -168,12 +174,11 @@ if (!host.hasAttribute(attribute)) return host._defaults[key]?.default || undefi
 const value = host.getAttribute(attribute);
 
 // case boolean attribute, presence with empty string value means true
-if (value === "" && attribute === "enable-automation") console.debug("enableAutomation set to  true");
 if (value === "") return true;
 
 
 const data = getData(host, key, utils.parse(value));
-//console.debug(`processAttribute: ${JSON.stringify(data)}`);
+if (host._id === "panner1") console.debug(`processAttribute: `, data);
 
 if (data.automate) automation.requestAutomation(data.automate);
 if (data.shortcut) keymap.requestKeyDefinition(data.shortcut);
@@ -186,7 +191,7 @@ else return data.default;
 return host._defaults[key]?.default || undefined;
 
 function getData (host, property, data) {
-const nodeProperty = host.node && host.aliases? host.aliases[property] : "";
+const nodeProperty = host.node && host._webaudioProp? host._webaudioProp(property) : "";
 return Object.assign({}, ...data.map(item => {
 if (item.length === 1) {
 return {default: item[0]};

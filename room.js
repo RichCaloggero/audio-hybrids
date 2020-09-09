@@ -1,9 +1,14 @@
 import {define, html, property} from "./hybrids/index.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 import * as audio from "./audio.js";
 import * as ui from "./ui.js";
+import * as app from "./app.js";
 
 const defaults = {
+position: {default: ""},
+coefs: {default: ""},
+
 scale: {ui: {heading: "dimensions"}, default: 1, min: Number.MIN_VALUE, step: 0.1},
 width: {default: Math.random(), min: Number.MIN_VALUE, step: 0.1},
 height: {default: Math.random(), min: Number.MIN_VALUE, step: 0.1},
@@ -20,44 +25,41 @@ back: {default: "transparent", type: "list", values: materials()}
 const Room = element.create("room", defaults, initialize, {
 
 scale: {
-set: (host, value) => _set(host, "scale", value, host._defaults["scale"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
-//observe: (host, value) => updateRoom(host.node, host._room)
+set: (host, value) => Number(value),
+connect: (host, key) => host[key] = Number(host.getAttribute(key)) || host._defaults[key].default,
+observe: (host, value) => _set(host, "scale", value)
 },
 
 width: {
-set: (host, value) => _set(host, "width", value, host._defaults["width"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
-//observe: (host, value) => updateRoom(host.node, host._room)
+connect: (host, key) => host[key] = Number(host.getAttribute(key)) || host._defaults[key].default,
+observe: (host, value) => _set(host, "width", value)
 },
 
 height: {
-set: (host, value) => _set(host, "height", value, host._defaults["height"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
-//observe: (host, value) => updateRoom(host.node, host._room)
+connect: (host, key) => host[key] = Number(host.getAttribute(key)) || host._defaults[key].default,
+observe: (host, value) => _set(host, "height", value)
 },
 
 depth: {
-set: (host, value) => _set(host, "depth", value, host._defaults["depth"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
-//observe: (host, value) => updateRoom(host.node, host._room)
+connect: (host, key) => host[key] = host.getAttribute(key) || host._defaults[key].default,
+observe: (host, value) => _set(host, "depth", value)
 },
 
 left: {
 set: (host, value) => _set(host, "left", value, host._defaults["left"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
+connect: (host, key) => host[key] = host.getAttribute(key) || host._defaults[key].default,
 //observe: (host, value) => updateRoom(host.node, host._room)
 },
 
 right: {
 set: (host, value) => _set(host, "right", value, host._defaults["right"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
+connect: (host, key) => host[key] = host.getAttribute(key) || host._defaults[key].default,
 //observe: (host, value) => updateRoom(host.node, host._room)
 },
 
 up: {
 set: (host, value) => _set(host, "up", value, host._defaults["up"]),
-connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults[key].default, host._defaults[key]),
+connect: (host, key) => host[key] = host.getAttribute(key) || host._defaults[key],
 //observe: (host, value) => updateRoom(host.node, host._room)
 },
 
@@ -79,10 +81,11 @@ connect: (host, key) => _set(host, key, host.getAttribute(key) || host._defaults
 //observe: (host, value) => updateRoom(host.node, host._room)
 },
 
+render: ui.createRenderer(defaults)
 }); // create
 
 
-Room.render = ui.createRenderer(defaults, []);
+//Room.render = ui.createRenderer(defaults);
 
 
 define ("audio-room", Room);
@@ -104,10 +107,8 @@ s.connect(inRight.input, 1,0);
 scene.output.connect(host.wet);
 
 host.node = scene;
-host._resonance = {source, scene};
-host._room = defaultRoom();
-updateRoom(host.node, host._room);
-element.signalReady(host);
+host._resonanceAudio = {source, scene};
+connector.signalReady(host);
 } // initialize
 
 
@@ -134,32 +135,23 @@ updateRoom(host.node, host._room);
 }});
 } // createDescriptor
 
-function _set (host, name, value, data) {
+function _set (host, name, value) {
+const data = host._defaults[name];
 if (typeof(value) === "undefined") value = data.default;
 value = (data.type === "number" || typeof(data.default) === "number")? Number(value) : value;
-if (name === "width" || name === "height" || name === "depth") host.scale = host._room.scale = 1;
+if (name === "width" || name === "height" || name === "depth") host.scale = 1;
 
-host._room[name] = value;
-updateRoom(host.node, host._room);
+updateRoom(host);
 //console.debug(`_set: ${host._id}, ${name}, ${value}`);
 return value;
 } // _set
 
-function updateRoom (scene, room) {
-const scale = room.scale;
-room.width *= scale;
-room.depth *= scale;
-room.height *= scale;
-const materials = {
-left: room.left, right: room.right,
-up: room.up, down: room.down,
-front: room.front, back: room.back
-};
+function updateRoom ({node, scale, width,height,depth, left,right, up,down, front,back}) {
 
-const dimensions = {width: room.width, height: room.height, depth: room.depth};
-//console.debug(`room updated: `, room);
-
-scene.setRoomProperties(dimensions, materials);
+node.setRoomProperties(
+{width: scale*width, height: scale*height, depth: scale*depth},
+{left,right, up,down, front, back}
+);
 } // updateRoom
 
 function defaultRoom () {

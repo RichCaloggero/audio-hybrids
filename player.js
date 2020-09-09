@@ -2,7 +2,8 @@ import {define, html, property} from "./hybrids/index.js";
 import * as audio from "./audio.js";
 import * as app from "./app.js";
 import * as ui from "./ui.js";
-import * as element from "./new.element.js";
+import * as element from "./element.js";
+import * as connector from "./connector.js";
 
 export let source = null;
 const defaults = {};
@@ -93,5 +94,5 @@ source = host.node;
 
 host.node.connect(host.output);
 //if (!audio.isRenderMode && ui.automator) host.output.connect (ui.automator);
-element.signalReady(host);
+connector.signalReady(host);
 } // initialize
