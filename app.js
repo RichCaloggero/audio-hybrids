@@ -17,20 +17,11 @@ let _responseCallback = null;
 let _dialog = {open: false};
 
 
-const suggestedAutomationIntervals = {
-target: 0.75,
-exponential: 0.75,
-linear: 0.5,
-instantaneous: 0.1,
-input: 0.1,
-host: 0.1
-};
-
 const defaults = {
 hideOnBypass: {default: true},
 enableAutomation: {default: false},
-automationType: {default: "instantaneous", values: ["target", "exponential", "linear", "instantaneous", "host", "input"]},
-automationInterval: {type: "number", default: suggestedAutomationIntervals["target"], min: 0.1, max: 1.0, step: 0.05},
+automationType: {default: "host", values: automation.automationTypes()},
+automationInterval: {type: "number", default: automation.suggestedAutomationInterval("target"), min: 0.1, max: 1.0, step: 0.05},
 };
 
 const App = element.create("app", defaults, initialize, {
@@ -91,7 +82,7 @@ automationType: {
 connect: (host, key) => host[key] = ui.processAttribute(host, key, "automation-type") || defaults.automationType,
 observe: (host, value) => {
 automation.setAutomationType(value);
-host.automationInterval = suggestedAutomationIntervals[value] || host.automationInterval;
+host.automationInterval = automation.suggestedAutomationInterval(value) || host.automationInterval;
 } // observe
 }, // automationType
 

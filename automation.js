@@ -6,6 +6,37 @@ let automationEnabled = false;
 
 const automationQueue = new Map();
 let automationRequests = [];
+const _automationTypes = {
+exponential: {interval: 0.75,
+apply (e, value, t) {
+setAudioParam(e.host.node[e.nodeProperty], value, t, "exponentialRampToValueAtTime");
+}},
+linear: {interval: 0.5,
+apply (e, value, t) {
+setAudioParam(e.host.node[e.nodeProperty], value, t, "linearRampToValueAtTime");
+}},
+instantaneous: {interval: 0.1,
+apply (e, value, t) {
+setAudioParam(e.host.node[e.nodeProperty], value, t);
+}},
+target: {interval: 0.75,
+apply (e, value, t) {
+setAudioParam(e.host.node[e.nodeProperty], value, t, "setTargetAtTime");
+}},
+input: {interval: 0.1,
+apply (e, value, t) {
+const {input} = e;
+input.value = Number(value);
+input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
+}},
+host: {interval: 0.1,
+apply (e, value, t) {
+e.host[e.property] = value;
+}}
+}; // _automationTypes
+
+
+
 
 export let automator = null;
 export let automationInterval = 0.03; // seconds
@@ -39,6 +70,7 @@ Object.assign(window.automationData, Object.fromEntries(message));
 } else if (message === "tick") {
 // if we receive a tick message, process the queue
 automationQueue.forEach(e => automate(e));
+console.debug("processed automation queue");
 } // if
 } // if enabled
 }; // onMessage
@@ -64,9 +96,17 @@ automationEnabled = false;
 if (audio.isRenderMode) return;
 if (!automator) return;
 
+automationQueue.forEach(cancelAutomation);
 automator.port.postMessage(["enable", false]);
+
 app.statusMessage("Automation disabled.");
 } // disableAutomation
+
+function cancelAutomation (item) {
+//console.debug(item);
+const param = item.nodeProperty;
+if (param && param instanceof AudioParam) param.cancelScheduledValues(0);
+} // cancelAutomation
 
 
 
@@ -80,59 +120,24 @@ function automate (e) {
 if (!e.enabled) return;
 const t = audio.context.currentTime;
 const value = e.function(t);
-const host = e.host;
 //console.debug(`automate ${host._id}.${e.property} = ${t}`);
-switch (automationType) {
-case "host": host[e.property] = value;
-break;
 
-case "input":
-e.input.value = Number(value);
-e.input.dispatchEvent(new CustomEvent("change", {bubbles: false}));
-break;
 
-default: automateAudioParam(host, e.property, value, t);
-} // switch
+_automationTypes[automationType] && _automationTypes[automationType].apply(e, value, t);
 } // automate
 
-function automateAudioParam (host, property, value, t) {
-let node = host.node;
-if (host._name === "series") {
-if (property === "delay") node = host._delay;
-else if (property === "gain") node = host._gain;
-} // if
-//console.debug(`automateProperty: node = ${node}`);
- 
-if (node) {
-property = host._webaudioProp? host._webaudioProp(property) : property;
+function setAudioParam (audioParam, value, t, func) {
+const arts = func === "setTargetAtTime"?
+[value, t, automationInterval]
+: [value, t];
+try {
+func? audioParam[func](...args)
+: (audioParam.value = value);
+} catch (e) {
+console.error(`setAudioParam: ${e.message}`);
+} // try
+} // setAudioParam
 
-if (node[property]) {
-if (node[property] instanceof AudioParam) setAudioParam(node[property], value, t);
-else node[property] = value;
-
-} else {
-throw new Error(`automateProperty: ${node} has no property ${property}; aborting`);
-} // if
-
-} else {
-console.error(`automateProperty: no AudioParam; falling back to host automation`);
-automationType = "host";
-} // if
-} // automateAudioParam
-
-function setAudioParam (param, value, t) {
-switch (automationType) {
-case "instantaneous": param.setValueAtTime(value, t); break;
-case "linear": param.linearRampToValueAtTime(value, t); break;
-case "exponential": param.exponentialRampToValueAtTime(value, t); break;
-case "target": param.setTargetAtTime(value, t, automationInterval); break;
-default: return;
-} // switch
-
-if (audio.isRenderMode) console.debug(`setAudioParam: ${automationType}, ${param}, ${value.toFixed(5)}, ${t.toFixed(3)}`);
-
-return;
-} // setAudioparam
 
 export function isAutomationEnabled (input) {
 if (!input) return automationEnabled;
@@ -277,4 +282,12 @@ return e;
 })
 .map(e => e); // pipeline
 } // getAutomationData
+
+export function automationTypes () {
+return Object.keys(_automationTypes);
+} // automationTypes
+
+export function suggestedAutomationInterval (type) {
+return type && _automationTypes[type] && _automationTypes[type].interval;
+} // suggestedAutomationInterval
 
