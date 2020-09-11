@@ -43,8 +43,8 @@ Object.fromEntries(
 .map(e => [e[0], addTypeInfo(e[1])])
 ), // fromEntries
 ); // assign
-// descriptors is what hybrids will see and convert to a custom element constructor
 
+// descriptors is what hybrids will see and convert to a custom element constructor
 const descriptors = Object.assign({},
 //defaults.createDescriptors instanceof Function? ...defaults.createDescriptors(defaults) :
 createDescriptors(defaults),
@@ -60,7 +60,8 @@ descriptors._defaults = () => defaults;
 if (!(creator instanceof Function)) descriptors.render = ui.createRenderer(defaults);
 
 // this is used by connect() when an element is actually used and connected to the DOM
-setHostInfo(name, { descriptors, creator, defaults,
+setHostInfo(name, { descriptors, defaults,
+creator: creator instanceof AudioWorkletNode? "audioWorkletNode" : creator,
 idGen: idGen(name)
 });
 
@@ -81,20 +82,24 @@ return !ui.validPropertyName(uiProp)? null
 : [uiProp, {
 connect: connect,
 observe: (host, value) => {
-setParameter(host, host.node, host._webaudioProp(uiProp), value, data.type);
+setParameter(host, host.node, host._webaudioProp(uiProp), value, data);
 } // observe
 } // descriptor
 ]; // pair
 
-function setParameter (host, node, name, newValue, type) {
-if (!host || !node || !name || typeof(node[name]) === "undefined") throw new Error("setParameter: bad arguments");
-const parameter = node[name];
-if (parameter instanceof AudioParam) {
-node[name].value = Number(newValue);
+function setParameter (host, node, name, newValue, data) {
+if (!host || !node || !name)  throw new Error("setParameter: bad arguments");
+const type = data.type;
+
+if (data.audioParam) {
+const audioParam = host.node instanceof AudioWorkletNode? host.node.parameters.get(name)
+: host.node[name];
+audioParam.setValueAtTime(Number(newValue), audio.context.currentTime);
 //console.debug ("setParameter: ", host._id, name, parameter.value);
 
 } else  {
-if (type === "number") node[name] = Number(newValue);
+if (node[name] instanceof AudioParam) node[name].setValueAtTime(Number(newValue), audio.context.currentTime);
+else if (type === "number") node[name] = Number(newValue);
 else if (type === "string") node[name] = String(newValue);
 else if(type === "boolean") node[name] = Boolean(newValue);
 else throw new Error(`setParameter: invalid type ${type} for ${host._id}.node.${name}`);
@@ -211,6 +216,12 @@ host.input.connect(host.node).connect(host.wet);
 initializeHost(host);
 connector.signalReady(host);
 
+} else if (creator === "audioWorkletNode") {
+host.node = new AudioWorkletNode(audio.context, host._name, {outputChannelCount: [2]});
+host.input.connect(host.node).connect(host.wet);
+initializeHost(host);
+connector.signalReady(host);
+
 } else {
 throw new Error(`bad creator; aborting`);
 } // if
@@ -223,29 +234,30 @@ return;
 } // if
 
 
-let value = getDefault(host, key, host._defaults);
+let value = getDefault(host, key, host._defaults[key]);
 host[key] = value;
 } // connect
 
-export function getDefault (host, key, defaults = {}) {
-return ui.processAttribute(host, key) || defaults[key]?.default;
+export function getDefault (host, key, data = {}) {
+const value = ui.processAttribute(host, key) || data.default;
+if (!data.type) return value;
+if (data.type === "number") return Number(value);
+if (data.type === "boolean") return Boolean(value);
+else return value;
 } // getDefault
 
 
 
 export function hideOnBypass (host) {
-const elements = [...host.shadowRoot?.querySelectorAll("fieldset > *")].slice(2)
+const elements = [...host.shadowRoot?.querySelectorAll("fieldset > *")].slice(2);
 elements.forEach(x => x.hidden = true);
-console.error("hidden = ", elements.reduce((a, x) => a += x.hidden? 1 : 0, 0));
 if (host.shadowRoot?.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = true;
 } // hideOnBypass
 
 export function showAll (host) {
-if (host.shadowRoot) {
-Array.from(host.shadowRoot.querySelectorAll("fieldset > [hidden=true]"))
+[...host.shadowRoot?.querySelectorAll("fieldset > [hidden]")]
 .forEach(x => x.hidden = false);
 if (host.shadowRoot.querySelector("slot")) host.shadowRoot.querySelector("slot").hidden = false;
-} // if
 } // showAll
 
 function processHide (host) {

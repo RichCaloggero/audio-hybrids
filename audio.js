@@ -13,6 +13,8 @@ export const context = isRenderMode?
 new OfflineAudioContext(2, length, sampleRate)
 : new AudioContext();
 
+if (!isRenderMode) context.resume();
+
 // initialize webaudio elements (connection elements such as series and parallel are initialized within their own modules)
 export function initialize (host) {
 host.input = context.createGain();

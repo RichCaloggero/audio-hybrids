@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Delay1 Test</title>
+<script async type="module" src="load.js"></script>
+</head>
+<body>
+<audio-app label="Delay1 test" hide-on-bypass automation-interval="shortcut{control shift i}" enable-automation="default{false} shortcut{control shift a}"> 
+<audio-series>
+<audio-player label="player" src="default{media/t.mp3} shortcut{control shift u}" play="default{false} shortcut{control shift x}" seek="default{0} shortcut{control shift t}"></audio-player>
+
+<audio-delay1 label="delay" delay="default{4} automate{s(t, 0, 0.0002)}"></audio-delay1>
+
+<audio-gain label="output volume" gain="1" hide="bypass mix"></audio-gain>
+
+<audio-destination label="speakers"></audio-destination>
+</audio-series>
+</audio-app>
+
+
+</body>
+</html>

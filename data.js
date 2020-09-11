@@ -4,12 +4,6 @@ else if (object instanceof AudioNode) return createParameterMap(object);
 else return null;
 } // parameterMap
 
-export function dataMap (parameterMap) {
-return parameterMap instanceof Map || parameterMap instanceof AudioParamMap?
-new Map([...parameterMap.entries()].map(p => [p[0], parameterData(p[1])]))
-: null;
-} // dataMap
-
 function createParameterMap (node) {
 return (
 new Map(
@@ -20,8 +14,16 @@ Object.getOwnPropertyNames(Object.getPrototypeOf(node))
  ); // return
 } // createParameterMap
 
+
+export function dataMap (parameterMap) {
+return parameterMap instanceof Map || parameterMap instanceof AudioParamMap?
+new Map([...parameterMap.entries()].map(p => [p[0], parameterData(p[1])]))
+: null;
+} // dataMap
+
 function parameterData (p) {
-const result = p instanceof AudioParam? {/*audioParam: p,*/ default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate}
+let result = p instanceof AudioParam?
+{audioParam: true, default: p.defaultValue, min: p.minValue, max: p.maxValue, automationRate: p.automationRate}
 : {default: p};
 
 if (p instanceof AudioParam || p instanceof Number || typeof(p) === "number") {
