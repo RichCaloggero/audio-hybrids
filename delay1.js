@@ -4,7 +4,10 @@ import * as element from "./element.js";
 import * as ui from "./ui.js";
 
 let delay1Processor;
-let defaults = {};
+let defaults = {
+delay: {step: 1, max: 44100},
+feedback: {min: -0.98, max: 0.98, step: 0.01}
+};
 let Delay1;
 
 const instantiateModule = async () => await audio.context.audioWorklet.addModule("delay1.worklet.js");

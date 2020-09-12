@@ -22,10 +22,8 @@ const aliases = new Map(...definitions.filter(d => d instanceof Array));
 
 // get parameters from node or audio worklet
 const data = new Map(
-(creator instanceof AudioNode?
-[...dataMap(parameterMap(creator)).entries()]
-: Object.entries(defaults)
-).map(entry => [invertMap(aliases).get(entry[0]) || entry[0], entry[1]])
+(creator instanceof AudioNode? [...dataMap(parameterMap(creator)).entries()] : [])
+.map(aliasKeys(invertMap(aliases)))
 .filter(entry => ui.validPropertyName(entry[0])) // filter out invalid names like output, wet, dry, input, etc
 ); // new Map
 
@@ -33,13 +31,17 @@ const data = new Map(
 if (!data.has("mix")) data.set("mix", {type: "number", min: -1, max: 1, default: 1});
 if (!data.has("bypass")) data.set("bypass", {type: "boolean", default: false});
 
+// merge with user supplied data
+merge(data, defaults);
+
 
 // convert to our own defaults object
 // * consider using map instead, after all elements use this new element.create()
 Object.assign(
 defaults, // will be reflected in individual element source modules
 Object.fromEntries(
-[...data.entries()].concat(Object.entries(defaults))
+[...data.entries()]
+.map(e => {console.debug(e); return e;})
 .map(e => [e[0], addTypeInfo(e[1])])
 ), // fromEntries
 ); // assign
@@ -272,3 +274,20 @@ if (x.dataset.name)
 //}, 0); // timeout
 } // processHide
 
+function aliasKeys (aliasMap, pair) {
+return function (pair) {
+const [key, value] = pair;
+return [
+aliasMap.has(key)? aliasMap.get(key) : key,
+value
+];
+}; // return function
+} // aliasKeys
+
+function merge (parameterMap, userData) {
+Object.keys(userData).forEach(key => 
+parameterMap.has(key)?
+parameterMap.set(key, Object.assign({}, parameterMap.get(key), userData[key]))
+: parameterMap.set(key, userData[key])
+); // forEach key
+} // merge
