@@ -41,7 +41,7 @@ Object.assign(
 defaults, // will be reflected in individual element source modules
 Object.fromEntries(
 [...data.entries()]
-.map(e => {console.debug(e); return e;})
+//.map(e => {console.debug(e); return e;})
 .map(e => [e[0], addTypeInfo(e[1])])
 ), // fromEntries
 ); // assign
@@ -125,7 +125,7 @@ while (true) {
 if (!map.has(name)) map.set(name, 0);
 const count = map.get(name) + 1;
 map.set(name, count);
-yield `${name}${count}`;
+yield `${name}-${count}`;
 } // while
 } // idGen
 
@@ -203,7 +203,7 @@ const creator = getHostInfo(host).creator;
 
 if (!isInitialized(host)) {
 host._id = getHostInfo(host).idGen.next().value;
-host.id = host._id;
+if (!host.id) host.id = host._id;
 //console.debug(`${host._id}: connect(${key}) initializing...`);
 audio.initialize(host);
 

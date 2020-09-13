@@ -17,14 +17,13 @@ automationRate: "k-rate"
 
 constructor (options) {
 super (options);
-this.delay = 0;
 this.initializeDelayBuffer();
-this.frameCount = 0;
+this.blockCount = 0;
 console.debug(`delay1.worklet ready.`);
 } // constructor
 
 process (inputs, outputs, parameters) {
-this.frameCount += 1;
+this.blockCount += 1;
 const delay = parameters.delay[0];
 const feedback = parameters.feedbackGain[0];
 const inputBuffer = inputs[0];
@@ -45,7 +44,7 @@ console.debug("deallocated buffers");
 } // if
 
 if (channelCount > 0) {
-//console.debug(`frame ${this.frameCount++}, delay ${delay}, ${this.delay}, ${delayLength}`);
+//console.debug(`frame ${this.blockCount++}, delay ${delay}, ${this.delay}, ${delayLength}`);
 
 for (let channel = 0; channel < channelCount; channel++) {
 const sampleCount = inputBuffer[channel].length;
@@ -77,6 +76,7 @@ this.delayBuffer = [null, null];
 this.readIndex = [0, 0];
 this.writeIndex = [0, 0];
 this.bufferLength = [0,0];
+this.delay = 0;
 } // initializeDelayBuffer
 
 readBuffer (channel) {
@@ -89,7 +89,7 @@ return sample;
 } // readBuffer
 
 writeBuffer (channel, sample) {
-if (this.bufferLength[channel] < this.delay) {
+if (this.delay > 0 && this.bufferLength[channel] < this.delay) {
 this.delayBuffer[channel][this.writeIndex[channel]] = sample;
 //console.debug(`- wrote ${sample} at ${this.writeIndex[channel]}`);
 this.writeIndex[channel] = (this.writeIndex[channel] + 1) % this.delay;
