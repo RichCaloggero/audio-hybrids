@@ -6,8 +6,8 @@ import * as ui from "./ui.js";
 
 
 const defaults = {
-gain: {default: 0, min: -0.98, max: 0.98, step: 0.02},
-delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
+//gain: {default: 0, min: -0.98, max: 0.98, step: 0.02},
+//delay: {default: 0, min: 0.00001, max: 1, step: 0.00001},
 }; // sefaults
 
 
@@ -16,7 +16,7 @@ _delay: null,
 _gain: null,
 
 
-delay: {
+/*delay: {
 connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => {
 if (host.feedback && host._delay) host._delay.delayTime.value = Number(value);
@@ -29,6 +29,7 @@ observe: (host, value) => {
 if (host.feedback) host._gain.gain.value = Number(value);
 } // observe
 }, // gain
+*/
 
 feedback: {
 connect: (host, key) => host[key] = host.hasAttribute(key) || false,
@@ -38,11 +39,11 @@ observe: (host, value) => connectFeedback(host)
 feedforward: false,
 
 
-render: ({ mix, bypass, label, _depth, feedback, feedforward, delay, _delay, gain }) => {
+render: ({ mix, bypass, label, _depth, _defaults, feedback, feedforward, delay, _delay, gain }) => {
 return html`
 <fieldset class="series">
 ${ui.legend({ label, _depth })}
-${ui.commonControls({ bypass, mix, defaults })}
+${ui.commonControls({ bypass, mix, data: _defaults.mix })}
 ${feedback && html`
 <div id="feedback-panel">
 ${_delay && ui.number("feedback delay", "delay", delay, defaults)}

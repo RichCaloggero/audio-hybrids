@@ -7,7 +7,7 @@ minValue: 0.0,
 maxValue: sampleRate, // 1 second
 automationRate: "k-rate"
 }, {
-name: "feedbackGain",
+name: "feedback",
 defaultValue: 0.0,
 minValue: -0.98,
 maxValue: 0.98,
@@ -25,7 +25,7 @@ console.debug(`delay1.worklet ready.`);
 process (inputs, outputs, parameters) {
 this.blockCount += 1;
 const delay = parameters.delay[0];
-const feedback = parameters.feedbackGain[0];
+const feedback = parameters.feedback[0];
 const inputBuffer = inputs[0];
 const outputBuffer = outputs[0];
 const channelCount = inputBuffer.length;

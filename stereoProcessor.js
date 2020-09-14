@@ -15,22 +15,22 @@ balance: {default: 0, min: -100, max: 100, step: 1},
 
 const StereoProcessor = element.create("stereoProcessor", defaults, initialize, {
 rotation: {
-connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "rotation", value)
 }, // rotation
 
 width: {
-connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "width", value)
 }, // width
 
 center: {
-connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "center", value)
 }, // center
 
 balance: {
-connect: (host, key) => host[key] = element.processAttribute(host, key) || defaults[key].default,
+connect: (host, key) => host[key] = ui.processAttribute(host, key) || defaults[key].default,
 observe: (host, value) => _set(host, "balance", value)
 }, // balance
 
@@ -38,7 +38,7 @@ render: ({ mix, bypass, label, _depth, rotation, width, center, balance }) => {
 return html`
 <fieldset class="stereoProcessor">
 ${ui.legend({ label, _depth })}
-${ui.commonControls({ bypass, mix, defaults })}
+${ui.commonControls({ bypass, mix, data: _defaults.mix })}
 ${ui.number("rotation", "rotation", rotation, defaults)}
 ${ui.number("width", "width", width, defaults)}
 ${ui.number("center", "center", center, defaults)}

@@ -34,11 +34,11 @@ order: {
 connect: (host, key) => host[key] = element.processAttribute(host, key) || 1
 }, // order
 
-render: ({ label, mix, bypass, _depth, type, low, high, gain}) => {
+render: ({ label, mix, bypass, _defaults, _depth, type, low, high, gain}) => {
 return html`
 <fieldset class="multiband">
 ${ui.legend({ label: `${label} (${type})`, _depth })}
-${ui.commonControls({ bypass, mix, defaults })}
+${ui.commonControls({ bypass, mix, data: _defaults.mix})}
 ${(type === "peaking" || type === "lowshelf") && ui.number("low", "low", low)}
 ${(type === "peaking" || type === "highshelf") && ui.number("high", "high", high)}
 ${ui.number("gain", "gain", gain)}

@@ -108,10 +108,9 @@ function pressed (value) {return value? "true" : "false";}
 } // boolean
 
 
-export function number (label, name, defaultValue, data) {
+export function number (label, name, defaultValue, data = {}) {
 let {step,min,max,uiType} = data;
-
-if (!step && min !== undefined && max !== undefined) step = (max - min) / 100;
+if (!step && typeof(min) !== undefined && typeof(max) !== undefined) step = Math.abs(max - min) / 100;
 if (typeof(min) === "undefined") min = Number.EPSILON;
 if (typeof(max) === "undefined") max = Number.MAX_VALUE;
 if (typeof(step) === "undefined") step = 1;

@@ -28,7 +28,7 @@ const data = new Map(
 ); // new Map
 
 // add common controls to our data map now
-if (!data.has("mix")) data.set("mix", {type: "number", min: -1, max: 1, default: 1});
+if (!data.has("mix")) data.set("mix", {type: "number", min: -1, max: 1, default: 1, step: 0.1});
 if (!data.has("bypass")) data.set("bypass", {type: "boolean", default: false});
 
 // merge with user supplied data

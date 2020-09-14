@@ -53,11 +53,11 @@ observe: (host, value) => setFilters(host.filters, "detune", Number(value))
 }, // detune
 
 
-render: ({ bypass, mix, label, _depth, count, frequency, type, q, gain, detune }) => {
+render: ({ bypass, mix, label, _defaults, _depth, count, frequency, type, q, gain, detune }) => {
 return html`
 <fieldset class="filter-bank">
 ${ui.legend({ label, _depth })}
-${ui.commonControls({ bypass, mix, defaults })}
+${ui.commonControls({ bypass, mix, data: defaults.mix })}
 
 ${ui.number("count", "count", count)}
 ${ui.list("type", "type", type, [
@@ -70,11 +70,11 @@ ${ui.list("type", "type", type, [
 ["low shelf", "lowshelf"],
 ["high shelf", "highshelf"],
 ])}
-${ui.number("frequency", "frequency", frequency)}
-${ui.number("q", "q", q)}
+${ui.number("frequency", "frequency", frequency, _defaults.frequency)}
+${ui.number("q", "q", q, _defaults.q)}
 
-${ui.number("gain", "gain", gain)}
-${ui.number("detune", "detune", detune)}
+${ui.number("gain", "gain", gain, _defaults.gain)}
+${ui.number("detune", "detune", detune, _defaults.detune)}
 </fieldset>
 `; // template
 } // render

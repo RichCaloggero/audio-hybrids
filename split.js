@@ -18,11 +18,11 @@ connect: (host, key) => host[key] = host.hasAttribute("swap-outputs") || false
 }, // swapOutputs
 
 
-render: ({ mix, bypass, label, _depth }) => {
+render: ({ mix, bypass, label, _defaults, _depth }) => {
 return html`
 <fieldset class="split">
 ${ui.legend({ label, _depth })}
-${ui.commonControls({ bypass, mix, defaults })}
+${ui.commonControls({ bypass, mix, data: _defaults.mix})}
 </fieldset>
 <slot></slot>
 `; // template
